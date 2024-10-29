@@ -315,19 +315,19 @@ public:
     auto print_info(std::ostream& os) const -> void
     {
         static auto header = [](auto depth) { return std::string(depth, '\t'); };
-        os << header(m_depth - 1) << "<ndbox<T,F," << N << ">>\n";
-        os << header(m_depth) << "Boundary: " << m_boundary << '\n';
-        os << header(m_depth) << "Capacity " << m_capacity << '\n';
-        os << header(m_depth) << "Depth " << m_depth << '\n';
-        os << header(m_depth) << "Fragmented: " << m_fragmented << '\n';
-        os << header(m_depth) << "Boxes: " << boxes() << '\n';
+        os << header(m_depth) << "<ndbox<T,F," << N << ">>\n";
+        os << header(m_depth + 1) << "Boundary: " << m_boundary << '\n';
+        os << header(m_depth + 1) << "Capacity " << m_capacity << '\n';
+        os << header(m_depth + 1) << "Depth " << m_depth << '\n';
+        os << header(m_depth + 1) << "Fragmented: " << m_fragmented << '\n';
+        os << header(m_depth + 1) << "Boxes: " << boxes() << '\n';
+        os << header(m_depth + 1) << "Elements: " << elements() << '\n';
         if (!m_fragmented)
         {
             auto&& elements = contained_elements();
-            os << header(m_depth) << "Elements: " << std::ranges::size(elements) << '\n';
             for (auto const& e : elements)
             {
-                os << header(m_depth) << e->position << '\n';
+                os << header(m_depth + 1) << e->position << '\n';
             }
         }
         else
@@ -337,7 +337,7 @@ public:
                 b.print_info(os);
             }
         }
-        os << header(m_depth - 1) << "<\\ndbox<T,F" << N << ">>\n";
+        os << header(m_depth) << "<\\ndbox<T,F" << N << ">>\n";
     }
 
     [[nodiscard]]
@@ -350,6 +350,19 @@ public:
                          [](auto nboxes, const auto& b) { return 1 + nboxes + b.boxes(); }
                      )
                    : 0;
+    }
+
+    [[nodiscard]]
+    auto elements() const -> std::size_t
+    {
+        return m_fragmented ? std::ranges::fold_left(
+                                  subboxes(),
+                                  0,
+                                  [](auto nelements, const auto& e) {
+                                      return nelements + e.elements();
+                                  }
+                              )
+                            : std::ranges::size(contained_elements());
     }
 
 private:
@@ -453,7 +466,7 @@ public:
         m_box(
             limits.has_value() ? limits.value() : detail::compute_limits(collection),
             box_capacity,
-            1,
+            0,
             max_depth
         ),
         m_max_depth{ max_depth },
@@ -477,7 +490,8 @@ public:
         os << "<ndtree<T,F," << s_dimension << ">>\n";
         os << "Capacity: " << m_capacity << '\n';
         os << "Max depth: " << m_max_depth << '\n';
-        os << "Elements: " << std::ranges::size(m_data_view) << '\n';
+        os << "Elements: " << m_box.elements() << " out of "
+           << std::ranges::size(m_data_view) << '\n';
         os << "<\\ndtree<T,F," << s_dimension << ">>\n";
     }
 
