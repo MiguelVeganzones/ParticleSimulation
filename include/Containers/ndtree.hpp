@@ -229,19 +229,20 @@ public:
 
     auto print_info(std::ostream& os) const -> void
     {
-        auto header = [this]() { return std::string(m_depth, '\t'); };
-        os << "<ndbox<T,F," << N << ">>\n";
-        os << header() << "Boundary: " << m_boundary << '\n';
-        os << header() << "Capacity " << m_capacity << '\n';
-        os << header() << "Depth " << m_depth << '\n';
-        os << header() << "Fragmented: " << m_fragmented << '\n';
+        static auto header = [](auto depth) { return std::string(depth, '\t'); };
+        os << header(m_depth - 1) << "<ndbox<T,F," << N << ">>\n";
+        os << header(m_depth) << "Boundary: " << m_boundary << '\n';
+        os << header(m_depth) << "Capacity " << m_capacity << '\n';
+        os << header(m_depth) << "Depth " << m_depth << '\n';
+        os << header(m_depth) << "Fragmented: " << m_fragmented << '\n';
+        os << header(m_depth) << "Boxes: " << boxes() << '\n';
         if (!m_fragmented)
         {
-            os << header() << "Elements: " << std::ranges::size(std::get<0>(m_elements))
-               << '\n';
+            os << header(m_depth)
+               << "Elements: " << std::ranges::size(std::get<0>(m_elements)) << '\n';
             for (auto const& e : std::get<0>(m_elements))
             {
-                os << header() << e->position << '\n';
+                os << header(m_depth) << e->position << '\n';
             }
         }
         else
@@ -251,7 +252,19 @@ public:
                 b.print_info(os);
             }
         }
-        os << "<\\ndbox<T,F" << N << ">>\n";
+        os << header(m_depth - 1) << "<\\ndbox<T,F" << N << ">>\n";
+    }
+
+    [[nodiscard]]
+    auto boxes() const -> std::size_t
+    {
+        return m_fragmented
+                   ? std::ranges::fold_left(
+                         std::get<1>(m_elements),
+                         0,
+                         [](auto nboxes, const auto& b) { return 1 + nboxes + b.boxes(); }
+                     )
+                   : 0;
     }
 
 private:

@@ -32,6 +32,6 @@ int main()
     std::cout << detail::count_in(std::array{ p1, p1, p4, p3 }, ndboundary{ p2, p3 })
               << '\n';
 
-    ndtree<F, F, N> tree(std::span{ samples }, 2, 1);
+    ndtree<F, F, N> tree(std::span{ samples }, 3, 1);
     std::cout << tree;
 }
