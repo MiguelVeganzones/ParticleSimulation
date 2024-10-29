@@ -371,7 +371,7 @@ public:
     {
         os << "<ndtree<T,F," << N << ">>\n";
         os << "Capacity: " << m_capacity << '\n';
-        os << "Depth: " << m_max_depth << '\n';
+        os << "Max depth: " << m_max_depth << '\n';
         os << "Elements: " << std::ranges::size(m_data_view) << '\n';
         os << "<\\ndtree<T,F," << N << ">>\n";
     }
