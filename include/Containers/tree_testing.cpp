@@ -76,13 +76,13 @@ int debug()
     std::cout << p1 << "\n";
     std::cout << p2 << "\n";
 
-    std::cout << detail::compute_limits(std::array{ p1, p2, p3, p4 }).min << "\n";
-    std::cout << detail::compute_limits(std::array{ p1, p2, p3, p4 }).max << "\n";
+    std::cout << detail::compute_limits(std::array{ p1, p2, p3, p4 }).min() << "\n";
+    std::cout << detail::compute_limits(std::array{ p1, p2, p3, p4 }).max() << "\n";
     std::cout << detail::in(p1, { p2, p3 });
     std::cout << detail::count_in(std::array{ p1, p1, p4, p3 }, ndboundary{ d1, d2 })
               << '\n';
 
-    ndtree<F, F, N> tree(std::span{ samples }, 3, 1, ndboundary{ d2, d1 });
+    ndtree<F, F, N> tree(std::span{ samples }, 3, 1, ndboundary<F, N>{ d2, d1 });
     std::cout << tree;
 
     return EXIT_SUCCESS;
