@@ -1,0 +1,1 @@
+Add distance metric + dimension restrictions to ntree
