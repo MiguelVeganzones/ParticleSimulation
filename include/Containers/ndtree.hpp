@@ -390,6 +390,11 @@ private:
         m_elements   = std::vector<ndbox>();
         m_fragmented = true;
         subboxes().reserve(s_nd_fanout);
+        static_assert(
+            s_1d_fanout == 2,
+            "The divisions are only binary with implementation! It could be generalzed "
+            "if needed tho..."
+        );
         for (auto binary_div = decltype(s_nd_fanout){ 0 }; binary_div != s_nd_fanout;
              ++binary_div)
         {
