@@ -1,17 +1,25 @@
-#ifndef INLCUDED_NTREE
-#define INLCUDED_NTREE
+#ifndef INLCUDED_NDTREE
+#define INLCUDED_NDTREE
 
+#define DEBUG_NDTREE
+
+#ifdef DEBUG_NDTREE
+#include <iostream>
+#endif
 #include "../Utility/constexpr_functions.hpp"
 #include "../Utility/error_handling.hpp"
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <iomanip>
+#include <numeric>
 #include <optional>
 #include <ostream>
 #include <ranges>
+#include <string>
 #include <vector>
 
-#define NTREE_MAX_DIMENSIONS 8 // Por poner algo vaya
+#define NDTREE_MAX_DIMENSIONS 8 // Por poner algo vaya
 
 namespace ndt
 {
@@ -52,6 +60,11 @@ struct ndboundary
     using point_t = ndpoint<F, N>;
     point_t min;
     point_t max;
+
+    auto mid(std::size_t idx) const -> F
+    {
+        return std::midpoint(max[idx], min[idx]);
+    }
 };
 
 template <typename T, std::floating_point F, std::size_t N>
@@ -68,6 +81,13 @@ auto operator<<(std::ostream& os, ndpoint<F, N> p) -> std::ostream&
     for (auto e : p)
         os << e << ", ";
     os << "}";
+    return os;
+}
+
+template <std::floating_point F, std::size_t N>
+auto operator<<(std::ostream& os, ndboundary<F, N> b) -> std::ostream&
+{
+    os << "{ " << b.min << " }, { " << b.max << " }";
     return os;
 }
 
@@ -98,7 +118,7 @@ auto in(ndpoint<F, N> const& p, ndboundary<F, N> const& b) noexcept -> bool
 {
     for (auto i = decltype(N){ 0 }; i != N; ++i)
     {
-        if (p[i] < b.min[i] || p[i] >= b.max[i])
+        if (p[i] < b.min[i] || p[i] > b.max[i])
         {
             return false;
         }
@@ -153,16 +173,25 @@ public:
     using point_t    = ndpoint<F, N>;
     using boundary_t = ndboundary<F, N>;
     using sample_t   = ndsample<T, F, N>;
+    using box_t      = ndbox<T, F, N>;
+    using depth_t    = int;
 
 public:
-    ndbox(boundary_t boundary, std::size_t max_elements) :
+    ndbox(
+        boundary_t  boundary,
+        std::size_t max_elements,
+        depth_t     depth,
+        depth_t     max_depth
+    ) :
         m_boundary{ boundary },
         m_elements{},
-        m_capacity{ max_elements }
+        m_capacity{ max_elements },
+        m_max_depth{ max_depth },
+        m_depth{ depth }
     {
     }
 
-    auto insert(sample_t const& s) -> bool
+    auto insert(sample_t& s) -> bool
     {
         if (!detail::in(s.position, m_boundary))
         {
@@ -170,22 +199,25 @@ public:
         }
         if (!m_fragmented)
         {
-            if (std::get<0>(m_elements).size() < m_capacity)
+            if (std::get<0>(m_elements).size() < m_capacity || m_depth == m_max_depth)
             {
+                std::cout << "Value at " << s.position << " stored in Box at depth "
+                          << m_depth << " with bounds " << m_boundary << '\n';
                 std::get<0>(m_elements).push_back(&s);
                 return true;
             }
             else
             {
+                std::cout << "########################\n";
                 fragment();
+                std::cout << "------------------------\n";
             }
         }
         if (m_fragmented)
         {
-            for (auto& c : std::get<1>(m_elements))
+            for (auto& b : std::get<1>(m_elements))
             {
-                const auto success = c.insert(s);
-                if (success)
+                if (const auto success = b.insert(s); success)
                 {
                     return true;
                 }
@@ -195,6 +227,33 @@ public:
         utility::error_handling::assert_unreachable();
     }
 
+    auto print_info(std::ostream& os) const -> void
+    {
+        auto header = [this]() { return std::string(m_depth, '\t'); };
+        os << "<ndbox<T,F," << N << ">>\n";
+        os << header() << "Boundary: " << m_boundary << '\n';
+        os << header() << "Capacity " << m_capacity << '\n';
+        os << header() << "Depth " << m_depth << '\n';
+        os << header() << "Fragmented: " << m_fragmented << '\n';
+        if (!m_fragmented)
+        {
+            os << header() << "Elements: " << std::ranges::size(std::get<0>(m_elements))
+               << '\n';
+            for (auto const& e : std::get<0>(m_elements))
+            {
+                os << header() << e->position << '\n';
+            }
+        }
+        else
+        {
+            for (auto const& b : std::get<1>(m_elements))
+            {
+                b.print_info(os);
+            }
+        }
+        os << "<\\ndbox<T,F" << N << ">>\n";
+    }
+
 private:
     auto fragment() -> void
     {
@@ -202,18 +261,37 @@ private:
         {
             return;
         }
-        auto&& samples = std::move(std::get<0>(m_elements));
-        m_elements     = std::vector<ndbox>(s_nd_fanout);
-        for (auto s : samples)
+        auto samples = std::move(std::get<0>(m_elements));
+        m_elements   = std::vector<ndbox>();
+        std::get<1>(m_elements).reserve(s_nd_fanout);
+        for (auto binary_div = decltype(s_nd_fanout){ 0 }; binary_div != s_nd_fanout;
+             ++binary_div)
         {
-            for (auto& c : std::get<1>(m_elements))
+            boundary_t bounds;
+            for (auto i = decltype(N){ 0 }; i != N; ++i)
             {
-                if (const auto success = c.insert(s); success)
+                const auto top_half = (binary_div & (1 << i)) > 0;
+                bounds.min[i]       = top_half ? m_boundary.mid(i) : m_boundary.min[i];
+                bounds.max[i]       = top_half ? m_boundary.max[i] : m_boundary.mid(i);
+            }
+            std::get<1>(m_elements)
+                .push_back(box_t{ bounds, m_capacity, m_depth + 1, m_max_depth });
+        }
+        for (auto* s : samples)
+        {
+            if (!s)
+            {
+                continue;
+            }
+            for (auto& b : std::get<1>(m_elements))
+            {
+                if (const auto success = b.insert(*s); success)
                 {
                     break;
                 }
             }
         }
+        m_fragmented = true;
     }
 
 private:
@@ -221,16 +299,18 @@ private:
     std::variant<std::vector<sample_t*>, std::vector<ndbox>> m_elements;
     std::size_t                                              m_capacity;
     bool                                                     m_fragmented = false;
+    depth_t                                                  m_max_depth;
+    depth_t                                                  m_depth;
 };
 
-template <typename PType, typename F, std::uint8_t N>
-    requires(N > 0 && N < NTREE_MAX_DIMENSIONS)
-class ntree
+template <typename PType, typename F, std::size_t N>
+    requires(N > 0 && N < NDTREE_MAX_DIMENSIONS)
+class ndtree
 {
 public:
     using value_type = F;
     using size_type  = std::size_t;
-    using depth_t    = std::uint8_t;
+    using depth_t    = int;
     using box_t      = ndbox<PType, value_type, N>;
 
 public:
@@ -241,40 +321,68 @@ public:
 public:
     using point_t      = ndpoint<value_type, s_dimension>;
     using boundary_t   = ndboundary<value_type, s_dimension>;
+    using sample_t     = ndsample<PType, F, s_dimension>;
     using parent_index = std::size_t;
     template <typename T>
     using container = std::vector<T>;
 
 public:
-    ntree(
-        std::span<value_type>     collection,
+    ndtree(
+        std::span<sample_t>       collection,
         depth_t const             max_depth,
-        size_type const           min_bin_capacity,
-        std::optional<boundary_t> limits
-    )
+        size_type const           box_capacity,
+        std::optional<boundary_t> limits = std::nullopt
+    ) :
+        m_data_view{ collection },
+        m_box(
+            limits.has_value() ? limits.value() : detail::compute_limits(collection),
+            box_capacity,
+            1,
+            max_depth
+        ),
+        m_max_depth{ max_depth },
+        m_capacity{ box_capacity }
     {
-        if (!limits.has_value())
-        {
-            limits = detail::compute_limits(collection);
-        }
         for (auto& e : collection)
         {
             insert(e, m_box);
         }
     }
 
-    auto insert(point_t const& p, boundary_t const& b) -> bool
+    auto insert(sample_t& p, box_t& b) -> bool
     {
-        return false;
+        return m_box.insert(p);
+    }
+
+    auto print_info(std::ostream& os = std::cout) const -> void
+    {
+        os << "<ndtree<T,F," << N << ">>\n";
+        os << "Capacity: " << m_capacity << '\n';
+        os << "Depth: " << m_max_depth << '\n';
+        os << "Elements: " << std::ranges::size(m_data_view) << '\n';
+        os << "<\\ndtree<T,F," << N << ">>\n";
+    }
+
+    auto box() const -> box_t const&
+    {
+        return m_box;
     }
 
 private:
-    std::span<value_type> m_data_view;
-    box_t                 m_box;
-    depth_t               m_max_depth;
-    size_type             min_bin_capacity;
+    std::span<sample_t> m_data_view;
+    box_t               m_box;
+    depth_t             m_max_depth;
+    size_type           m_capacity;
 };
+
+template <typename PType, typename F, std::size_t N>
+auto operator<<(std::ostream& os, ndtree<PType, F, N> const& tree) -> std::ostream&
+{
+    tree.print_info(os);
+    tree.box().print_info(os);
+    return os;
+}
 
 } // namespace ndt
 
-#endif // INLCUDED_NTREE
+#endif // INLCUDED_NDTREE
