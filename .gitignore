@@ -42,6 +42,7 @@ bld/
 *.synctex.gz
 *.xdv
 *.png
+*.json
 
 # Swap files
 *.swp
