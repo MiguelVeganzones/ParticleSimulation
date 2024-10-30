@@ -163,7 +163,12 @@ auto operator<<(std::ostream& os, ndboundary<F, N> b) -> std::ostream&
 namespace concepts
 {
 template <typename T>
-concept point_concept = requires(T t) { t.value; };
+concept point_concept = requires(T t) {
+    typename T::value_type;
+    t.value;
+    T::s_dimension;
+    t[0];
+};
 
 template <typename T>
 concept boundary_concept = requires(T t) {
