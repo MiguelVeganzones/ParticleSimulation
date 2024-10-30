@@ -80,6 +80,7 @@ class ndboundary
 {
 public:
     using point_t                            = ndpoint<F, N>;
+    using value_type                         = typename point_t::value_type;
     inline static constexpr auto s_dimension = point_t::s_dimension;
     using index_t                            = std::remove_const_t<decltype(s_dimension)>;
 
@@ -90,9 +91,11 @@ public:
     {
         for (index_t i = 0; i != s_dimension; ++i)
         {
-            const auto r = std::minmax(p1[i], p2[i]);
-            m_min[i]     = r.first;
-            m_max[i]     = r.second;
+
+            // Explicit copy to avoid dangling reference to a temporary
+            std::pair<value_type, value_type> r = std::minmax(p1[i], p2[i]);
+            m_min[i]                            = r.first;
+            m_max[i]                            = r.second;
         }
     }
 
@@ -480,12 +483,12 @@ public:
         for (auto& e : collection)
         {
             [[maybe_unused]]
-            auto _ = insert(e, m_box);
+            auto _ = insert(e);
         }
     }
 
     [[nodiscard]]
-    auto insert(sample_t const& p, box_t& b) -> bool
+    auto insert(sample_t const& p) noexcept -> bool
     {
         return m_box.insert(p);
     }
