@@ -76,11 +76,22 @@ template <std::floating_point F, PhysicalMagnitudeUnits U>
 auto operator<<(std::ostream& os, physical_magnitude<F, U> const pm) noexcept
     -> std::ostream&
 {
-    constexpr auto unit_idx =
-        static_cast<typename std::underlying_type_t<decltype(U)>>(U);
-    constexpr std::string_view unit_names[]{ "m",     "m_s",    "m_s2", "rad",
-                                             "rad_s", "rad_s2", "kg" };
-    os << pm.value << '[' << unit_names[unit_idx] << ']';
+    constexpr auto unit_name = [](PhysicalMagnitudeUnits unit
+                               ) noexcept -> std::string_view {
+        switch (unit)
+        {
+        case PhysicalMagnitudeUnits::m: return "m";
+        case PhysicalMagnitudeUnits::m_s: return "m/s";
+        case PhysicalMagnitudeUnits::m_s2: return "m/s^2";
+        case PhysicalMagnitudeUnits::rad: return "rad";
+        case PhysicalMagnitudeUnits::rad_s: return "rad/s";
+        case PhysicalMagnitudeUnits::rad_s2: return "rad/s^2";
+        case PhysicalMagnitudeUnits::kg: return "kg";
+        default: return "unknown";
+        }
+    };
+    constexpr auto unit = unit_name(U); // Force compile time evaluation
+    os << pm.value << '[' << unit << ']';
     return os;
 }
 
