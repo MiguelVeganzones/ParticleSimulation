@@ -1,4 +1,6 @@
-#include "../include/PhysicalModel/particle.hpp"
+#include "particle.hpp"
+#include "random.hpp"
+#include "random_distributions.hpp"
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
@@ -71,18 +73,39 @@ int main0()
     return 0;
 }
 
-int main()
+int particle_test()
 {
+    using namespace ndt;
     using F                 = float;
     static constexpr auto N = 3;
+    using sample_t          = particle::ndparticle<N, float>;
 
-    using particle_properties_t = particle::properties<N, float>;
-    particle_properties_t pp(
-        ndt::ndpoint<N, F>{ 1.f, 2.f, 3.5f },
-        pm::mass<F>{ 5.f },
-        pm::linear_velocity<F>{ 1.f },
-        pm::linear_acceleration<F>{ 0.2f }
-    );
+    const auto            size = 500;
+    std::vector<sample_t> samples;
 
-    std::cout << pp;
+    for (auto _ : std::views::iota(0, size))
+    {
+        samples.emplace_back(
+            pm::position<N, F>{ utility::random::srandom::randfloat<F>(),
+                                utility::random::srandom::randfloat<F>(),
+                                utility::random::srandom::randfloat<F>() },
+            pm::mass<F>{ F{ 10 } * utility::random::srandom::randfloat<F>() },
+            pm::linear_velocity<F>{ -utility::random::srandom::randfloat<F>() },
+            pm::linear_acceleration<F>{ -utility::random::srandom::randfloat<F>() }
+        );
+    }
+
+    for (auto i = 0uz; auto const& s : samples)
+    {
+        std::cout << "Sample: " << i++ << '\n' << s << '\n';
+    }
+    ndtree<sample_t> tree(std::span{ samples }, 3, 1);
+    std::cout << tree;
+
+    return EXIT_SUCCESS;
+}
+
+int main()
+{
+    particle_test();
 }

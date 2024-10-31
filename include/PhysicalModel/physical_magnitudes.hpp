@@ -72,6 +72,66 @@ auto operator/(physical_magnitude<F, U> const pm, F scalar) noexcept
     return pm.value / scalar;
 }
 
+template <std::size_t N, std::floating_point F>
+struct position
+{
+    using value_type                         = F;
+    inline static constexpr auto s_dimension = N;
+    using container_t                        = std::array<value_type, s_dimension>;
+
+    [[nodiscard]]
+    auto operator[](std::integral auto idx) -> value_type&
+    {
+        assert(idx < N);
+        return value[idx];
+    }
+
+    [[nodiscard]]
+    auto operator[](std::integral auto idx) const -> value_type
+    {
+        assert(idx < N);
+        return value[idx];
+    }
+
+    [[nodiscard]]
+    auto begin() const -> container_t::const_iterator
+    {
+        return std::begin(value);
+    }
+
+    [[nodiscard]]
+    auto begin() -> container_t::iterator
+    {
+        return std::begin(value);
+    }
+
+    [[nodiscard]]
+    auto end() const -> container_t::const_iterator
+    {
+        return std::end(value);
+    }
+
+    [[nodiscard]]
+    auto end() -> container_t::iterator
+    {
+        return std::end(value);
+    }
+
+    [[nodiscard]]
+    auto cbegin() const -> container_t::const_iterator
+    {
+        return std::cbegin(value);
+    }
+
+    [[nodiscard]]
+    auto cend() const -> container_t::const_iterator
+    {
+        return std::cend(value);
+    }
+
+    container_t value;
+};
+
 template <std::floating_point F, PhysicalMagnitudeUnits U>
 auto operator<<(std::ostream& os, physical_magnitude<F, U> const pm) noexcept
     -> std::ostream&
@@ -92,6 +152,16 @@ auto operator<<(std::ostream& os, physical_magnitude<F, U> const pm) noexcept
     };
     constexpr auto unit = unit_name(U); // Force compile time evaluation
     os << pm.value << '[' << unit << ']';
+    return os;
+}
+
+template <std::size_t N, std::floating_point F>
+auto operator<<(std::ostream& os, position<N, F> const& p) -> std::ostream&
+{
+    os << "{ ";
+    for (auto const& e : p)
+        os << e << ", ";
+    os << "}";
     return os;
 }
 

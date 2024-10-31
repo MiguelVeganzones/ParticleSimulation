@@ -89,9 +89,14 @@ SRC_DIR			    =	src
 INCLUDE_DIR		    =	include
 UTILITY_DIR		    =	$(INCLUDE_DIR)/Utility
 ROOT_DIR		    =	$(INCLUDE_DIR)/Plotting
+CONTAINERS_DIR		    =	$(INCLUDE_DIR)/Containers
+PHYSICAL_MODEL_DIR	    =	$(INCLUDE_DIR)/PhysicalModel
 
 UTILITY_INCL			=
 GENERAL_INCL			=	-I./$(UTILITY_DIR) $(UTILITY_INCL)
+PHYSICAL_MODEL_INCL		=	-I./$(PHYSICAL_MODEL_DIR)
+NDTREE_INCL			=	-I./$(CONTAINERS_DIR)
+MAIN_SIMULATION_INCL		=	$(GENERAL_INCL) $(PHYSICAL_MODEL_INCL) $(NDTREE_INCL)
 
 ROOT_LIB			= `root-config --libs`
 
@@ -104,6 +109,6 @@ main: ${OUT_DIR}/main.o
 ${OUT_DIR}/main.o: $(SRC_DIR)/*.cpp
 	@echo -e Building $@..."\n"
 	@mkdir -p ${OUT_DIR}
-	$(CXX) $(CXXFLAGS) $(GENERAL_INCL) $(SRC_DIR)/main.cpp -o $@
+	$(CXX) $(CXXFLAGS) $(MAIN_SIMULATION_INCL) $(SRC_DIR)/main.cpp -o $@
 	@echo -e Built $@ successfully."\n"
 #================================================================================================

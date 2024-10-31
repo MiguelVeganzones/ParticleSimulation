@@ -25,59 +25,40 @@
 namespace ndt
 {
 
-template <std::size_t N, std::floating_point F>
-struct ndpoint
+namespace concepts
 {
-    using value_type                         = F;
-    inline static constexpr auto s_dimension = N;
-    using container_t                        = std::array<value_type, s_dimension>;
-
-    [[nodiscard]]
-    auto operator[](std::integral auto idx) -> value_type&
-    {
-        assert(idx < N);
-        return value[idx];
-    }
-
-    [[nodiscard]]
-    auto operator[](std::integral auto idx) const -> value_type
-    {
-        assert(idx < N);
-        return value[idx];
-    }
-
-    [[nodiscard]]
-    auto begin() const -> container_t::const_iterator
-    {
-        return std::begin(value);
-    }
-
-    [[nodiscard]]
-    auto end() -> container_t::iterator
-    {
-        return std::end(value);
-    }
-
-    [[nodiscard]]
-    auto cbegin() const -> container_t::const_iterator
-    {
-        return std::cbegin(value);
-    }
-
-    [[nodiscard]]
-    auto cend() const -> container_t::const_iterator
-    {
-        return std::cend(value);
-    }
-
-    container_t value;
+template <typename T>
+concept point_concept = requires(T t) {
+    typename T::value_type;
+    T::s_dimension;
+    t.value;
+    t[0];
+    std::begin(t);
+    std::end(t);
 };
 
-template <std::size_t N, std::floating_point F>
+template <typename T>
+concept boundary_concept = requires(T t) {
+    t.min();
+    t.max();
+    t.mid(0);
+};
+
+template <typename T>
+concept sample_concept = requires(T t) {
+    typename T::value_type;
+    T::s_dimension;
+    { t.position() } -> std::same_as<typename T::position_t>;
+    t.properties();
+};
+
+} // namespace concepts
+
+template <concepts::point_concept Point_Type>
 class ndboundary
 {
 public:
-    using point_t                            = ndpoint<N, F>;
+    using point_t                            = Point_Type;
     using value_type                         = typename point_t::value_type;
     inline static constexpr auto s_dimension = point_t::s_dimension;
     using index_t                            = std::remove_const_t<decltype(s_dimension)>;
@@ -110,18 +91,18 @@ public:
     }
 
     [[nodiscard]]
-    auto min(index_t const idx) const -> F
+    auto min(index_t const idx) const -> value_type
     {
         return m_min[idx];
     }
 
     [[nodiscard]]
-    auto max(index_t const idx) const -> F
+    auto max(index_t const idx) const -> value_type
     {
         return m_max[idx];
     }
 
-    auto mid(index_t const idx) const -> F
+    auto mid(index_t const idx) const -> value_type
     {
         return std::midpoint(m_max[idx], m_min[idx]);
     }
@@ -131,66 +112,22 @@ private:
     point_t m_max;
 };
 
-template <std::size_t N, std::floating_point F, typename T>
-struct ndsample
-{
-    using position_t                         = ndpoint<N, F>;
-    using value_type                         = T;
-    inline static constexpr auto s_dimension = position_t::s_dimension;
-    position_t                   position;
-    value_type                   properties;
-};
-
-template <std::size_t N, std::floating_point F>
-auto operator<<(std::ostream& os, ndpoint<N, F> p) -> std::ostream&
-{
-    os << "{ ";
-    for (auto e : p)
-        os << e << ", ";
-    os << "}";
-    return os;
-}
-
-template <std::size_t N, std::floating_point F>
-auto operator<<(std::ostream& os, ndboundary<N, F> b) -> std::ostream&
+template <concepts::point_concept Point_Type>
+auto operator<<(std::ostream& os, ndboundary<Point_Type> const& b) -> std::ostream&
 {
     os << "{ " << b.min() << " }, { " << b.max() << " }";
     return os;
 }
 
-namespace concepts
-{
-template <typename T>
-concept point_concept = requires(T t) {
-    typename T::value_type;
-    t.value;
-    T::s_dimension;
-    t[0];
-};
-
-template <typename T>
-concept boundary_concept = requires(T t) {
-    t.min();
-    t.max();
-    t.mid(0);
-};
-
-template <typename T>
-concept sample_concept = requires(T t) {
-    t.position;
-    t.properties;
-};
-
-} // namespace concepts
-
 namespace detail
 {
 
-template <std::floating_point F, std::size_t N>
+template <concepts::point_concept Point_Type>
 [[nodiscard]]
-auto in(ndpoint<N, F> const& p, ndboundary<N, F> const& b) noexcept -> bool
+auto in(Point_Type const& p, ndboundary<Point_Type> const& b) noexcept -> bool
 {
-    for (auto i = decltype(N){ 0 }; i != N; ++i)
+    for (auto i = decltype(Point_Type::s_dimension){ 0 }; i != Point_Type::s_dimension;
+         ++i)
     {
         if (p[i] < b.min(i) || p[i] > b.max(i))
         {
@@ -200,11 +137,11 @@ auto in(ndpoint<N, F> const& p, ndboundary<N, F> const& b) noexcept -> bool
     return true;
 }
 
-template <std::floating_point F, std::size_t N>
+template <concepts::point_concept Point_Type>
 [[nodiscard]]
 auto count_in(
     std::ranges::range auto const& collection,
-    ndboundary<N, F> const&        b
+    ndboundary<Point_Type> const&  b
 ) noexcept -> std::size_t
 {
     return std::ranges::count_if(collection, [b](auto const& p) { return in(p, b); });
@@ -212,49 +149,39 @@ auto count_in(
 
 [[nodiscard]]
 auto compute_limits(std::ranges::range auto const& data) noexcept
-    requires concepts::point_concept<std::ranges::range_value_t<decltype(data)>>
+    requires concepts::sample_concept<std::ranges::range_value_t<decltype(data)>>
 {
-    using point_t    = std::ranges::range_value_t<decltype(data)>;
+    using sample_t   = std::ranges::range_value_t<decltype(data)>;
+    using point_t    = typename sample_t::position_t;
     constexpr auto N = point_t::s_dimension;
     point_t        min;
     point_t        max;
     for (auto i = decltype(N){ 0 }; i != N; ++i)
     {
-        const auto bounds = std::ranges::minmax(
-            data | std::views::transform([i](auto const& p) -> auto const& {
-                return p.value[i];
-            })
-        );
+        const auto bounds =
+            std::ranges::minmax(data | std::views::transform([i](auto const& p) -> auto {
+                                    return p.position().value[i];
+                                }));
         min[i] = bounds.min;
         max[i] = bounds.max;
     }
-    return ndboundary<point_t::s_dimension, typename point_t::value_type>{ min, max };
+    return ndboundary<point_t>{ min, max };
 }
 
-[[nodiscard]]
-auto compute_limits(std::ranges::range auto const& data) noexcept
-    requires concepts::sample_concept<std::ranges::range_value_t<decltype(data)>>
-{
-    return compute_limits(data | std::views::transform([](auto const& s) -> auto const& {
-                              return s.position;
-                          }));
-}
 } // namespace detail
 
-template <std::size_t N, std::floating_point F, typename T>
+template <concepts::sample_concept Sample_Type>
 class ndbox
 {
 public:
-    using point_t                            = ndpoint<N, F>;
+    using sample_t                           = Sample_Type;
+    using point_t                            = typename sample_t::position_t;
+    using box_t                              = ndbox<sample_t>;
     inline static constexpr auto s_dimension = point_t::s_dimension;
-
-public:
-    using boundary_t = ndboundary<s_dimension, F>;
-    using sample_t   = ndsample<s_dimension, F, T>;
-    using box_t      = ndbox<s_dimension, F, T>;
-    using depth_t    = int;
-
-public:
+    using value_type                         = typename sample_t::value_type;
+    inline static constexpr auto s_simension = sample_t::s_dimension;
+    using boundary_t                         = ndboundary<point_t>;
+    using depth_t                            = int;
     inline static constexpr auto s_1d_fanout = std::size_t{ 2 };
     inline static constexpr auto s_nd_fanout =
         utility::cx_functions::pow(s_1d_fanout, s_dimension);
@@ -277,7 +204,7 @@ public:
     [[nodiscard]]
     auto insert(sample_t const& s) noexcept -> bool
     {
-        if (!detail::in(s.position, m_boundary))
+        if (!detail::in(s.position(), m_boundary))
         {
             return false;
         }
@@ -287,7 +214,7 @@ public:
             if (elements.size() < m_capacity || m_depth == m_max_depth)
             {
 #if DEBUG_NDTREE
-                std::cout << "Value at " << s.position << " stored in Box at depth "
+                std::cout << "Value at " << s.position() << " stored in Box at depth "
                           << m_depth << " with bounds " << m_boundary << '\n';
 #endif
                 elements.push_back(const_cast<sample_t*>(&s));
@@ -321,11 +248,11 @@ public:
     auto print_info(std::ostream& os) const -> void
     {
         static auto header = [](auto depth) { return std::string(depth, '\t'); };
-        os << header(m_depth) << "<ndbox<T,F," << N << ">>\n";
+        os << header(m_depth) << "<ndbox<" << s_dimension << ">>\n ";
         os << header(m_depth + 1) << "Boundary: " << m_boundary << '\n';
         os << header(m_depth + 1) << "Capacity " << m_capacity << '\n';
         os << header(m_depth + 1) << "Depth " << m_depth << '\n';
-        os << header(m_depth + 1) << "Fragmented: " << m_fragmented << '\n';
+        os << header(m_depth + 1) << "value_typeragmented: " << m_fragmented << '\n';
         os << header(m_depth + 1) << "Boxes: " << boxes() << '\n';
         os << header(m_depth + 1) << "Elements: " << elements() << '\n';
         if (!m_fragmented)
@@ -333,7 +260,7 @@ public:
             auto&& elements = contained_elements();
             for (auto const& e : elements)
             {
-                os << header(m_depth + 1) << e->position << '\n';
+                os << header(m_depth + 1) << e->position() << '\n';
             }
         }
         else
@@ -343,7 +270,7 @@ public:
                 b.print_info(os);
             }
         }
-        os << header(m_depth) << "<\\ndbox<T,F" << N << ">>\n";
+        os << header(m_depth) << "<\\ndbox<" << s_dimension << ">>\n";
     }
 
     [[nodiscard]]
@@ -406,7 +333,7 @@ private:
         {
             point_t min;
             point_t max;
-            for (auto i = decltype(N){ 0 }; i != N; ++i)
+            for (auto i = decltype(s_dimension){ 0 }; i != s_dimension; ++i)
             {
                 const auto top_half = (binary_div & (1 << i)) > 0;
                 min[i]              = top_half ? m_boundary.mid(i) : m_boundary.min(i);
@@ -440,29 +367,25 @@ private:
     depth_t                                                  m_depth;
 };
 
-template <std::size_t N, std::floating_point Position_Impl_Type, typename Value_Type>
-    requires(N > 0 && N < NDTREE_MAX_DIMENSIONS)
+template <concepts::sample_concept Sample_Type>
+    requires(
+        Sample_Type::position_t::s_dimension > 0 &&
+        Sample_Type::position_t::s_dimension < NDTREE_MAX_DIMENSIONS
+    )
 class ndtree
 {
 public:
-    using sample_t   = ndsample<N, Position_Impl_Type, Value_Type>;
-    using position_t = typename sample_t::position_t;
-    using value_type = typename sample_t::value_type;
-    using size_type  = std::size_t;
-    using depth_t    = int;
-
-public:
+    using sample_t                           = Sample_Type;
+    using position_t                         = typename sample_t::position_t;
+    using value_type                         = typename sample_t::value_type;
+    using size_type                          = std::size_t;
+    using depth_t                            = int;
     inline static constexpr auto s_dimension = sample_t::s_dimension;
-
-public:
-    using box_t =
-        ndbox<position_t::s_dimension, typename position_t::value_type, value_type>;
-    using point_t    = ndpoint<s_dimension, typename position_t::value_type>;
-    using boundary_t = ndboundary<s_dimension, typename position_t::value_type>;
+    using box_t                              = ndbox<sample_t>;
+    using point_t                            = typename sample_t::position_t;
+    using boundary_t                         = ndboundary<point_t>;
     template <typename T>
-    using container = std::vector<T>;
-
-public:
+    using container                          = std::vector<T>;
     inline static constexpr auto s_1d_fanout = box_t::s_1d_fanout;
     inline static constexpr auto s_nd_fanout = box_t::s_nd_fanout;
 
@@ -498,12 +421,12 @@ public:
 
     auto print_info(std::ostream& os = std::cout) const -> void
     {
-        os << "<ndtree<T,F," << s_dimension << ">>\n";
+        os << "<ndtree <" << s_dimension << ">>\n";
         os << "Capacity: " << m_capacity << '\n';
         os << "Max depth: " << m_max_depth << '\n';
         os << "Elements: " << m_box.elements() << " out of "
            << std::ranges::size(m_data_view) << '\n';
-        os << "<\\ndtree<T,F," << s_dimension << ">>\n";
+        os << "<\\ndtree<" << s_dimension << ">>\n";
     }
 
     [[nodiscard]]
@@ -519,8 +442,8 @@ private:
     size_type           m_capacity;
 };
 
-template <std::size_t N, std::floating_point F, typename T>
-auto operator<<(std::ostream& os, ndtree<N, F, T> const& tree) -> std::ostream&
+template <concepts::sample_concept Sample_Type>
+auto operator<<(std::ostream& os, ndtree<Sample_Type> const& tree) -> std::ostream&
 {
     tree.print_info(os);
     tree.box().print_info(os);
