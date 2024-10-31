@@ -252,7 +252,7 @@ public:
         os << header(m_depth + 1) << "Boundary: " << m_boundary << '\n';
         os << header(m_depth + 1) << "Capacity " << m_capacity << '\n';
         os << header(m_depth + 1) << "Depth " << m_depth << '\n';
-        os << header(m_depth + 1) << "value_typeragmented: " << m_fragmented << '\n';
+        os << header(m_depth + 1) << "Fragmented: " << m_fragmented << '\n';
         os << header(m_depth + 1) << "Boxes: " << boxes() << '\n';
         os << header(m_depth + 1) << "Elements: " << elements() << '\n';
         if (!m_fragmented)
@@ -279,8 +279,8 @@ public:
         return m_fragmented
                    ? std::ranges::fold_left(
                          subboxes(),
-                         0,
-                         [](auto nboxes, const auto& b) { return 1 + nboxes + b.boxes(); }
+                         std::ranges::size(subboxes()),
+                         [](auto nboxes, const auto& b) { return nboxes + b.boxes(); }
                      )
                    : 0;
     }

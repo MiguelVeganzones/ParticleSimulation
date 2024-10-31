@@ -99,7 +99,7 @@ int particle_test()
     {
         std::cout << "Sample: " << i++ << '\n' << s << '\n';
     }
-    ndtree<sample_t> tree(std::span{ samples }, 3, 1);
+    ndtree<sample_t> tree(std::span{ samples }, 5, 1);
     std::cout << tree;
 
     return EXIT_SUCCESS;
