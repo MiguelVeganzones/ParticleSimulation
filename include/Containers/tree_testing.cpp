@@ -14,28 +14,28 @@ int test()
 
     using namespace utility::random;
 
-    const ndpoint<F, N> p1 = { srandom::randfloat<F>(),
+    const ndpoint<N, F> p1 = { srandom::randfloat<F>(),
                                srandom::randfloat<F>(),
                                srandom::randfloat<F>() };
-    const ndpoint<F, N> p2 = { srandom::randfloat<F>(),
+    const ndpoint<N, F> p2 = { srandom::randfloat<F>(),
                                srandom::randfloat<F>(),
                                srandom::randfloat<F>() };
-    const ndpoint<F, N> p3 = { srandom::randfloat<F>(),
+    const ndpoint<N, F> p3 = { srandom::randfloat<F>(),
                                srandom::randfloat<F>(),
                                srandom::randfloat<F>() };
-    const ndpoint<F, N> p4 = { srandom::randfloat<F>(),
+    const ndpoint<N, F> p4 = { srandom::randfloat<F>(),
                                srandom::randfloat<F>(),
                                srandom::randfloat<F>() };
 
-    ndsample<F, F, N> s1{ p1, srandom::randfloat<F>() };
-    ndsample<F, F, N> s2{ p2, srandom::randfloat<F>() };
-    ndsample<F, F, N> s3{ p3, srandom::randfloat<F>() };
-    ndsample<F, F, N> s4{ p4, srandom::randfloat<F>() };
-    ndsample<F, F, N> s5{ p3, srandom::randfloat<F>() };
-    ndsample<F, F, N> s6{ p2, srandom::randfloat<F>() };
+    ndsample<N, F, F> s1{ p1, srandom::randfloat<F>() };
+    ndsample<N, F, F> s2{ p2, srandom::randfloat<F>() };
+    ndsample<N, F, F> s3{ p3, srandom::randfloat<F>() };
+    ndsample<N, F, F> s4{ p4, srandom::randfloat<F>() };
+    ndsample<N, F, F> s5{ p3, srandom::randfloat<F>() };
+    ndsample<N, F, F> s6{ p2, srandom::randfloat<F>() };
     auto              samples = std::vector{ s1, s2, s3, s4, s5, s6 };
 
-    ndtree<F, F, N> tree(std::span{ samples }, 3, 1);
+    ndtree<N, F, F> tree(std::span{ samples }, 3, 1);
     std::cout << tree;
 
     return EXIT_SUCCESS;
@@ -55,30 +55,30 @@ int debug()
     param_type     params(0.25f);
     distribution_t d(params);
 
-    const ndpoint<F, N> d1 = { 10, 10, 10, 10 };
-    const ndpoint<F, N> d2 = { -10, -10, -10, -10 };
+    const ndpoint<N, F> d1 = { 10, 10, 10, 10 };
+    const ndpoint<N, F> d2 = { -10, -10, -10, -10 };
 
-    std::vector<ndsample<F, F, N>> samples;
+    std::vector<ndsample<N, F, F>> samples;
     samples.reserve(K);
     for (auto i = 0; i != K; ++i)
     {
-        samples.push_back(ndsample<F, F, N>(ndpoint<F, N>{ d(), d(), d(), d() }, d()));
+        samples.push_back(ndsample<N, F, F>(ndpoint<N, F>{ d(), d(), d(), d() }, d()));
     }
 
-    const ndpoint<F, N> p1 = { srandom::randfloat<F>(),
+    const ndpoint<N, F> p1 = { srandom::randfloat<F>(),
                                srandom::randfloat<F>(),
                                srandom::randfloat<F>(),
                                srandom::randfloat<F>() };
 
-    const ndpoint<F, N> p2 = { srandom::randfloat<F>(),
+    const ndpoint<N, F> p2 = { srandom::randfloat<F>(),
                                srandom::randfloat<F>(),
                                srandom::randfloat<F>(),
                                srandom::randfloat<F>() };
-    const ndpoint<F, N> p3 = { srandom::randfloat<F>(),
+    const ndpoint<N, F> p3 = { srandom::randfloat<F>(),
                                srandom::randfloat<F>(),
                                srandom::randfloat<F>(),
                                srandom::randfloat<F>() };
-    const ndpoint<F, N> p4 = { srandom::randfloat<F>(),
+    const ndpoint<N, F> p4 = { srandom::randfloat<F>(),
                                srandom::randfloat<F>(),
                                srandom::randfloat<F>(),
                                srandom::randfloat<F>() };
@@ -93,7 +93,7 @@ int debug()
     std::cout << detail::count_in(std::array{ p1, p1, p4, p3 }, ndboundary{ d1, d2 })
               << '\n';
 
-    ndtree<F, F, N> tree(std::span{ samples }, 10, 3, ndboundary<F, N>{ d2, d1 });
+    ndtree<N, F, F> tree(std::span{ samples }, 10, 3, ndboundary<N, F>{ d2, d1 });
     std::cout << tree;
 
     return EXIT_SUCCESS;

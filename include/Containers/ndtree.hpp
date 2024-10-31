@@ -20,14 +20,12 @@
 #include <iostream>
 #endif
 
-#define NDTREE_MAX_DIMENSIONS 64 // Because of how I compute the boundaries in
-
-// subdivisions
+#define NDTREE_MAX_DIMENSIONS 64 // Because of how boundary subdivisions are computed
 
 namespace ndt
 {
 
-template <std::floating_point F, std::size_t N>
+template <std::size_t N, std::floating_point F>
 struct ndpoint
 {
     using value_type                         = F;
@@ -75,11 +73,11 @@ struct ndpoint
     container_t value;
 };
 
-template <std::floating_point F, std::size_t N>
+template <std::size_t N, std::floating_point F>
 class ndboundary
 {
 public:
-    using point_t                            = ndpoint<F, N>;
+    using point_t                            = ndpoint<N, F>;
     using value_type                         = typename point_t::value_type;
     inline static constexpr auto s_dimension = point_t::s_dimension;
     using index_t                            = std::remove_const_t<decltype(s_dimension)>;
@@ -133,18 +131,18 @@ private:
     point_t m_max;
 };
 
-template <typename T, std::floating_point F, std::size_t N>
+template <std::size_t N, std::floating_point F, typename T>
 struct ndsample
 {
-    using position_t                         = ndpoint<F, N>;
+    using position_t                         = ndpoint<N, F>;
     using value_type                         = T;
     inline static constexpr auto s_dimension = position_t::s_dimension;
     position_t                   position;
     value_type                   properties;
 };
 
-template <std::floating_point F, std::size_t N>
-auto operator<<(std::ostream& os, ndpoint<F, N> p) -> std::ostream&
+template <std::size_t N, std::floating_point F>
+auto operator<<(std::ostream& os, ndpoint<N, F> p) -> std::ostream&
 {
     os << "{ ";
     for (auto e : p)
@@ -153,8 +151,8 @@ auto operator<<(std::ostream& os, ndpoint<F, N> p) -> std::ostream&
     return os;
 }
 
-template <std::floating_point F, std::size_t N>
-auto operator<<(std::ostream& os, ndboundary<F, N> b) -> std::ostream&
+template <std::size_t N, std::floating_point F>
+auto operator<<(std::ostream& os, ndboundary<N, F> b) -> std::ostream&
 {
     os << "{ " << b.min() << " }, { " << b.max() << " }";
     return os;
@@ -190,7 +188,7 @@ namespace detail
 
 template <std::floating_point F, std::size_t N>
 [[nodiscard]]
-auto in(ndpoint<F, N> const& p, ndboundary<F, N> const& b) noexcept -> bool
+auto in(ndpoint<N, F> const& p, ndboundary<N, F> const& b) noexcept -> bool
 {
     for (auto i = decltype(N){ 0 }; i != N; ++i)
     {
@@ -206,7 +204,7 @@ template <std::floating_point F, std::size_t N>
 [[nodiscard]]
 auto count_in(
     std::ranges::range auto const& collection,
-    ndboundary<F, N> const&        b
+    ndboundary<N, F> const&        b
 ) noexcept -> std::size_t
 {
     return std::ranges::count_if(collection, [b](auto const& p) { return in(p, b); });
@@ -230,7 +228,7 @@ auto compute_limits(std::ranges::range auto const& data) noexcept
         min[i] = bounds.min;
         max[i] = bounds.max;
     }
-    return ndboundary<typename point_t::value_type, point_t::s_dimension>{ min, max };
+    return ndboundary<point_t::s_dimension, typename point_t::value_type>{ min, max };
 }
 
 [[nodiscard]]
@@ -243,17 +241,17 @@ auto compute_limits(std::ranges::range auto const& data) noexcept
 }
 } // namespace detail
 
-template <typename T, std::floating_point F, std::size_t N>
+template <std::size_t N, std::floating_point F, typename T>
 class ndbox
 {
 public:
-    using point_t                            = ndpoint<F, N>;
+    using point_t                            = ndpoint<N, F>;
     inline static constexpr auto s_dimension = point_t::s_dimension;
 
 public:
-    using boundary_t = ndboundary<F, s_dimension>;
-    using sample_t   = ndsample<T, F, s_dimension>;
-    using box_t      = ndbox<T, F, s_dimension>;
+    using boundary_t = ndboundary<s_dimension, F>;
+    using sample_t   = ndsample<s_dimension, F, T>;
+    using box_t      = ndbox<s_dimension, F, T>;
     using depth_t    = int;
 
 public:
@@ -442,12 +440,12 @@ private:
     depth_t                                                  m_depth;
 };
 
-template <typename Value_Type, std::floating_point Position_Impl_Type, std::size_t N>
+template <std::size_t N, std::floating_point Position_Impl_Type, typename Value_Type>
     requires(N > 0 && N < NDTREE_MAX_DIMENSIONS)
 class ndtree
 {
 public:
-    using sample_t   = ndsample<Value_Type, Position_Impl_Type, N>;
+    using sample_t   = ndsample<N, Position_Impl_Type, Value_Type>;
     using position_t = typename sample_t::position_t;
     using value_type = typename sample_t::value_type;
     using size_type  = std::size_t;
@@ -458,9 +456,9 @@ public:
 
 public:
     using box_t =
-        ndbox<value_type, typename position_t::value_type, position_t::s_dimension>;
-    using point_t    = ndpoint<typename position_t::value_type, s_dimension>;
-    using boundary_t = ndboundary<typename position_t::value_type, s_dimension>;
+        ndbox<position_t::s_dimension, typename position_t::value_type, value_type>;
+    using point_t    = ndpoint<s_dimension, typename position_t::value_type>;
+    using boundary_t = ndboundary<s_dimension, typename position_t::value_type>;
     template <typename T>
     using container = std::vector<T>;
 
@@ -521,8 +519,8 @@ private:
     size_type           m_capacity;
 };
 
-template <typename T, std::floating_point F, std::size_t N>
-auto operator<<(std::ostream& os, ndtree<T, F, N> const& tree) -> std::ostream&
+template <std::size_t N, std::floating_point F, typename T>
+auto operator<<(std::ostream& os, ndtree<N, F, T> const& tree) -> std::ostream&
 {
     tree.print_info(os);
     tree.box().print_info(os);
