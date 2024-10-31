@@ -1,66 +1,88 @@
-#include <iostream>
-#include <string>
-#include <vector>
+#include "../include/PhysicalModel/particle.hpp"
+#include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
-#include <chrono>
+#include <iostream>
+#include <string>
+#include <vector>
 
 
 using namespace std;
 
-//g++ -std=c++11 worksheet_1.cpp -o output `pkg-config --cflags'
+// g++ -std=c++11 worksheet_1.cpp -o output `pkg-config --cflags'
 
 // NOTE: a random vector with 3D entries is FLAT
 void generateRandomVector(
-    int n,
-    vector<float>& return_vec,  
-    float lower_bound, 
-    float upper_bound,
-    bool is3D) 
+    int            n,
+    vector<float>& return_vec,
+    float          lower_bound,
+    float          upper_bound,
+    bool           is3D
+)
+{
+    float ran_float;
+    float ran_number_in_bounds;
+
+    int   num_dim = ((int)is3D) * 2 + 1;
+    float dif     = upper_bound - lower_bound;
+    for (int i = 0; i < n; ++i)
     {
-        float ran_float;
-        float ran_number_in_bounds;
+        for (int cur_dim = 0; cur_dim < num_dim; ++cur_dim)
+        {
+            // generates ran float between 0.0 and 1.0 with resolution of e-3
+            ran_float = ((float)(rand() % 1000)) / 1000.f;
 
-        int num_dim = ((int) is3D) * 2 + 1;
-        float dif = upper_bound - lower_bound;
-        for (int i = 0; i < n; ++i) {
-            for (int cur_dim = 0; cur_dim < num_dim; ++cur_dim) {
-                // generates ran float between 0.0 and 1.0 with resolution of e-3
-                ran_float = ((float)(rand() % 1000)) / 1000.0;
-
-                ran_number_in_bounds = ran_float * dif + lower_bound;
-                return_vec.push_back(ran_number_in_bounds);
-            }
+            ran_number_in_bounds = ran_float * dif + lower_bound;
+            return_vec.push_back(ran_number_in_bounds);
         }
+    }
 }
 
 void generateAllFields(
-    int n,
-    vector<float>& mass, 
-    vector<float>& velocity, 
-    vector<float>& position)
-    {
-        float mass_lower = 1.0;
-        float mass_upper = 10.0;
+    int                             n,
+    vector<float>&                  mass,
+    [[maybe_unused]] vector<float>& velocity,
+    [[maybe_unused]] vector<float>& position
+)
+{
+    float mass_lower = 1.0;
+    float mass_upper = 10.0;
 
-        float velocity_lower = -3.0;
-        float velocity_upper = 3.0;
+    float velocity_lower = -3.0;
+    float velocity_upper = 3.0;
 
-        float position_lower = -100;
-        float position_upper = 100;
+    float position_lower = -100;
+    float position_upper = 100;
 
-        generateRandomVector(n, mass, mass_lower, mass_upper, false);
-        generateRandomVector(n, mass, velocity_lower, velocity_upper, true);
-        generateRandomVector(n, mass, position_lower, position_upper, true);
+    generateRandomVector(n, mass, mass_lower, mass_upper, false);
+    generateRandomVector(n, mass, velocity_lower, velocity_upper, true);
+    generateRandomVector(n, mass, position_lower, position_upper, true);
 }
 
-int main() {
+int main0()
+{
     vector<float> mass;
     vector<float> velocity;
     vector<float> position;
-    int n = 100;
+    int           n = 100;
     generateAllFields(n, mass, velocity, position);
 
     return 0;
+}
+
+int main()
+{
+    using F                 = float;
+    static constexpr auto N = 3;
+
+    using particle_properties_t = particle::properties<N, float>;
+    particle_properties_t pp(
+        ndt::ndpoint<N, F>{ 1.f, 2.f, 3.5f },
+        pm::mass<F>{ 5.f },
+        pm::linear_velocity<F>{ 1.f },
+        pm::linear_acceleration<F>{ 0.2f }
+    );
+
+    std::cout << pp;
 }

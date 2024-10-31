@@ -8,7 +8,7 @@
 namespace utility::concepts
 {
 
-namespace initializable_impl
+namespace initializable::detail
 {
 template <typename T>
 concept initializable_concept = requires { T::init(); };
@@ -27,10 +27,10 @@ struct is_initializable<T> : std::true_type
 template <typename T>
 inline constexpr bool is_initializable_v = is_initializable<T>::value;
 
-} // namespace initializable_impl
+} // namespace initializable::detail
 
-using initializable_impl::is_initializable;
-using initializable_impl::is_initializable_v;
+using initializable::detail::is_initializable;
+using initializable::detail::is_initializable_v;
 
 template <typename T>
 concept arithmetic = std::is_arithmetic_v<T>;
