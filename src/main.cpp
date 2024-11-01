@@ -91,12 +91,14 @@ int particle_test()
                                 utility::random::srandom::randfloat<F>() },
             // operator*(mass, F)
             pm::mass<F>{ utility::random::srandom::randfloat<F>() * F{ 20 } },
-            pm::linear_velocity<N, F>{ -utility::random::srandom::randfloat<F>(),
+            pm::linear_velocity<N, F>{ F{ 100.f } *
+                                           -utility::random::srandom::randfloat<F>(),
                                        -utility::random::srandom::randfloat<F>(),
                                        -utility::random::srandom::randfloat<F>() },
 
             pm::linear_acceleration<N, F>{ utility::random::srandom::randfloat<F>(),
-                                           utility::random::srandom::randfloat<F>(),
+                                           utility::random::srandom::randfloat<F>() /
+                                               F{ 10 },
                                            utility::random::srandom::randfloat<F>() }
         );
     }
