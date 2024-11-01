@@ -1,6 +1,7 @@
 #ifndef INCLUDED_PHYSICAL_MAGNIFUDES
 #define INCLUDED_PHYSICAL_MAGNIFUDES
 
+#include "casts.hpp"
 #include <iostream>
 #include <string_view>
 #include <type_traits>
@@ -19,102 +20,20 @@ enum struct PhysicalMagnitudeUnits
     kg,
 };
 
-template <std::floating_point F, PhysicalMagnitudeUnits Units>
+template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits Units>
 struct physical_magnitude
-{
-    using value_type                   = F;
-    inline static constexpr auto units = Units;
-    value_type                   value;
-    [[nodiscard]]
-    constexpr auto operator<=>(physical_magnitude const&) const = default;
-};
-
-template <std::floating_point F>
-using distance = physical_magnitude<F, PhysicalMagnitudeUnits::m>;
-template <std::floating_point F>
-using linear_velocity = physical_magnitude<F, PhysicalMagnitudeUnits::m_s>;
-template <std::floating_point F>
-using linear_acceleration = physical_magnitude<F, PhysicalMagnitudeUnits::m_s2>;
-template <std::floating_point F>
-using angular_position = physical_magnitude<F, PhysicalMagnitudeUnits::rad>;
-template <std::floating_point F>
-using angular_velocity = physical_magnitude<F, PhysicalMagnitudeUnits::rad_s>;
-template <std::floating_point F>
-using angular_acceleration = physical_magnitude<F, PhysicalMagnitudeUnits::rad_s2>;
-template <std::floating_point F>
-using mass = physical_magnitude<F, PhysicalMagnitudeUnits::kg>;
-
-template <std::floating_point F, PhysicalMagnitudeUnits U>
-auto operator+(physical_magnitude<F, U> const pma, physical_magnitude<F, U> pmb) noexcept
-    -> physical_magnitude<F, U>
-{
-    return pma.value + pmb.value;
-}
-
-template <std::floating_point F, PhysicalMagnitudeUnits U>
-auto operator-(physical_magnitude<F, U> const pma, physical_magnitude<F, U> pmb) noexcept
-    -> physical_magnitude<F, U>
-{
-    return pma.value - pmb.value;
-}
-
-template <std::floating_point F, PhysicalMagnitudeUnits U>
-auto operator*(physical_magnitude<F, U> const pm, F scalar) noexcept
-    -> physical_magnitude<F, U>
-{
-    return pm.value * scalar;
-}
-
-template <std::floating_point F, PhysicalMagnitudeUnits U>
-auto operator/(physical_magnitude<F, U> const pm, F scalar) noexcept
-    -> physical_magnitude<F, U>
-{
-    return pm.value / scalar;
-}
-
-template <std::size_t N, std::floating_point F>
-struct position
 {
     using value_type                         = F;
     inline static constexpr auto s_dimension = N;
-    using container_t                        = std::array<value_type, s_dimension>;
+    inline static constexpr auto units       = Units;
+    using container_t                        = std::array<value_type, N>;
+    container_t value;
 
     [[nodiscard]]
-    auto operator[](std::integral auto idx) -> value_type&
+    auto operator[](this auto&& self, std::integral auto idx) -> decltype(auto)
     {
-        assert(idx < N);
-        return value[idx];
-    }
-
-    [[nodiscard]]
-    auto operator[](std::integral auto idx) const -> value_type
-    {
-        assert(idx < N);
-        return value[idx];
-    }
-
-    [[nodiscard]]
-    auto begin() const -> container_t::const_iterator
-    {
-        return std::begin(value);
-    }
-
-    [[nodiscard]]
-    auto begin() -> container_t::iterator
-    {
-        return std::begin(value);
-    }
-
-    [[nodiscard]]
-    auto end() const -> container_t::const_iterator
-    {
-        return std::end(value);
-    }
-
-    [[nodiscard]]
-    auto end() -> container_t::iterator
-    {
-        return std::end(value);
+        assert(idx < utility::casts::safe_cast<decltype(idx)>(self.s_dimension));
+        return std::forward<decltype(self)>(self).value[idx];
     }
 
     [[nodiscard]]
@@ -129,11 +48,84 @@ struct position
         return std::cend(value);
     }
 
-    container_t value;
+    [[nodiscard]]
+    auto begin(this auto&& self) -> decltype(auto)
+    {
+        return std::begin(std::forward<decltype(self)>(self).value);
+    }
+
+    [[nodiscard]]
+    auto end(this auto&& self) -> decltype(auto)
+    {
+        return std::end(std::forward<decltype(self)>(self).value);
+    }
+
+    [[nodiscard]]
+    constexpr auto operator<=>(physical_magnitude const&) const = default;
 };
 
-template <std::floating_point F, PhysicalMagnitudeUnits U>
-auto operator<<(std::ostream& os, physical_magnitude<F, U> const pm) noexcept
+template <std::floating_point F, PhysicalMagnitudeUnits Units>
+struct physical_magnitude<1, F, Units>
+{
+    using value_type                         = F;
+    inline static constexpr auto s_dimension = 1;
+    inline static constexpr auto units       = Units;
+    value_type                   value;
+    [[nodiscard]]
+    constexpr auto operator<=>(physical_magnitude const&) const = default;
+};
+
+template <std::size_t N, std::floating_point F>
+using position = physical_magnitude<N, F, PhysicalMagnitudeUnits::m>;
+template <std::size_t N, std::floating_point F>
+using distance = physical_magnitude<N, F, PhysicalMagnitudeUnits::m>;
+template <std::size_t N, std::floating_point F>
+using linear_velocity = physical_magnitude<N, F, PhysicalMagnitudeUnits::m_s>;
+template <std::size_t N, std::floating_point F>
+using angular_position = physical_magnitude<N, F, PhysicalMagnitudeUnits::rad>;
+template <std::size_t N, std::floating_point F>
+using linear_acceleration = physical_magnitude<N, F, PhysicalMagnitudeUnits::m_s2>;
+template <std::size_t N, std::floating_point F>
+using angular_velocity = physical_magnitude<N, F, PhysicalMagnitudeUnits::rad_s>;
+template <std::size_t N, std::floating_point F>
+using angular_acceleration = physical_magnitude<N, F, PhysicalMagnitudeUnits::rad_s2>;
+template <std::floating_point F>
+using mass = physical_magnitude<1, F, PhysicalMagnitudeUnits::kg>;
+
+template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits U>
+auto operator+(
+    physical_magnitude<N, F, U> const pma,
+    physical_magnitude<N, F, U>       pmb
+) noexcept -> physical_magnitude<N, F, U>
+{
+    return pma.value + pmb.value;
+}
+
+template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits U>
+auto operator-(
+    physical_magnitude<N, F, U> const pma,
+    physical_magnitude<N, F, U>       pmb
+) noexcept -> physical_magnitude<N, F, U>
+{
+    return pma.value - pmb.value;
+}
+
+template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits U>
+auto operator*(physical_magnitude<N, F, U> const pm, F scalar) noexcept
+    -> physical_magnitude<N, F, U>
+{
+    return pm.value * scalar;
+}
+
+template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits U>
+auto operator/(physical_magnitude<N, F, U> const pm, F scalar) noexcept
+    -> physical_magnitude<N, F, U>
+{
+    return pm.value / scalar;
+}
+
+template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits U>
+auto operator<<(std::ostream& os, physical_magnitude<N, F, U> const pm) noexcept
     -> std::ostream&
 {
     constexpr auto unit_name = [](PhysicalMagnitudeUnits unit
@@ -143,7 +135,7 @@ auto operator<<(std::ostream& os, physical_magnitude<F, U> const pm) noexcept
         case PhysicalMagnitudeUnits::m: return "m";
         case PhysicalMagnitudeUnits::m_s: return "m/s";
         case PhysicalMagnitudeUnits::m_s2: return "m/s^2";
-        case PhysicalMagnitudeUnits::rad: return "rad";
+        case PhysicalMagnitudeUnits::rad: return "rad/s";
         case PhysicalMagnitudeUnits::rad_s: return "rad/s";
         case PhysicalMagnitudeUnits::rad_s2: return "rad/s^2";
         case PhysicalMagnitudeUnits::kg: return "kg";
@@ -151,17 +143,19 @@ auto operator<<(std::ostream& os, physical_magnitude<F, U> const pm) noexcept
         }
     };
     constexpr auto unit = unit_name(U); // Force compile time evaluation
-    os << pm.value << '[' << unit << ']';
-    return os;
-}
-
-template <std::size_t N, std::floating_point F>
-auto operator<<(std::ostream& os, position<N, F> const& p) -> std::ostream&
-{
-    os << "{ ";
-    for (auto const& e : p)
-        os << e << ", ";
-    os << "}";
+    if constexpr (N == 1)
+    {
+        os << pm.value << '[' << unit << ']';
+    }
+    else
+    {
+        os << "{ ";
+        for (auto const v : pm.value)
+        {
+            os << v << ", ";
+        }
+        os << "}[" << unit << ']';
+    }
     return os;
 }
 

@@ -17,8 +17,8 @@ public:
     inline static constexpr auto s_dimension = N;
     using position_t                         = pm::position<s_dimension, value_type>;
     using mass_t                             = pm::mass<value_type>;
-    using velocity_t                         = pm::linear_velocity<value_type>;
-    using acceleration_t                     = pm::linear_acceleration<value_type>;
+    using velocity_t     = pm::linear_velocity<s_dimension, value_type>;
+    using acceleration_t = pm::linear_acceleration<s_dimension, value_type>;
 
 public:
     constexpr ndparticle(

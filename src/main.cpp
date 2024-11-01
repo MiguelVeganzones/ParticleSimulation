@@ -90,8 +90,13 @@ int particle_test()
                                 utility::random::srandom::randfloat<F>(),
                                 utility::random::srandom::randfloat<F>() },
             pm::mass<F>{ F{ 10 } * utility::random::srandom::randfloat<F>() },
-            pm::linear_velocity<F>{ -utility::random::srandom::randfloat<F>() },
-            pm::linear_acceleration<F>{ -utility::random::srandom::randfloat<F>() }
+            pm::linear_velocity<N, F>{ -utility::random::srandom::randfloat<F>(),
+                                       -utility::random::srandom::randfloat<F>(),
+                                       -utility::random::srandom::randfloat<F>() },
+
+            pm::linear_acceleration<N, F>{ utility::random::srandom::randfloat<F>(),
+                                           utility::random::srandom::randfloat<F>(),
+                                           utility::random::srandom::randfloat<F>() }
         );
     }
 
@@ -99,7 +104,7 @@ int particle_test()
     {
         std::cout << "Sample: " << i++ << '\n' << s << '\n';
     }
-    ndtree<sample_t> tree(std::span{ samples }, 5, 1);
+    ndtree<sample_t> tree(std::span{ samples }, 5, 4);
     std::cout << tree;
 
     return EXIT_SUCCESS;
