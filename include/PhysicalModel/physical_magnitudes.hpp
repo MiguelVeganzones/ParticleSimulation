@@ -2,6 +2,8 @@
 #define INCLUDED_PHYSICAL_MAGNIFUDES
 
 #include "casts.hpp"
+#include <concepts>
+#include <functional>
 #include <iostream>
 #include <string_view>
 #include <type_traits>
@@ -20,12 +22,19 @@ enum struct PhysicalMagnitudeUnits
     kg,
 };
 
+template <typename T>
+concept physical_magnitude_concept = requires {
+    T::s_dimension;
+    T::units;
+    typename T::value_type;
+};
+
 template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits Units>
 struct physical_magnitude
 {
     using value_type                         = F;
     inline static constexpr auto s_dimension = N;
-    inline static constexpr auto units       = Units;
+    inline static constexpr auto s_units     = Units;
     using container_t                        = std::array<value_type, N>;
     container_t value;
 
@@ -69,7 +78,7 @@ struct physical_magnitude<1, F, Units>
 {
     using value_type                         = F;
     inline static constexpr auto s_dimension = 1;
-    inline static constexpr auto units       = Units;
+    inline static constexpr auto s_units     = Units;
     value_type                   value;
     [[nodiscard]]
     constexpr auto operator<=>(physical_magnitude const&) const = default;
@@ -92,36 +101,86 @@ using angular_acceleration = physical_magnitude<N, F, PhysicalMagnitudeUnits::ra
 template <std::floating_point F>
 using mass = physical_magnitude<1, F, PhysicalMagnitudeUnits::kg>;
 
-template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits U>
-auto operator+(
-    physical_magnitude<N, F, U> const pma,
-    physical_magnitude<N, F, U>       pmb
-) noexcept -> physical_magnitude<N, F, U>
+auto operator+(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
 {
-    return pma.value + pmb.value;
+    return operator_impl(
+        std::forward<decltype(pma)>(pma), std::forward<decltype(pmb)>(pmb), std::plus<>{}
+    );
 }
 
-template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits U>
-auto operator-(
-    physical_magnitude<N, F, U> const pma,
-    physical_magnitude<N, F, U>       pmb
-) noexcept -> physical_magnitude<N, F, U>
+auto operator-(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
 {
-    return pma.value - pmb.value;
+    return operator_impl(
+        std::forward<decltype(pma)>(pma), std::forward<decltype(pmb)>(pmb), std::minus<>{}
+    );
 }
 
-template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits U>
-auto operator*(physical_magnitude<N, F, U> const pm, F scalar) noexcept
-    -> physical_magnitude<N, F, U>
+auto operator*(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
 {
-    return pm.value * scalar;
+    return operator_impl(
+        std::forward<decltype(pma)>(pma),
+        std::forward<decltype(pmb)>(pmb),
+        std::multiplies<>{}
+    );
 }
 
-template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits U>
-auto operator/(physical_magnitude<N, F, U> const pm, F scalar) noexcept
-    -> physical_magnitude<N, F, U>
+auto operator/(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
 {
-    return pm.value / scalar;
+    return operator_impl(
+        std::forward<decltype(pma)>(pma),
+        std::forward<decltype(pmb)>(pmb),
+        std::divides<>{}
+    );
+}
+
+auto operator_impl(auto&& pma, auto&& pmb, auto&& binary_op) noexcept -> decltype(auto)
+    requires(
+        (std::is_floating_point_v<decltype(pma)> &&
+         physical_magnitude_concept<decltype(pmb)>) ||
+        (physical_magnitude_concept<decltype(pma)> &&
+         std::is_floating_point_v<decltype(pmb)>) ||
+        (physical_magnitude_concept<decltype(pma)> &&
+         physical_magnitude_concept<decltype(pmb)> &&
+         decltype(pma)::s_units == decltype(pmb)::s_units)
+    )
+{
+    constexpr auto at_idx = [](auto&&             v,
+                               std::integral auto idx) noexcept -> decltype(auto) {
+        if constexpr (std::ranges::range<decltype(v)>)
+        {
+            return v[idx];
+        }
+        else
+        {
+            return v;
+        }
+    };
+    if constexpr (std::ranges::range<decltype(pma)>)
+    {
+        decltype(pma) ret;
+        for (auto i = decltype(decltype(pma)::s_dimension){ 0 };
+             i != decltype(pma)::s_dimension;
+             ++i)
+        {
+            ret[i] = binary_op(pma[i], at_idx(pmb, i));
+        }
+        return ret;
+    }
+    else if constexpr (std::ranges::range<decltype(pmb)>)
+    {
+        decltype(pmb) ret;
+        for (auto i = decltype(decltype(pmb)::s_dimension){ 0 };
+             i != decltype(pmb)::s_dimension;
+             ++i)
+        {
+            ret[i] = binary_op(at_idx(pma, i), pmb[i]);
+        }
+        return ret;
+    }
+    else
+    {
+        utility::error_handling::assert_unreachable();
+    }
 }
 
 template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits U>

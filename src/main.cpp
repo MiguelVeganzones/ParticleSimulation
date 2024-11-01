@@ -80,7 +80,7 @@ int particle_test()
     static constexpr auto N = 3;
     using sample_t          = particle::ndparticle<N, float>;
 
-    const auto            size = 500;
+    const auto            size = 30;
     std::vector<sample_t> samples;
 
     for (auto _ : std::views::iota(0, size))
@@ -89,7 +89,8 @@ int particle_test()
             pm::position<N, F>{ utility::random::srandom::randfloat<F>(),
                                 utility::random::srandom::randfloat<F>(),
                                 utility::random::srandom::randfloat<F>() },
-            pm::mass<F>{ F{ 10 } * utility::random::srandom::randfloat<F>() },
+            // operator*(mass, F)
+            pm::mass<F>{ utility::random::srandom::randfloat<F>() * F{ 20 } },
             pm::linear_velocity<N, F>{ -utility::random::srandom::randfloat<F>(),
                                        -utility::random::srandom::randfloat<F>(),
                                        -utility::random::srandom::randfloat<F>() },
