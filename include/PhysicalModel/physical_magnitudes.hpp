@@ -24,9 +24,9 @@ enum struct PhysicalMagnitudeUnits
 
 template <typename T>
 concept physical_magnitude_concept = requires {
-    T::s_dimension;
-    T::units;
-    typename T::value_type;
+    std::remove_reference_t<T>::s_dimension;
+    std::remove_reference_t<T>::s_units;
+    typename std::remove_reference_t<T>::value_type;
 };
 
 template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits Units>
@@ -133,15 +133,13 @@ auto operator/(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
     );
 }
 
-auto operator_impl(auto&& pma, auto&& pmb, auto&& binary_op) noexcept -> decltype(auto)
+template <typename T1, typename T2>
+auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(auto)
     requires(
-        (std::is_floating_point_v<decltype(pma)> &&
-         physical_magnitude_concept<decltype(pmb)>) ||
-        (physical_magnitude_concept<decltype(pma)> &&
-         std::is_floating_point_v<decltype(pmb)>) ||
-        (physical_magnitude_concept<decltype(pma)> &&
-         physical_magnitude_concept<decltype(pmb)> &&
-         decltype(pma)::s_units == decltype(pmb)::s_units)
+        (std::is_floating_point_v<T1> && physical_magnitude_concept<T2>) ||
+        (physical_magnitude_concept<T1> && std::is_floating_point_v<T2>) ||
+        (physical_magnitude_concept<T1> && physical_magnitude_concept<T2> &&
+         T1::s_units == T2::s_units)
     )
 {
     constexpr auto at_idx = [](auto&&             v,
@@ -157,10 +155,8 @@ auto operator_impl(auto&& pma, auto&& pmb, auto&& binary_op) noexcept -> decltyp
     };
     if constexpr (std::ranges::range<decltype(pma)>)
     {
-        decltype(pma) ret;
-        for (auto i = decltype(decltype(pma)::s_dimension){ 0 };
-             i != decltype(pma)::s_dimension;
-             ++i)
+        T1 ret{};
+        for (auto i = decltype(T1::s_dimension){ 0 }; i != T1::s_dimension; ++i)
         {
             ret[i] = binary_op(pma[i], at_idx(pmb, i));
         }
@@ -168,10 +164,8 @@ auto operator_impl(auto&& pma, auto&& pmb, auto&& binary_op) noexcept -> decltyp
     }
     else if constexpr (std::ranges::range<decltype(pmb)>)
     {
-        decltype(pmb) ret;
-        for (auto i = decltype(decltype(pmb)::s_dimension){ 0 };
-             i != decltype(pmb)::s_dimension;
-             ++i)
+        T2 ret{};
+        for (auto i = decltype(T2::s_dimension){ 0 }; i != T2::s_dimension; ++i)
         {
             ret[i] = binary_op(at_idx(pma, i), pmb[i]);
         }

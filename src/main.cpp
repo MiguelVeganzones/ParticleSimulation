@@ -88,7 +88,8 @@ int particle_test()
         samples.emplace_back(
             pm::position<N, F>{ utility::random::srandom::randfloat<F>(),
                                 utility::random::srandom::randfloat<F>(),
-                                utility::random::srandom::randfloat<F>() },
+                                utility::random::srandom::randfloat<F>() } *
+                F{ 3 },
             // operator*(mass, F)
             pm::mass<F>{ utility::random::srandom::randfloat<F>() * F{ 20 } },
             pm::linear_velocity<N, F>{ F{ 100.f } *
