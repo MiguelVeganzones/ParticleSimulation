@@ -188,11 +188,11 @@ auto operator<<(std::ostream& os, physical_magnitude<N, F, U> const pm) noexcept
         case PhysicalMagnitudeUnits::m: return "m";
         case PhysicalMagnitudeUnits::m_s: return "m/s";
         case PhysicalMagnitudeUnits::m_s2: return "m/s^2";
-        case PhysicalMagnitudeUnits::rad: return "rad/s";
+        case PhysicalMagnitudeUnits::rad: return "rad";
         case PhysicalMagnitudeUnits::rad_s: return "rad/s";
         case PhysicalMagnitudeUnits::rad_s2: return "rad/s^2";
         case PhysicalMagnitudeUnits::kg: return "kg";
-        default: return "unknown";
+        default: return "??";
         }
     };
     constexpr auto unit = unit_name(U); // Force compile time evaluation
