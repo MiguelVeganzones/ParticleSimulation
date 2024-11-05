@@ -2,6 +2,7 @@
 #define INCLUDED_PHYSICAL_MAGNIFUDES
 
 #include "casts.hpp"
+#include "unit_system.hpp"
 #include <concepts>
 #include <functional>
 #include <iostream>
@@ -11,22 +12,11 @@
 namespace pm
 {
 
-enum struct PhysicalMagnitudeUnits
-{
-    m,
-    m_s,
-    m_s2,
-    rad, // Radians are adimensional... Look away
-    rad_s,
-    rad_s2,
-    kg,
-};
-
 template <typename T>
-concept physical_magnitude_concept = requires {
-    std::remove_reference_t<T>::s_dimension;
-    std::remove_reference_t<T>::s_units;
-    typename std::remove_reference_t<T>::value_type;
+concept physical_magnitude_concept = requires(T t) {
+    T::s_dimension;
+    T::s_units;
+    typename T::value_type;
 };
 
 template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits Units>
@@ -142,23 +132,22 @@ auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(au
          T1::s_units == T2::s_units)
     )
 {
-    constexpr auto at_idx = [](auto&&             v,
-                               std::integral auto idx) noexcept -> decltype(auto) {
-        if constexpr (std::ranges::range<decltype(v)>)
+    if constexpr (std::ranges::range<decltype(pma)> && std::ranges::range<decltype(pmb)>)
+    {
+        static_assert(T1::s_dimension == T2::s_dimension);
+        T1 ret{};
+        for (auto i = decltype(T1::s_dimension){ 0 }; i != T1::s_dimension; ++i)
         {
-            return v[idx];
+            ret[i] = binary_op(pma[i], pmb[i]);
         }
-        else
-        {
-            return v;
-        }
-    };
-    if constexpr (std::ranges::range<decltype(pma)>)
+        return ret;
+    }
+    else if constexpr (std::ranges::range<decltype(pma)>)
     {
         T1 ret{};
         for (auto i = decltype(T1::s_dimension){ 0 }; i != T1::s_dimension; ++i)
         {
-            ret[i] = binary_op(pma[i], at_idx(pmb, i));
+            ret[i] = binary_op(pma[i], pmb);
         }
         return ret;
     }
@@ -167,7 +156,7 @@ auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(au
         T2 ret{};
         for (auto i = decltype(T2::s_dimension){ 0 }; i != T2::s_dimension; ++i)
         {
-            ret[i] = binary_op(at_idx(pma, i), pmb[i]);
+            ret[i] = binary_op(pma, pmb[i]);
         }
         return ret;
     }
@@ -181,35 +170,23 @@ template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits U>
 auto operator<<(std::ostream& os, physical_magnitude<N, F, U> const pm) noexcept
     -> std::ostream&
 {
-    constexpr auto unit_name = [](PhysicalMagnitudeUnits unit
-                               ) noexcept -> std::string_view {
-        switch (unit)
-        {
-        case PhysicalMagnitudeUnits::m: return "m";
-        case PhysicalMagnitudeUnits::m_s: return "m/s";
-        case PhysicalMagnitudeUnits::m_s2: return "m/s^2";
-        case PhysicalMagnitudeUnits::rad: return "rad";
-        case PhysicalMagnitudeUnits::rad_s: return "rad/s";
-        case PhysicalMagnitudeUnits::rad_s2: return "rad/s^2";
-        case PhysicalMagnitudeUnits::kg: return "kg";
-        default: return "??";
-        }
-    };
-    constexpr auto unit = unit_name(U); // Force compile time evaluation
     if constexpr (N == 1)
     {
-        os << pm.value << '[' << unit << ']';
+        os << pm.value << U;
     }
     else
     {
         os << "{ ";
+        std::size_t n{ 0 };
         for (auto const v : pm.value)
         {
-            os << v << ", ";
+            os << v << (++n > != N ? ", " : ' ');
         }
-        os << "}[" << unit << ']';
+        os << '}' << unit;
     }
-    return os;
+}
+
+return os;
 }
 
 } // namespace pm
