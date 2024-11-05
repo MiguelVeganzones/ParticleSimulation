@@ -24,12 +24,6 @@ struct unit_power
     static constexpr int      s_power = Power;
 };
 
-template <typename... Units>
-struct composite_unit
-{
-    inline static constexpr auto s_units = std::tuple<Units...>{};
-};
-
 template <typename U1, typename U2>
 struct is_same_unit : std::false_type
 {
@@ -39,29 +33,6 @@ template <BaseUnit Unit, int Power1, int Power2>
 struct is_same_unit<unit_power<Unit, Power1>, unit_power<Unit, Power2>> : std::true_type
 {
 };
-
-template <typename Unit, typename... Other_Units>
-struct in_parameter_pack
-{
-    inline static constexpr auto value =
-        std::disjunction_v<in_parameter_pack<Unit, Other_Units>...>;
-};
-
-template <typename Unit, typename Other_Unit>
-struct in_parameter_pack<Unit, Other_Unit> : is_same_unit<Unit, Other_Unit>
-{
-};
-
-template <std::size_t Idx, typename Head, typename... Rest>
-    requires(Idx >= 0 && Idx <= sizeof...(Rest))
-struct index_impl
-{
-    using type =
-        std::conditional_t<Idx == 0, Head, typename index_impl<Idx - 1, Rest...>::type>;
-};
-
-template <std::size_t Idx, typename... Units>
-using index_at_t = typename index_impl<Idx, Units...>::type;
 
 template <typename Unit, typename... Other_Units>
 struct merge_powers_impl;
@@ -84,13 +55,14 @@ struct merge_powers_impl<Unit, Other_Head, Other_Rest...>
             merge_powers_impl<Unit, Other_Rest...>::type::s_power>;
 };
 
-template <typename Unit, typename Head, typename... Tail>
-using merge_powers_t = typename merge_powers_impl<Unit, Head, Tail...>::type;
+template <typename Unit, typename... All_Units>
+using merge_powers_t = typename merge_powers_impl<Unit, All_Units...>::type;
 
 template <typename... Units>
 struct unit_pack
 {
-    using type = std::tuple<Units...>;
+    using type                          = std::tuple<Units...>;
+    inline static constexpr auto s_size = sizeof...(Units);
 };
 
 template <typename Unit, typename Pack>
@@ -120,10 +92,66 @@ struct unique_types_impl<unit_pack<T, Ts...>, Pack>
 template <typename Pack>
 using unique_types = typename unique_types_impl<Pack>::type;
 
-template <typename... Units>
-struct unit_merging_engine
+template <typename Unique_Units, typename All_Units, typename Result>
+struct merger
 {
-    using type = float;
+    using type = unit_pack<>;
+};
+
+template <
+    typename Unique_Units_Head,
+    typename... Unique_Units_Tail,
+    typename... All_Units,
+    typename... Result>
+struct merger<
+    unit_pack<Unique_Units_Head, Unique_Units_Tail...>,
+    unit_pack<All_Units...>,
+    unit_pack<Result...>>
+{
+    using merged_unit = merge_powers_t<Unique_Units_Head, All_Units...>;
+
+    using type = typename merger<
+        unit_pack<Unique_Units_Tail...>,
+        unit_pack<All_Units...>,
+        std::conditional_t<
+            merged_unit::s_power != 0,
+            typename append_unique<merged_unit, unit_pack<Result...>>::type,
+            unit_pack<Result...>>>::type;
+};
+
+template <typename Unique_Units_Head, typename... All_Units, typename... Result>
+struct merger<unit_pack<Unique_Units_Head>, unit_pack<All_Units...>, unit_pack<Result...>>
+{
+    using merged_unit = merge_powers_t<Unique_Units_Head, All_Units...>;
+    using type        = std::conditional_t<
+               merged_unit::s_power != 0,
+               typename append_unique<merged_unit, unit_pack<Result...>>::type,
+               unit_pack<Result...>>;
+};
+
+template <typename... Units>
+using unit_merging_engine_t =
+    merger<unique_types<unit_pack<Units...>>, unit_pack<Units...>, unit_pack<>>::type::
+        type;
+
+template <typename... Units>
+struct composite_unit
+{
+    inline static constexpr std::tuple sd_units = unit_merging_engine_t<Units...>{};
+    inline static constexpr auto       s_size   = std::tuple_size_v<decltype(sd_units)>;
+};
+
+template <typename, typename>
+struct is_same_composite_unit : std::false_type
+{
+};
+
+template <typename... Units1, typename... Units2>
+struct is_same_composite_unit<composite_unit<Units1...>, composite_unit<Units2...>>
+    : std::is_same<
+          decltype(composite_unit<Units1...>::sd_units),
+          decltype(composite_unit<Units2...>::sd_units)>
+{
 };
 
 template <BaseUnit Unit, int Power>
@@ -152,15 +180,15 @@ auto operator<<(std::ostream& os, unit_power<Unit, Power>) noexcept -> std::ostr
 template <typename... Units>
 auto operator<<(std::ostream& os, composite_unit<Units...>) noexcept -> std::ostream&
 {
-    using ug_t = composite_unit<Units...>;
+    using cu_t = composite_unit<Units...>;
     std::apply(
         [&os](auto... up) {
             os << '[';
             std::size_t n{ 0 };
-            ((os << up << (++n != sizeof...(Units) ? " " : "")), ...);
+            ((os << up << (++n != cu_t::s_size ? " " : "")), ...);
             os << ']';
         },
-        ug_t::s_units
+        cu_t::sd_units
     );
     return os;
 }
