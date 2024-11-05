@@ -25,69 +25,9 @@ int main()
     std::cout << mskg2{} << '\n';
     std::cout << merge_powers_t<meters, meters, meters, seconds_sq, meters>{} << '\n';
 
-    std::apply(
-        []<typename... Ts>(Ts const&... tupleArgs) {
-            std::cout << '[';
-            std::size_t n{ 0 };
-            ((std::cout << tupleArgs << (++n != sizeof...(Ts) ? " || " : "")), ...);
-            std::cout << ']';
-        },
-        unit_merging_engine_t<
-            meters,
-            meters,
-            meters,
-            seconds_sq,
-            seconds,
-            kilograms,
-            seconds_div_sq>{}
-    );
-
     std::cout << is_same_composite_unit<
-                     unit_merging_engine_t<
-                         meters,
-                         meters,
-                         meters,
-                         seconds_sq,
-                         seconds,
-                         kilograms,
-                         seconds_div_sq>,
-                     composite_unit<meters_3, seconds>>::value
-              << '\n';
-
-    /*static_assert(is_same_composite_unit<*/
-    /*              unit_merging_engine_t<*/
-    /*                  meters,*/
-    /*                  meters,*/
-    /*                  meters,*/
-    /*                  seconds_sq,*/
-    /*                  seconds,*/
-    /*                  kilograms,*/
-    /*                  seconds_div_sq>,*/
-    /*              composite_unit<meters_3, seconds, kilograms>>::value);*/
-
-    std::cout << typeid(unit_merging_engine_t<
-                            meters,
-                            meters,
-                            meters,
-                            seconds_sq,
-                            seconds,
-                            kilograms,
-                            seconds_div_sq>)
-                     .name()
-              << '\n';
-    std::cout << typeid(composite_unit<meters_3, seconds, kilograms>).name() << '\n';
-
-    std::cout << is_same_composite_unit<
-                     unit_merging_engine_t<
-                         meters,
-                         meters,
-                         meters,
-                         seconds_sq,
-                         seconds,
-                         kilograms,
-                         seconds_div_sq>,
-                     composite_unit<meters_3, seconds, kilograms>>::value
-              << '\n';
+        composite_unit<meters, meters, meters, seconds, kilograms>,
+        composite_unit<meters_3, seconds, kilograms>>::value;
 
     std::cout << "\nCompile-time unit checking example." << std::endl;
     return 0;

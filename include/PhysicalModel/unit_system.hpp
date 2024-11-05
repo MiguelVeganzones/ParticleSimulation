@@ -137,8 +137,8 @@ using unit_merging_engine_t =
 template <typename... Units>
 struct composite_unit
 {
-    inline static constexpr std::tuple sd_units = unit_merging_engine_t<Units...>{};
-    inline static constexpr auto       s_size   = std::tuple_size_v<decltype(sd_units)>;
+    inline static constexpr std::tuple s_units = unit_merging_engine_t<Units...>{};
+    inline static constexpr auto       s_size  = std::tuple_size_v<decltype(s_units)>;
 };
 
 template <typename, typename>
@@ -148,10 +148,12 @@ struct is_same_composite_unit : std::false_type
 
 template <typename... Units1, typename... Units2>
 struct is_same_composite_unit<composite_unit<Units1...>, composite_unit<Units2...>>
-    : std::is_same<
-          decltype(composite_unit<Units1...>::sd_units),
-          decltype(composite_unit<Units2...>::sd_units)>
 {
+    using units_type_1 = decltype(composite_unit<Units1...>::s_units);
+    using units_type_2 = decltype(composite_unit<Units2...>::s_units);
+    inline static constexpr auto value =
+        std::tuple_size_v<units_type_1> == std::tuple_size_v<units_type_2> &&
+        std::is_same_v<units_type_1, units_type_2>;
 };
 
 template <BaseUnit Unit, int Power>
@@ -188,7 +190,7 @@ auto operator<<(std::ostream& os, composite_unit<Units...>) noexcept -> std::ost
             ((os << up << (++n != cu_t::s_size ? " " : "")), ...);
             os << ']';
         },
-        cu_t::sd_units
+        cu_t::s_units
     );
     return os;
 }
