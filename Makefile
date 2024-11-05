@@ -34,6 +34,7 @@ DEBUG_CXXFLAGS =  	-fdiagnostics-color=always \
 					-mavx \
 					-fbounds-check \
 					-fconcepts-diagnostics-depth=3 \
+					-fmax-errors=10 \
 					-std=c++23 
 
 RELEASE_CXXFLAGS =  -fdiagnostics-color=always \
