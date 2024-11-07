@@ -4,17 +4,42 @@
 #include <concepts>
 #include <functional>
 #include <iostream>
+#include <string_view>
+#include <type_traits>
+
+#define UNIT_SYSTEM 0
+
+#if USE_UNIT_SYSTEM
 #include <mp-units/framework/unit_concepts.h>
 #include <mp-units/ostream.h>
 #include <mp-units/systems/isq.h>
 #include <mp-units/systems/si.h>
-#include <string_view>
-#include <type_traits>
+#endif
 
 namespace pm
 {
 
+#if USE_UNIT_SYSTEM
 using namespace mp_units;
+constexpr auto m      = si::metre;
+constexpr auto m_s    = si::metre / si::second;
+constexpr auto m_s2   = si::metre / si::second / si::second;
+constexpr auto rad    = si::radian;
+constexpr auto rad_s  = si::radian / si::second;
+constexpr auto rad_s2 = si::radian / si::second / si::second;
+constexpr auto kg     = si::kilogram;
+constexpr auto newton = si::newton;
+#else
+constexpr auto m      = 1;
+constexpr auto m_s    = 1;
+constexpr auto m_s2   = 1;
+constexpr auto rad    = 1;
+constexpr auto rad_s  = 1;
+constexpr auto rad_s2 = 1;
+constexpr auto kg     = 1;
+constexpr auto newton = 1;
+#endif
+
 
 template <typename T>
 concept physical_magnitude_concept = requires {
@@ -117,33 +142,37 @@ struct physical_magnitude
 template <std::floating_point F, auto Unit>
 struct physical_magnitude<1, F, Unit>
 {
-    using value_type                             = F;
-    inline static constexpr auto     s_dimension = 1;
-    inline static constexpr quantity s_units     = 1 * Unit;
-    value_type                       value;
+    using value_type                         = F;
+    inline static constexpr auto s_dimension = 1;
+
+#if USE_UNIT_SYSTEM
+    inline static constexpr quantity s_units = 1 * Unit;
+#else
+    inline static constexpr auto s_units = 1 * Unit;
+#endif
+    value_type value;
     [[nodiscard]]
     constexpr auto operator<=>(physical_magnitude const&) const = default;
 };
 
 template <std::size_t N, std::floating_point F>
-using position = physical_magnitude<N, F, si::metre>;
+using position = physical_magnitude<N, F, m>;
 template <std::size_t N, std::floating_point F>
-using distance = physical_magnitude<N, F, si::metre>;
+using distance = physical_magnitude<N, F, m>;
 template <std::size_t N, std::floating_point F>
-using linear_velocity = physical_magnitude<N, F, si::metre / si::second>;
+using linear_velocity = physical_magnitude<N, F, m_s>;
 template <std::size_t N, std::floating_point F>
-using angular_position = physical_magnitude<N, F, si::radian>;
+using linear_acceleration = physical_magnitude<N, F, m_s2>;
 template <std::size_t N, std::floating_point F>
-using linear_acceleration = physical_magnitude<N, F, si::metre / si::second / si::second>;
+using angular_position = physical_magnitude<N, F, rad>;
 template <std::size_t N, std::floating_point F>
-using angular_velocity = physical_magnitude<N, F, si::radian / si::second>;
+using angular_velocity = physical_magnitude<N, F, rad_s>;
 template <std::size_t N, std::floating_point F>
-using angular_acceleration =
-    physical_magnitude<N, F, si::radian / si::second / si::second>;
+using angular_acceleration = physical_magnitude<N, F, rad_s2>;
 template <std::floating_point F>
-using mass = physical_magnitude<1, F, si::kilogram>;
+using mass = physical_magnitude<1, F, kg>;
 template <std::floating_point F>
-using energy = physical_magnitude<1, F, si::newton>;
+using energy = physical_magnitude<1, F, newton>;
 
 auto operator+(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
 {
