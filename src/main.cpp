@@ -83,7 +83,8 @@ int particle_test()
     const auto            size = 30;
     std::vector<sample_t> samples;
 
-    for (auto _ : std::views::iota(0, size))
+    for ([[maybe_unused]]
+         auto _ : std::views::iota(0, size))
     {
         samples.emplace_back(
             pm::position<N, F>{ utility::random::srandom::randfloat<F>(),

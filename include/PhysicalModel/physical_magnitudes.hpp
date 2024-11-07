@@ -1,5 +1,4 @@
-#ifndef INCLUDED_PHYSICAL_MAGNIFUDES
-#define INCLUDED_PHYSICAL_MAGNIFUDES
+#pragma once
 
 #include "casts.hpp"
 #include <concepts>
@@ -33,12 +32,33 @@ struct physical_magnitude
     using container_t                        = std::array<value_type, N>;
     container_t value;
 
+    inline auto assert_in_bounds(std::integral auto const idx) const -> void
+    {
+        assert(idx < utility::casts::safe_cast<decltype(idx)>(s_dimension));
+    }
+
+#if __GNUC__ >= 14
     [[nodiscard]]
     auto operator[](this auto&& self, std::integral auto idx) -> decltype(auto)
     {
-        assert(idx < utility::casts::safe_cast<decltype(idx)>(self.s_dimension));
+        std::forward<decltype(self)>(self).assert_in_bounds(idx);
         return std::forward<decltype(self)>(self).value[idx];
     }
+#else
+    [[nodiscard]]
+    auto operator[](std::integral auto idx) const -> value_type
+    {
+        assert_in_bounds(idx);
+        return value[idx];
+    }
+
+    [[nodiscard]]
+    auto operator[](std::integral auto idx) -> value_type&
+    {
+        assert_in_bounds(idx);
+        return value[idx];
+    }
+#endif
 
     [[nodiscard]]
     auto cbegin() const -> container_t::const_iterator
@@ -52,17 +72,43 @@ struct physical_magnitude
         return std::cend(value);
     }
 
+#if __GNUC__ >= 14
     [[nodiscard]]
-    auto begin(this auto&& self) -> decltype(auto)
+    auto begin(this auto&& self) noexcept -> decltype(auto)
     {
         return std::begin(std::forward<decltype(self)>(self).value);
     }
 
     [[nodiscard]]
-    auto end(this auto&& self) -> decltype(auto)
+    auto end(this auto&& self) noexcept -> decltype(auto)
     {
         return std::end(std::forward<decltype(self)>(self).value);
     }
+#else
+    [[nodiscard]]
+    auto begin() const noexcept -> container_t::const_iterator
+    {
+        return std::begin(value);
+    }
+
+    [[nodiscard]]
+    auto end() const noexcept -> container_t::const_iterator
+    {
+        return std::end(value);
+    }
+
+    [[nodiscard]]
+    auto begin() -> container_t::iterator
+    {
+        return std::begin(value);
+    }
+
+    [[nodiscard]]
+    auto end() -> container_t::iterator
+    {
+        return std::end(value);
+    }
+#endif
 
     [[nodiscard]]
     constexpr auto operator<=>(physical_magnitude const&) const = default;
@@ -197,5 +243,3 @@ auto operator<<(std::ostream& os, physical_magnitude<N, F, U> const pm) noexcept
 }
 
 } // namespace pm
-
-#endif // INCLUDED_PHYSICAL_MAGNIFUDES

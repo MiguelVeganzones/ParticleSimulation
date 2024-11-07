@@ -1,5 +1,4 @@
-#ifndef INLCUDED_NDTREE
-#define INLCUDED_NDTREE
+#pragma once
 
 #define DEBUG_NDTREE 1
 
@@ -299,19 +298,60 @@ public:
     }
 
 private:
-    [[nodiscard]]
-    auto subboxes(this auto&& self) noexcept -> decltype(auto)
+    // because you cannot portably have a macro expansion (assert) inside #if #endif
+    inline auto assert_fragmented() const -> void
     {
-        assert(self.m_fragmented);
-        return std::get<1>(self.m_elements);
+        assert(m_fragmented);
     }
 
+    inline auto assert_not_fragmented() const -> void
+    {
+        assert(!m_fragmented);
+    }
+
+#if __GNUC__ >= 14
     [[nodiscard]]
     auto contained_elements(this auto&& self) noexcept -> decltype(auto)
     {
-        assert(!self.m_fragmented);
-        return std::get<0>(self.m_elements);
+        std::forward<decltype(self)>(self).assert_not_fragmented();
+        return std::get<0>(std::forward<decltype(self)>(self).m_elements);
     }
+
+    [[nodiscard]]
+    auto subboxes(this auto&& self) noexcept -> decltype(auto)
+    {
+        std::forward<decltype(self)>(self).assert_fragmented();
+        return std::get<1>(std::forward<decltype(self)>(self).m_elements);
+    }
+#else
+    [[nodiscard]]
+    auto contained_elements() noexcept -> auto&
+    {
+        assert_not_fragmented();
+        return std::get<0>(m_elements);
+    }
+
+    [[nodiscard]]
+    auto contained_elements() const noexcept -> auto const&
+    {
+        assert_not_fragmented();
+        return std::get<0>(m_elements);
+    }
+
+    [[nodiscard]]
+    auto subboxes() noexcept -> auto&
+    {
+        assert_fragmented();
+        return std::get<1>(m_elements);
+    }
+
+    [[nodiscard]]
+    auto subboxes() const noexcept -> auto const&
+    {
+        assert_fragmented();
+        return std::get<1>(m_elements);
+    }
+#endif
 
     auto fragment() noexcept -> void
     {
@@ -451,5 +491,3 @@ auto operator<<(std::ostream& os, ndtree<Sample_Type> const& tree) -> std::ostre
 }
 
 } // namespace ndt
-
-#endif // INLCUDED_NDTREE

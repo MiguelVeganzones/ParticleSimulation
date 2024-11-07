@@ -148,7 +148,7 @@ private:
     {
         static random<T> instance;
         return instance;
-    };
+    }
 
 public:
     template <std::floating_point F>

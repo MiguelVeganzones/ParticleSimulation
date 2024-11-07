@@ -35,6 +35,7 @@ public:
     }
 
 public:
+#if __GNUC__ > 14
     [[nodiscard]]
     constexpr auto position(this auto&& self) noexcept -> decltype(auto)
     {
@@ -68,6 +69,67 @@ public:
             std::forward<decltype(self)>(self).m_acceleration
         );
     }
+#else
+    [[nodiscard]]
+    constexpr auto position() noexcept -> decltype(auto)
+    {
+        return m_position;
+    }
+
+    [[nodiscard]]
+    constexpr auto mass() noexcept -> decltype(auto)
+    {
+        return m_mass;
+    }
+
+    [[nodiscard]]
+    constexpr auto velocity() noexcept -> decltype(auto)
+    {
+        return m_velocity;
+    }
+
+    [[nodiscard]]
+    constexpr auto acceleration() noexcept -> decltype(auto)
+    {
+        return m_acceleration;
+    }
+
+    [[nodiscard]]
+    constexpr auto properties() noexcept -> decltype(auto)
+    {
+        return std::tie(m_mass, m_velocity, m_acceleration);
+    }
+
+    [[nodiscard]]
+    constexpr auto position() const noexcept -> decltype(auto)
+    {
+        return m_position;
+    }
+
+    [[nodiscard]]
+    constexpr auto mass() const noexcept -> decltype(auto)
+    {
+        return m_mass;
+    }
+
+    [[nodiscard]]
+    constexpr auto velocity() const noexcept -> decltype(auto)
+    {
+        return m_velocity;
+    }
+
+    [[nodiscard]]
+    constexpr auto acceleration() const noexcept -> decltype(auto)
+    {
+        return m_acceleration;
+    }
+
+    [[nodiscard]]
+    constexpr auto properties() const noexcept -> decltype(auto)
+    {
+        return std::tie(m_mass, m_velocity, m_acceleration);
+    }
+#endif
 
 private:
     position_t     m_position;
