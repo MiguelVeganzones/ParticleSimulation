@@ -21,8 +21,8 @@ constexpr auto safe_cast(Src const& v) noexcept -> Dst
     constexpr auto is_number_to_number =
         std::is_arithmetic_v<Src> && std::is_arithmetic_v<Dst>;
     constexpr auto is_intptr_to_ptr =
-        (std::is_same_v<std::uintptr_t, Src> ||
-         std::is_same_v<std::intptr_t, Src>)&&std::is_pointer_v<Dst>;
+        (std::is_same_v<std::uintptr_t, Src> || std::is_same_v<std::intptr_t, Src>) &&
+        std::is_pointer_v<Dst>;
     constexpr auto is_ptr_to_intptr =
         std::is_pointer_v<Src> &&
         (std::is_same_v<std::uintptr_t, Dst> || std::is_same_v<std::intptr_t, Dst>);

@@ -2,8 +2,9 @@
 
 #define DEBUG_NDTREE 1
 
-#include "../Utility/constexpr_functions.hpp"
-#include "../Utility/error_handling.hpp"
+#include "constexpr_functions.hpp"
+#include "error_handling.hpp"
+#include "logging.hpp"
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -14,6 +15,7 @@
 #include <ranges>
 #include <string>
 #include <vector>
+
 
 #ifdef DEBUG_NDTREE
 #include <iostream>
@@ -222,11 +224,15 @@ public:
             else
             {
 #if DEBUG_NDTREE
-                std::cout << "########################\n";
+                utility::logging::default_source::log(
+                    utility::logging::severity_level::info, "Fragentation started"
+                );
 #endif
                 fragment();
 #if DEBUG_NDTREE
-                std::cout << "------------------------\n";
+                utility::logging::default_source::log(
+                    utility::logging::severity_level::info, "Fragentation finished"
+                );
 #endif
             }
         }

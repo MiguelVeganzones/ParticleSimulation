@@ -1,77 +1,81 @@
 CXX = g++
 
-DEBUG_CXXFLAGS =  	-fdiagnostics-color=always \
-					-fdiagnostics-show-template-tree \
-					-fdiagnostics-path-format=inline-events \
-					-fdiagnostics-show-caret \
-					-ggdb3 \
-					-O0 \
-					-Wall \
-					-Wextra \
-					-Wshadow \
-					-Wconversion \
-					-Wmisleading-indentation \
-					-Wduplicated-cond \
-					-Wduplicated-branches \
-					-Wlogical-op \
-					-Wnull-dereference \
-					-Wpointer-arith \
-					-Wdangling-else \
-					-Wrestrict \
-					-Wdouble-promotion \
-					-Wvla \
-					-Wswitch-enum \
-					-Wswitch-default \
-					-Winvalid-pch \
-					-Wodr \
-					-Wstack-usage=$(shell ulimit -s) \
-					-Wformat \
-					-fsanitize=leak \
-					-fsanitize=address \
-					-fsanitize=undefined \
-					-Werror \
-					-pedantic \
-					-mavx \
-					-fbounds-check \
-					-fconcepts-diagnostics-depth=3 \
-					-fmax-errors=5 \
-					-std=c++23 
+DEBUG_CXXFLAGS =	-O0 \
+			-W \
+			-Wall \
+			-Wconversion \
+			-Wdangling-else \
+			-Wdouble-promotion \
+			-Wduplicated-branches \
+			-Wduplicated-cond \
+			-Werror \
+			-Wextra \
+			-Wfloat-equal \
+			-Wformat \
+			-Winvalid-pch \
+			-Wlogical-op \
+			-Wmisleading-indentation \
+			-Wnull-dereference \
+			-Wodr \
+			-Wpointer-arith \
+			-Wrestrict \
+			-Wshadow \
+			-Wswitch-default \
+			-Wswitch-enum \
+			-Wvla \
+			-fbounds-check \
+			-fconcepts-diagnostics-depth=3 \
+			-fdiagnostics-color=always \
+			-fdiagnostics-path-format=inline-events \
+			-fdiagnostics-show-caret \
+			-fdiagnostics-show-template-tree \
+			-fmax-errors=5 \
+			-fsanitize=address \
+			-fsanitize=leak \
+			-fsanitize=undefined \
+			-ggdb3 \
+			-mavx \
+			-pedantic \
+			-std=c++23
 
-RELEASE_CXXFLAGS =  -fdiagnostics-color=always \
-					-fdiagnostics-show-template-tree \
-					-fdiagnostics-path-format=inline-events \
-					-fdiagnostics-show-caret \
-					-ggdb3 \
-					-O2 \
-					-Wall \
-					-Wextra \
-					-Wshadow \
-					-Wconversion \
-					-Wmisleading-indentation \
-					-Werror \
-					-pedantic \
-					-mavx \
-					-fbounds-check \
-					-fconcepts-diagnostics-depth=3 \
-					-std=c++23
-					
-FULL_RELEASE_CXXFLAGS =  -fdiagnostics-color=always \
-					-fdiagnostics-show-template-tree \
-					-fdiagnostics-path-format=inline-events \
-					-fdiagnostics-show-caret \
-					-O3 \
-					-Wall \
-					-Wextra \
-					-Wshadow \
-					-Wconversion \
-					-Wmisleading-indentation \
-					-Werror \
-					-pedantic \
-					-mavx \
-					-fconcepts-diagnostics-depth=3 \
-					-std=c++23
-					#-fno-exceptions
-					
+RELEASE_CXXFLAGS =	-fdiagnostics-color=always \
+			-fdiagnostics-show-template-tree \
+			-fdiagnostics-path-format=inline-events \
+			-fdiagnostics-show-caret \
+			-ggdb3 \
+			-O2 \
+			-Wall \
+			-Wextra \
+			-Wshadow \
+			-Wconversion \
+			-ffinite-math-only \
+			-Wmisleading-indentation \
+			-Werror \
+			-pedantic \
+			-mavx \
+			-fstrength-reduce \
+			-fbounds-check \
+			-fconcepts-diagnostics-depth=3 \
+			-std=c++23
+			
+FULL_RELEASE_CXXFLAGS = -fdiagnostics-color=always \
+			-fdiagnostics-show-template-tree \
+			-fdiagnostics-path-format=inline-events \
+			-fdiagnostics-show-caret \
+			-O3 \
+			-Wall \
+			-Wextra \
+			-Wshadow \
+			-Wconversion \
+			-Wmisleading-indentation \
+			-Werror \
+			-fstrength-reduce \
+			-pedantic \
+			-mavx \
+			-fconcepts-diagnostics-depth=3 \
+			-std=c++23
+			#-fno-exceptions
+			
 
 RELEASE ?= 0
 ifeq (${RELEASE}, 1)
@@ -103,6 +107,8 @@ UNIT_SYSTEM_INCL		=	-I./$(UNIT_SYSTEM_CORE_DIR) -I./$(UNIT_SYSTEM_SYSTEMS_DIR)
 MAIN_SIMULATION_INCL		=	$(GENERAL_INCL) $(PHYSICAL_MODEL_INCL) $(NDTREE_INCL) $(UNIT_SYSTEM_INCL)
 
 ROOT_LIB			= `root-config --libs`
+LOG_LIB				= -lboost_log -lboost_thread -lboost_system -lpthread
+MAIN_SIMULATION_LIB		= $(LOG_LIB)
 
 ROOT_FLAGS			= `root-config --cflags` -Wno-cpp
 
@@ -113,6 +119,6 @@ main: ${OUT_DIR}/main.o
 ${OUT_DIR}/main.o: $(SRC_DIR)/*.cpp
 	@echo -e Building $@..."\n"
 	@mkdir -p ${OUT_DIR}
-	$(CXX) $(CXXFLAGS) $(MAIN_SIMULATION_INCL) $(SRC_DIR)/main.cpp -o $@
+	$(CXX) $(CXXFLAGS) $(MAIN_SIMULATION_INCL) $(MAIN_SIMULATION_LIB) $(SRC_DIR)/main.cpp -o $@
 	@echo -e Built $@ successfully."\n"
 #================================================================================================

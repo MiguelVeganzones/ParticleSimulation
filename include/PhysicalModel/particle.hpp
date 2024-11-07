@@ -1,7 +1,7 @@
 #ifndef INLCLUDED_PARTICLE
 #define INLCLUDED_PARTICLE
 
-#include "../Containers/ndtree.hpp" // Tight coupling to ndpoint. Improve?
+#include "ndtree.hpp"
 #include "physical_magnitudes.hpp"
 #include <tuple>
 #include <type_traits>
