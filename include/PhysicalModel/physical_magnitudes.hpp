@@ -5,22 +5,17 @@
 #include <concepts>
 #include <functional>
 #include <iostream>
+#include <mp-units/framework/unit_concepts.h>
+#include <mp-units/ostream.h>
+#include <mp-units/systems/isq.h>
+#include <mp-units/systems/si.h>
 #include <string_view>
 #include <type_traits>
 
 namespace pm
 {
 
-enum struct PhysicalMagnitudeUnits
-{
-    m,
-    m_s,
-    m_s2,
-    rad, // Radians are adimensional... Look away
-    rad_s,
-    rad_s2,
-    kg,
-};
+using namespace mp_units;
 
 template <typename T>
 concept physical_magnitude_concept = requires {
@@ -29,12 +24,12 @@ concept physical_magnitude_concept = requires {
     typename std::remove_reference_t<T>::value_type;
 };
 
-template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits Units>
+template <std::size_t N, std::floating_point F, auto Unit>
 struct physical_magnitude
 {
     using value_type                         = F;
     inline static constexpr auto s_dimension = N;
-    inline static constexpr auto s_units     = Units;
+    inline static constexpr auto s_units     = Unit;
     using container_t                        = std::array<value_type, N>;
     container_t value;
 
@@ -73,33 +68,36 @@ struct physical_magnitude
     constexpr auto operator<=>(physical_magnitude const&) const = default;
 };
 
-template <std::floating_point F, PhysicalMagnitudeUnits Units>
-struct physical_magnitude<1, F, Units>
+template <std::floating_point F, auto Unit>
+struct physical_magnitude<1, F, Unit>
 {
-    using value_type                         = F;
-    inline static constexpr auto s_dimension = 1;
-    inline static constexpr auto s_units     = Units;
-    value_type                   value;
+    using value_type                             = F;
+    inline static constexpr auto     s_dimension = 1;
+    inline static constexpr quantity s_units     = 1 * Unit;
+    value_type                       value;
     [[nodiscard]]
     constexpr auto operator<=>(physical_magnitude const&) const = default;
 };
 
 template <std::size_t N, std::floating_point F>
-using position = physical_magnitude<N, F, PhysicalMagnitudeUnits::m>;
+using position = physical_magnitude<N, F, si::metre>;
 template <std::size_t N, std::floating_point F>
-using distance = physical_magnitude<N, F, PhysicalMagnitudeUnits::m>;
+using distance = physical_magnitude<N, F, si::metre>;
 template <std::size_t N, std::floating_point F>
-using linear_velocity = physical_magnitude<N, F, PhysicalMagnitudeUnits::m_s>;
+using linear_velocity = physical_magnitude<N, F, si::metre / si::second>;
 template <std::size_t N, std::floating_point F>
-using angular_position = physical_magnitude<N, F, PhysicalMagnitudeUnits::rad>;
+using angular_position = physical_magnitude<N, F, si::radian>;
 template <std::size_t N, std::floating_point F>
-using linear_acceleration = physical_magnitude<N, F, PhysicalMagnitudeUnits::m_s2>;
+using linear_acceleration = physical_magnitude<N, F, si::metre / si::second / si::second>;
 template <std::size_t N, std::floating_point F>
-using angular_velocity = physical_magnitude<N, F, PhysicalMagnitudeUnits::rad_s>;
+using angular_velocity = physical_magnitude<N, F, si::radian / si::second>;
 template <std::size_t N, std::floating_point F>
-using angular_acceleration = physical_magnitude<N, F, PhysicalMagnitudeUnits::rad_s2>;
+using angular_acceleration =
+    physical_magnitude<N, F, si::radian / si::second / si::second>;
 template <std::floating_point F>
-using mass = physical_magnitude<1, F, PhysicalMagnitudeUnits::kg>;
+using mass = physical_magnitude<1, F, si::kilogram>;
+template <std::floating_point F>
+using energy = physical_magnitude<1, F, si::newton>;
 
 auto operator+(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
 {
@@ -177,37 +175,23 @@ auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(au
     }
 }
 
-template <std::size_t N, std::floating_point F, PhysicalMagnitudeUnits U>
+template <std::size_t N, std::floating_point F, auto U>
 auto operator<<(std::ostream& os, physical_magnitude<N, F, U> const pm) noexcept
     -> std::ostream&
 {
-    constexpr auto unit_name = [](PhysicalMagnitudeUnits unit
-                               ) noexcept -> std::string_view {
-        switch (unit)
-        {
-        case PhysicalMagnitudeUnits::m: return "m";
-        case PhysicalMagnitudeUnits::m_s: return "m/s";
-        case PhysicalMagnitudeUnits::m_s2: return "m/s^2";
-        case PhysicalMagnitudeUnits::rad: return "rad";
-        case PhysicalMagnitudeUnits::rad_s: return "rad/s";
-        case PhysicalMagnitudeUnits::rad_s2: return "rad/s^2";
-        case PhysicalMagnitudeUnits::kg: return "kg";
-        default: return "??";
-        }
-    };
-    constexpr auto unit = unit_name(U); // Force compile time evaluation
     if constexpr (N == 1)
     {
-        os << pm.value << '[' << unit << ']';
+        os << pm.value << decltype(pm)::s_units << ']';
     }
     else
     {
         os << "{ ";
+        std::size_t n{ 0 };
         for (auto const v : pm.value)
         {
-            os << v << ", ";
+            os << v << (++n != N ? ", " : " ");
         }
-        os << "}[" << unit << ']';
+        os << "}[" << decltype(pm)::s_units << ']';
     }
     return os;
 }

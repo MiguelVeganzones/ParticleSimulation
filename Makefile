@@ -34,6 +34,7 @@ DEBUG_CXXFLAGS =  	-fdiagnostics-color=always \
 					-mavx \
 					-fbounds-check \
 					-fconcepts-diagnostics-depth=3 \
+					-fmax-errors=5 \
 					-std=c++23 
 
 RELEASE_CXXFLAGS =  -fdiagnostics-color=always \
@@ -91,12 +92,15 @@ UTILITY_DIR		    =	$(INCLUDE_DIR)/Utility
 ROOT_DIR		    =	$(INCLUDE_DIR)/Plotting
 CONTAINERS_DIR		    =	$(INCLUDE_DIR)/Containers
 PHYSICAL_MODEL_DIR	    =	$(INCLUDE_DIR)/PhysicalModel
+UNIT_SYSTEM_CORE_DIR	    =	mp-units/src/core/include
+UNIT_SYSTEM_SYSTEMS_DIR	    =	mp-units/src/systems/include
 
 UTILITY_INCL			=
 GENERAL_INCL			=	-I./$(UTILITY_DIR) $(UTILITY_INCL)
 PHYSICAL_MODEL_INCL		=	-I./$(PHYSICAL_MODEL_DIR)
 NDTREE_INCL			=	-I./$(CONTAINERS_DIR)
-MAIN_SIMULATION_INCL		=	$(GENERAL_INCL) $(PHYSICAL_MODEL_INCL) $(NDTREE_INCL)
+UNIT_SYSTEM_INCL		=	-I./$(UNIT_SYSTEM_CORE_DIR) -I./$(UNIT_SYSTEM_SYSTEMS_DIR)
+MAIN_SIMULATION_INCL		=	$(GENERAL_INCL) $(PHYSICAL_MODEL_INCL) $(NDTREE_INCL) $(UNIT_SYSTEM_INCL)
 
 ROOT_LIB			= `root-config --libs`
 
