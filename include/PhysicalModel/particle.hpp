@@ -35,7 +35,7 @@ public:
     }
 
 public:
-#if __GNUC__ > 14
+#if __GNUC__ >= 14
     [[nodiscard]]
     constexpr auto position(this auto&& self) noexcept -> decltype(auto)
     {
