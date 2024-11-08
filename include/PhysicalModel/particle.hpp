@@ -6,7 +6,7 @@
 #include <tuple>
 #include <type_traits>
 
-namespace particle
+namespace pm::particle
 {
 
 template <std::size_t N, std::floating_point F>
@@ -15,10 +15,10 @@ class ndparticle
 public:
     using value_type                         = F;
     inline static constexpr auto s_dimension = N;
-    using position_t                         = pm::position<s_dimension, value_type>;
-    using mass_t                             = pm::mass<value_type>;
-    using velocity_t     = pm::linear_velocity<s_dimension, value_type>;
-    using acceleration_t = pm::linear_acceleration<s_dimension, value_type>;
+    using position_t     = magnitudes::position<s_dimension, value_type>;
+    using mass_t         = magnitudes::mass<value_type>;
+    using velocity_t     = magnitudes::linear_velocity<s_dimension, value_type>;
+    using acceleration_t = magnitudes::linear_acceleration<s_dimension, value_type>;
 
 public:
     constexpr ndparticle(
@@ -148,6 +148,6 @@ auto operator<<(std::ostream& os, ndparticle<N, F> pp) noexcept -> std::ostream&
     return os;
 }
 
-}; // namespace particle
+}; // namespace pm::particle
 
 #endif // INLCLUDED_PARTICLE

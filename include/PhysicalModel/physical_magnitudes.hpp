@@ -1,6 +1,7 @@
 #pragma once
 
 #include "casts.hpp"
+#include "particle_concepts.hpp"
 #include <concepts>
 #include <functional>
 #include <iostream>
@@ -18,11 +19,12 @@
 #include <mp-units/systems/si.h>
 #endif
 
-namespace pm
+namespace pm::units
 {
 
 #if USE_UNIT_SYSTEM
 using namespace mp_units;
+constexpr auto s      = si::second;
 constexpr auto m      = si::metre;
 constexpr auto m_s    = si::metre / si::second;
 constexpr auto m_s2   = si::metre / si::second / si::second;
@@ -32,6 +34,7 @@ constexpr auto rad_s2 = si::radian / si::second / si::second;
 constexpr auto kg     = si::kilogram;
 constexpr auto newton = si::newton;
 #else
+constexpr auto s      = 1;
 constexpr auto m      = 1;
 constexpr auto m_s    = 1;
 constexpr auto m_s2   = 1;
@@ -42,6 +45,32 @@ constexpr auto kg     = 1;
 constexpr auto newton = 1;
 #endif
 
+} // namespace pm::units
+
+namespace pm
+{
+
+using namespace units;
+
+template <std::floating_point F>
+struct physical_constants
+{
+    [[nodiscard]]
+    inline static constexpr auto G() noexcept
+    {
+        static_assert(std::is_same_v<F, double>);
+        constexpr auto value =
+            static_cast<F>(0.000000000066743) * 1 * m * m * m / kg / s / s;
+        return value;
+    }
+};
+
+} // namespace pm
+
+namespace pm::magnitudes
+{
+
+using namespace units;
 
 template <typename T>
 concept physical_magnitude_concept = requires {
@@ -57,7 +86,7 @@ struct physical_magnitude
     inline static constexpr auto s_dimension = N;
     inline static constexpr auto s_units     = Unit;
     using container_t                        = std::array<value_type, N>;
-    container_t value;
+    container_t value_;
 
     inline auto assert_in_bounds(std::integral auto const idx) const -> void
     {
@@ -66,93 +95,98 @@ struct physical_magnitude
 
 #if __GNUC__ >= 14
     [[nodiscard]]
+    auto value(this auto&& self) noexcept -> decltype(auto)
+        requires(s_dimension == 1)
+    {
+        return std::forward<decltype(self)>(self)[0];
+    }
+
+    [[nodiscard]]
     auto operator[](this auto&& self, std::integral auto idx) -> decltype(auto)
     {
         std::forward<decltype(self)>(self).assert_in_bounds(idx);
-        return std::forward<decltype(self)>(self).value[idx];
+        return std::forward<decltype(self)>(self).value_[idx];
     }
 #else
+    [[nodiscard]]
+    auto value() noexcept -> value_type
+        requires(s_dimension == 1)
+    {
+        return value_[0];
+    }
+
+    [[nodiscard]]
+    auto value() const noexcept -> value_type const&
+        requires(s_dimension == 1)
+    {
+        return value_[0];
+    }
+
     [[nodiscard]]
     auto operator[](std::integral auto idx) const -> value_type
     {
         assert_in_bounds(idx);
-        return value[idx];
+        return value_[idx];
     }
 
     [[nodiscard]]
     auto operator[](std::integral auto idx) -> value_type&
     {
         assert_in_bounds(idx);
-        return value[idx];
+        return value_[idx];
     }
 #endif
 
     [[nodiscard]]
     auto cbegin() const -> container_t::const_iterator
     {
-        return std::cbegin(value);
+        return std::cbegin(value_);
     }
 
     [[nodiscard]]
     auto cend() const -> container_t::const_iterator
     {
-        return std::cend(value);
+        return std::cend(value_);
     }
 
 #if __GNUC__ >= 14
     [[nodiscard]]
     auto begin(this auto&& self) noexcept -> decltype(auto)
     {
-        return std::begin(std::forward<decltype(self)>(self).value);
+        return std::begin(std::forward<decltype(self)>(self).value_);
     }
 
     [[nodiscard]]
     auto end(this auto&& self) noexcept -> decltype(auto)
     {
-        return std::end(std::forward<decltype(self)>(self).value);
+        return std::end(std::forward<decltype(self)>(self).value_);
     }
 #else
     [[nodiscard]]
     auto begin() const noexcept -> container_t::const_iterator
     {
-        return std::begin(value);
+        return std::begin(value_);
     }
 
     [[nodiscard]]
     auto end() const noexcept -> container_t::const_iterator
     {
-        return std::end(value);
+        return std::end(value_);
     }
 
     [[nodiscard]]
     auto begin() -> container_t::iterator
     {
-        return std::begin(value);
+        return std::begin(value_);
     }
 
     [[nodiscard]]
     auto end() -> container_t::iterator
     {
-        return std::end(value);
+        return std::end(value_);
     }
 #endif
 
-    [[nodiscard]]
-    constexpr auto operator<=>(physical_magnitude const&) const = default;
-};
-
-template <std::floating_point F, auto Unit>
-struct physical_magnitude<1, F, Unit>
-{
-    using value_type                         = F;
-    inline static constexpr auto s_dimension = 1;
-
-#if USE_UNIT_SYSTEM
-    inline static constexpr quantity s_units = 1 * Unit;
-#else
-    inline static constexpr auto s_units = 1 * Unit;
-#endif
-    value_type value;
     [[nodiscard]]
     constexpr auto operator<=>(physical_magnitude const&) const = default;
 };
@@ -209,13 +243,9 @@ auto operator/(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
 }
 
 template <typename T1, typename T2>
+    requires(concepts::Magnitude<T1> || concepts::Magnitude<T2>)
+[[nodiscard]]
 auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(auto)
-    requires(
-        (std::is_floating_point_v<T1> && physical_magnitude_concept<T2>) ||
-        (physical_magnitude_concept<T1> && std::is_floating_point_v<T2>) ||
-        (physical_magnitude_concept<T1> && physical_magnitude_concept<T2> &&
-         T1::s_units == T2::s_units)
-    )
 {
     constexpr auto at_idx = [](auto&&             v,
                                std::integral auto idx) noexcept -> decltype(auto) {
@@ -258,7 +288,7 @@ auto operator<<(std::ostream& os, physical_magnitude<N, F, U> const pm) noexcept
 {
     if constexpr (N == 1)
     {
-        os << pm.value;
+        os << pm.value();
 #if USE_UNIT_SYSTEM
         os << '[' << decltype(pm)::s_units << ']';
 #endif
@@ -267,7 +297,7 @@ auto operator<<(std::ostream& os, physical_magnitude<N, F, U> const pm) noexcept
     {
         os << "{ ";
         std::size_t n{ 0 };
-        for (auto const v : pm.value)
+        for (auto const v : pm)
         {
             os << v << (++n != N ? ", " : " ");
         }
@@ -280,4 +310,4 @@ auto operator<<(std::ostream& os, physical_magnitude<N, F, U> const pm) noexcept
     return os;
 }
 
-} // namespace pm
+} // namespace pm::magnitudes

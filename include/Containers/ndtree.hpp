@@ -29,10 +29,9 @@ namespace ndt
 namespace concepts
 {
 template <typename T>
-concept point_concept = requires(T t) {
+concept Point = requires(T t) {
     typename T::value_type;
     T::s_dimension;
-    t.value;
     t[0];
     std::begin(t);
     std::end(t);
@@ -55,7 +54,7 @@ concept sample_concept = requires(T t) {
 
 } // namespace concepts
 
-template <concepts::point_concept Point_Type>
+template <concepts::Point Point_Type>
 class ndboundary
 {
 public:
@@ -113,7 +112,7 @@ private:
     point_t m_max;
 };
 
-template <concepts::point_concept Point_Type>
+template <concepts::Point Point_Type>
 auto operator<<(std::ostream& os, ndboundary<Point_Type> const& b) -> std::ostream&
 {
     os << "{ " << b.min() << " }, { " << b.max() << " }";
@@ -123,7 +122,7 @@ auto operator<<(std::ostream& os, ndboundary<Point_Type> const& b) -> std::ostre
 namespace detail
 {
 
-template <concepts::point_concept Point_Type>
+template <concepts::Point Point_Type>
 [[nodiscard]]
 auto in(Point_Type const& p, ndboundary<Point_Type> const& b) noexcept -> bool
 {
@@ -138,7 +137,7 @@ auto in(Point_Type const& p, ndboundary<Point_Type> const& b) noexcept -> bool
     return true;
 }
 
-template <concepts::point_concept Point_Type>
+template <concepts::Point Point_Type>
 [[nodiscard]]
 auto count_in(
     std::ranges::range auto const& collection,
@@ -161,7 +160,7 @@ auto compute_limits(std::ranges::range auto const& data) noexcept
     {
         const auto bounds =
             std::ranges::minmax(data | std::views::transform([i](auto const& p) -> auto {
-                                    return p.position().value[i];
+                                    return p.position()[i];
                                 }));
         min[i] = bounds.min;
         max[i] = bounds.max;

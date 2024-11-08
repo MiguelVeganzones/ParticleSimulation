@@ -10,7 +10,6 @@ DEBUG_CXXFLAGS =	-O0 \
 			-Wduplicated-cond \
 			-Werror \
 			-Wextra \
-			-Wfloat-equal \
 			-Wformat \
 			-Winvalid-pch \
 			-Wlogical-op \
@@ -29,7 +28,7 @@ DEBUG_CXXFLAGS =	-O0 \
 			-fdiagnostics-path-format=inline-events \
 			-fdiagnostics-show-caret \
 			-fdiagnostics-show-template-tree \
-			-fmax-errors=5 \
+			-fmax-errors=15 \
 			-fsanitize=address \
 			-fsanitize=leak \
 			-fsanitize=undefined \
@@ -37,6 +36,7 @@ DEBUG_CXXFLAGS =	-O0 \
 			-mavx \
 			-pedantic \
 			-std=c++23
+			# -Wfloat-equal \
 
 RELEASE_CXXFLAGS =	-fdiagnostics-color=always \
 			-fdiagnostics-show-template-tree \
