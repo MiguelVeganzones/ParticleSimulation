@@ -8,6 +8,10 @@
 #include <string_view>
 #include <type_traits>
 
+#ifndef USE_UNIT_SYSTEM
+#define USE_UNIT_SYSTEM 0
+#endif
+
 namespace pm::units
 {
 
@@ -47,17 +51,28 @@ namespace pm::magnitudes
 template <typename T>
 concept physical_magnitude_concept = requires {
     std::remove_reference_t<T>::s_dimension;
+#if USE_UNIT_SYSTEM
     std::remove_reference_t<T>::s_units;
+#endif
     typename std::remove_reference_t<T>::value_type;
 };
 
-template <std::size_t N, std::floating_point F, auto U>
+template <
+    std::size_t         N,
+    std::floating_point F
+#if USE_UNIT_SYSTEM
+    ,
+    auto U
+#endif
+    >
 struct physical_magnitude
 {
     using value_type                         = F;
     inline static constexpr auto s_dimension = N;
-    inline static constexpr auto s_units     = U;
-    using container_t                        = std::array<value_type, s_dimension>;
+#if USE_UNIT_SYSTEM
+    inline static constexpr auto s_units = U;
+#endif
+    using container_t = std::array<value_type, s_dimension>;
     container_t value_;
 
     inline auto assert_in_bounds(std::integral auto const idx) const -> void
@@ -183,24 +198,37 @@ struct physical_magnitude
     constexpr auto operator<=>(physical_magnitude const&) const = default;
 };
 
+template <std::size_t N, std::floating_point F, auto U>
+struct physical_magnitude_type_factory
+{
+#if USE_UNIT_SYSTEM
+    using type = physical_magnitude<N, F, U>;
+#else
+    using type = physical_magnitude<N, F>;
+#endif
+};
+
+template <std::size_t N, std::floating_point F, auto U>
+using physical_magnitude_t = typename physical_magnitude_type_factory<N, F, U>::type;
+
 template <std::size_t N, std::floating_point F>
-using position = physical_magnitude<N, F, units::Units::m>;
+using position = physical_magnitude_t<N, F, units::Units::m>;
 template <std::size_t N, std::floating_point F>
-using distance = physical_magnitude<N, F, units::Units::m>;
+using distance = physical_magnitude_t<N, F, units::Units::m>;
 template <std::size_t N, std::floating_point F>
-using linear_velocity = physical_magnitude<N, F, units::Units::m_s>;
+using linear_velocity = physical_magnitude_t<N, F, units::Units::m_s>;
 template <std::size_t N, std::floating_point F>
-using linear_acceleration = physical_magnitude<N, F, units::Units::m_s2>;
+using linear_acceleration = physical_magnitude_t<N, F, units::Units::m_s2>;
 template <std::size_t N, std::floating_point F>
-using angular_position = physical_magnitude<N, F, units::Units::rad>;
+using angular_position = physical_magnitude_t<N, F, units::Units::rad>;
 template <std::size_t N, std::floating_point F>
-using angular_velocity = physical_magnitude<N, F, units::Units::rad_s>;
+using angular_velocity = physical_magnitude_t<N, F, units::Units::rad_s>;
 template <std::size_t N, std::floating_point F>
-using angular_acceleration = physical_magnitude<N, F, units::Units::rad_s2>;
+using angular_acceleration = physical_magnitude_t<N, F, units::Units::rad_s2>;
 template <std::floating_point F>
-using mass = physical_magnitude<1, F, units::Units::kg>;
+using mass = physical_magnitude_t<1, F, units::Units::kg>;
 template <std::floating_point F>
-using energy = physical_magnitude<1, F, units::Units::newton>;
+using energy = physical_magnitude_t<1, F, units::Units::newton>;
 
 auto operator+(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
 {
@@ -255,22 +283,13 @@ auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(au
             utility::error_handling::assert_unreachable();
         }
     };
-    if constexpr (concepts::Magnitude<T1> && concepts::Magnitude<T2>)
+    if constexpr (concepts::Magnitude<T1>)
     {
-        physical_magnitude<
+        physical_magnitude_t<
             T1::s_dimension,
             typename T1::value_type,
             units::Units::_runtime_unit_>
             ret{};
-        for (auto i = 0uz; i != std::ranges::size(pma); ++i)
-        {
-            ret[i] = binary_op(pma[i], pmb[i]);
-        }
-        return ret;
-    }
-    else if constexpr (concepts::Magnitude<T1>)
-    {
-        physical_magnitude<T1::s_dimension, typename T1::value_type, T1::s_units> ret{};
         for (auto i = 0uz; i != std::ranges::size(pma); ++i)
         {
             ret[i] = binary_op(pma[i], at_idx(pmb, i));
@@ -279,7 +298,11 @@ auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(au
     }
     else if constexpr (concepts::Magnitude<T2>)
     {
-        physical_magnitude<T2::s_dimension, typename T2::value_type, T2::s_units> ret{};
+        physical_magnitude_t<
+            T2::s_dimension,
+            typename T2::value_type,
+            units::Units::_runtime_unit_>
+            ret{};
         for (auto i = 0uz; i != std::ranges::size(pmb); ++i)
         {
             ret[i] = binary_op(at_idx(pma, i), pmb[i]);
@@ -288,14 +311,31 @@ auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(au
     }
     else
     {
-        return binary_op(at_idx(pma, 0), at_idx(pmb, 0));
+        utility::error_handling::assert_unreachable();
     }
 }
 
-template <std::size_t N, std::floating_point F, auto U>
-auto operator<<(std::ostream& os, physical_magnitude<N, F, U> const pm) noexcept
-    -> std::ostream&
+template <
+    std::size_t         N,
+    std::floating_point F
+#if USE_UNIT_SYSTEM
+    ,
+    auto U
+#endif
+    >
+auto operator<<(
+    std::ostream& os,
+    physical_magnitude<
+        N,
+        F
+#if USE_UNIT_SYSTEM
+        ,
+        U
+#endif
+        > const pm
+) noexcept -> std::ostream&
 {
+#if USE_UNIT_SYSTEM
     constexpr auto unit_name = [](units::Units unit) noexcept -> std::string_view {
         switch (unit)
         {
@@ -313,10 +353,13 @@ auto operator<<(std::ostream& os, physical_magnitude<N, F, U> const pm) noexcept
         }
     };
     constexpr auto unit = unit_name(U);
+#endif
     if constexpr (N == 1)
     {
         os << pm.value();
+#if USE_UNIT_SYSTEM
         os << '[' << unit << ']';
+#endif
     }
     else
     {
@@ -327,7 +370,9 @@ auto operator<<(std::ostream& os, physical_magnitude<N, F, U> const pm) noexcept
             os << v << (++n != N ? ", " : " ");
         }
         os << '}';
+#if USE_UNIT_SYSTEM
         os << '[' << unit << ']';
+#endif
     }
 
     return os;

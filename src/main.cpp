@@ -18,10 +18,10 @@ auto generate_particle() noexcept -> P
     constexpr auto N = P::s_dimension;
     using F          = typename P::value_type;
     return P(
-        pm::magnitudes::position<N, F>{ utility::random::srandom::randfloat<F>(),
-                                        utility::random::srandom::randfloat<F>(),
-                                        utility::random::srandom::randfloat<F>() } *
-            F{ 3 },
+        pm::magnitudes::position<N, F>{ utility::random::srandom::randfloat<F>() * F{ 3 },
+                                        utility::random::srandom::randfloat<F>() * F{ 3 },
+                                        utility::random::srandom::randfloat<F>() *
+                                            F{ 3 } },
         // operator*(mass, F)
         pm::magnitudes::mass<F>{ utility::random::srandom::randfloat<F>() * F{ 20 } },
         pm::magnitudes::linear_velocity<N, F>{
