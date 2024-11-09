@@ -163,15 +163,15 @@ public:
     }
 
     [[nodiscard]]
-    inline auto
-    operator()() noexcept -> result_type
+    inline auto operator()() noexcept -> result_type
     {
         const auto value = distribution_(random_engine_);
         if constexpr (std::is_same_v<result_type, impl_result_type>)
         {
             return value;
         }
-        else if constexpr (std::is_integral_v<result_type> and std::is_floating_point_v<impl_result_type>)
+        else if constexpr (std::is_integral_v<result_type> and
+                           std::is_floating_point_v<impl_result_type>)
         {
             if constexpr (discretizaton_policy == DiscretizationPolicy::Floor)
             {
@@ -194,7 +194,8 @@ public:
                 utility::error_handling::assert_unreachable();
             }
         }
-        else if constexpr (std::is_floating_point_v<result_type> and std::is_integral_v<impl_result_type>)
+        else if constexpr (std::is_floating_point_v<result_type> and
+                           std::is_integral_v<impl_result_type>)
         {
             return static_cast<result_type>(value);
         }
