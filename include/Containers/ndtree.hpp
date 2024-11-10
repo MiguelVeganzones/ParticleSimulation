@@ -280,26 +280,24 @@ public:
     [[nodiscard]]
     auto boxes() const -> std::size_t
     {
-        return m_fragmented
-                   ? std::ranges::fold_left(
-                         subboxes(),
-                         std::ranges::size(subboxes()),
-                         [](auto nboxes, const auto& b) { return nboxes + b.boxes(); }
-                     )
-                   : 0;
+        return m_fragmented ? std::ranges::fold_left(
+                                  subboxes(),
+                                  std::ranges::size(subboxes()),
+                                  [](auto acc, const auto& b) { return acc + b.boxes(); }
+                              )
+                            : 0;
     }
 
     [[nodiscard]]
     auto elements() const -> std::size_t
     {
-        return m_fragmented ? std::ranges::fold_left(
-                                  subboxes(),
-                                  0,
-                                  [](auto nelements, const auto& e) {
-                                      return nelements + e.elements();
-                                  }
-                              )
-                            : std::ranges::size(contained_elements());
+        return m_fragmented
+                   ? std::ranges::fold_left(
+                         subboxes(),
+                         0,
+                         [](auto acc, const auto& e) { return acc + e.elements(); }
+                     )
+                   : std::ranges::size(contained_elements());
     }
 
 private:

@@ -28,7 +28,7 @@ DEBUG_CXXFLAGS =	-O0 \
 			-fdiagnostics-path-format=inline-events \
 			-fdiagnostics-show-caret \
 			-fdiagnostics-show-template-tree \
-			-fmax-errors=15 \
+			-fmax-errors=5 \
 			-fsanitize=address \
 			-fsanitize=leak \
 			-fsanitize=undefined \

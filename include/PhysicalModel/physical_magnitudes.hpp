@@ -2,48 +2,15 @@
 
 #include "casts.hpp"
 #include "particle_concepts.hpp"
+#include "unit_system.hpp"
+#include <algorithm>
 #include <concepts>
 #include <functional>
 #include <iostream>
+#include <ranges>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
-
-#ifndef USE_UNIT_SYSTEM
-#define USE_UNIT_SYSTEM 0
-#endif
-
-namespace pm::units
-{
-
-enum struct Units
-{
-    s,
-    m,
-    m_s,
-    m_s2,
-    rad,
-    rad_s,
-    rad_s2,
-    kg,
-    newton,
-    _runtime_unit_,
-};
-
-} // namespace pm::units
-
-namespace pm
-{
-
-using namespace units;
-
-template <std::floating_point F>
-struct physical_constants
-{
-    static_assert(std::is_same_v<F, double>);
-    inline static constexpr auto G = static_cast<F>(0.000000000066743);
-};
-
-} // namespace pm
 
 namespace pm::magnitudes
 {
@@ -51,12 +18,13 @@ namespace pm::magnitudes
 template <std::size_t N, std::floating_point F>
 struct physical_vector
 {
-    using value_type                         = F;
-    using size_type                          = decltype(N);
-    inline static constexpr auto s_dimension = N;
-    using container_t                        = std::array<value_type, s_dimension>;
-    using const_iterator                     = typename container_t::const_iterator;
-    using iterator                           = typename container_t::iterator;
+    using value_type                                             = F;
+    using size_type                                              = decltype(N);
+    inline static constexpr auto s_dimension                     = N;
+    inline static constexpr auto _disambiguator_physical_vector_ = 0;
+    using container_t    = std::array<value_type, s_dimension>;
+    using const_iterator = typename container_t::const_iterator;
+    using iterator       = typename container_t::iterator;
 
     inline auto assert_in_bounds(std::integral auto const idx) const -> void
     {
@@ -159,6 +127,7 @@ public:
 };
 
 template <std::size_t N, std::floating_point F>
+[[nodiscard]]
 auto operator-(physical_vector<N, F> const& v1, physical_vector<N, F> const& v2) noexcept
     -> physical_vector<N, F>
 {
@@ -166,7 +135,7 @@ auto operator-(physical_vector<N, F> const& v1, physical_vector<N, F> const& v2)
     vector_t    ret{};
     const auto& view = std::views::zip(v1, v2);
     std::transform(std::cbegin(view), std::cend(view), std::begin(ret), [](auto v) {
-        return std::get<0>(v) - std::get<2>(v);
+        return std::get<0>(v) - std::get<1>(v);
     });
     return ret;
 }
@@ -204,6 +173,7 @@ template <
 struct physical_magnitude
 {
 public:
+    inline static constexpr auto _disambiguator_physical_magnitude_ = 0;
     using container_t                        = physical_vector<N, F>;
     using value_type                         = typename container_t::value_type;
     inline static constexpr auto s_dimension = container_t::s_dimension;
@@ -213,16 +183,29 @@ public:
 
 #if __GNUC__ >= 14
     [[nodiscard]]
-    auto value(this auto&& self) noexcept -> decltype(auto)
+    auto value() const noexcept -> container_t const&
     {
-        if constexpr (N == 1)
-        {
-            return std::forward<decltype(self)>(self)[0];
-        }
-        else
-        {
-            return std::forward<decltype(self)>(self).value_;
-        }
+        return value_;
+    }
+
+    [[nodiscard]]
+    auto value() noexcept -> container_t&
+    {
+        return value_;
+    }
+
+    [[nodiscard]]
+    auto value() const noexcept -> value_type
+        requires(N == 1)
+    {
+        return value_[0];
+    }
+
+    [[nodiscard]]
+    auto value() noexcept -> value_type&
+        requires(N == 1)
+    {
+        return value_[0];
     }
 
     [[nodiscard]]
@@ -234,26 +217,27 @@ public:
     [[nodiscard]]
     auto value() const noexcept -> container_t const&
     {
-        if constexpr (N == 1)
-        {
-            return value_[0];
-        }
-        else
-        {
-            return value_;
-        }
+        return value_;
     }
 
-    auto value() noexcept -> constainer_t&
+    [[nodiscard]]
+    auto value() noexcept -> container_t&
     {
-        if constexpr (N == 1)
-        {
-            return value_[0];
-        }
-        else
-        {
-            return value_;
-        }
+        return value_;
+    }
+
+    [[nodiscard]]
+    auto value() const noexcept -> value_type
+        requires(N == 1)
+    {
+        return value_[0];
+    }
+
+    [[nodiscard]]
+    auto value() noexcept -> value_type&
+        requires(N == 1)
+    {
+        return value_[0];
     }
 
     [[nodiscard]]

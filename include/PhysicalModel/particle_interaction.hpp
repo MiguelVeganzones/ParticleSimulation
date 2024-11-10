@@ -1,33 +1,31 @@
 #pragma once
 
 #include "particle_concepts.hpp"
+#include "physical_constants.hpp"
+#include "physical_magnitudes.hpp"
+#include "utils.hpp"
 #include <ranges>
 
 namespace pm::interaction
 {
 
-template <concepts::Position Position_Type>
-auto l2_distance(Position_Type const& p1, Position_Type const& p2) noexcept ->
-    typename Position_Type::value_type
+template <concepts::Particle Particle_Type>
+auto gravitational_interaction(Particle_Type const& p1, Particle_Type const& p2) noexcept
+    -> magnitudes::force<Particle_Type::s_dimension, typename Particle_Type::value_type>
 {
-    typename Position_Type::value_type sqd{};
-    for (auto i = decltype(Position_Type::s_dimension){ 0 };
-         i != Position_Type::s_dimension;
-         ++i)
-    {
-        const auto d = (p1[i] - p2[i]);
-        sqd += d * d;
-    }
-    return std::sqrt(sqd);
+    using value_type = typename Particle_Type::value_type;
+    using force_t    = magnitudes::force<Particle_Type::s_dimension, value_type>;
+    [[maybe_unused]]
+    const auto distance            = utils::distance(p1.position(), p2.position());
+    const auto [unit_vector, norm] = utils::normalize(distance.value());
+    const auto magnitude = pm::physical_constants<value_type>::G * p1.mass().value() *
+                           p2.mass().value() / norm / norm;
+    return force_t{ unit_vector * magnitude };
 }
 
 template <concepts::Particle Particle_Type>
-auto gravitational_interaction(Particle_Type const& p1, Particle_Type const& p2) noexcept
+auto calculate_force() noexcept -> void
 {
-    using value_type    = typename Particle_Type::value_type;
-    const auto distance = l2_distance(p1.position(), p2.position());
-    return physical_constants<value_type>::G * p1.mass() * p2.mass() / distance /
-           distance;
 }
 
 } // namespace pm::interaction

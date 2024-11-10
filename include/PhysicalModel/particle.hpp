@@ -14,6 +14,7 @@ class ndparticle
 {
 public:
     using value_type                         = F;
+    using size_type                          = decltype(N);
     inline static constexpr auto s_dimension = N;
     using position_t     = magnitudes::position<s_dimension, value_type>;
     using mass_t         = magnitudes::mass<value_type>;

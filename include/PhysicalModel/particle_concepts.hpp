@@ -17,12 +17,26 @@ concept Position = requires(P p) {
     std::begin(p);
     std::end(p);
     P::s_dimension;
+    p[0];
 };
 
-template <typename P>
-concept Magnitude = requires(P p) {
-    typename P::value_type;
-    P::s_dimension;
+template <typename M>
+concept Magnitude = requires(M m) {
+    M::_disambiguator_physical_magnitude_;
+    std::remove_reference_t<M>::s_dimension;
+#if USE_UNIT_SYSTEM
+    std::remove_reference_t<M>::s_units;
+#endif
+    typename M::value_type;
+    std::begin(m);
+    std::end(m);
+};
+
+template <typename V>
+concept Vector = requires(V v) {
+    V::_disambiguator_physical_vector_;
+    V::s_dimension;
+    typename V::value_type;
 };
 
 } // namespace pm::concepts
