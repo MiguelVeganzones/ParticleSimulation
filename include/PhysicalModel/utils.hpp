@@ -23,14 +23,21 @@ auto distance(Position_Type const& p1, Position_Type const& p2) noexcept
 }
 
 [[gnu::const, nodiscard]]
+auto l2_norm(concepts::Vector auto const& v) noexcept ->
+    typename std::remove_cvref_t<decltype(v)>::value_type
+{
+    return std::sqrt(std::ranges::fold_left(v, 0, [](const auto acc, const auto e) {
+        return e * e + acc;
+    }));
+}
+
+[[gnu::const, nodiscard]]
 auto normalize(concepts::Vector auto const& v) noexcept
     -> std::pair<
         std::remove_cvref_t<decltype(v)>,
         typename std::remove_cvref_t<decltype(v)>::value_type>
 {
-    const auto norm = std::ranges::fold_left(v, 0, [](const auto acc, const auto e) {
-        return std::abs(e) + acc;
-    });
+    const auto norm = l2_norm(std::forward<decltype(v)>(v));
     return { v / norm, norm };
 }
 
