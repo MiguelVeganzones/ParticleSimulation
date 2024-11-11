@@ -19,7 +19,7 @@ auto distance(Position_Type const& p1, Position_Type const& p2) noexcept
 {
     using distance_t = magnitudes::
         distance<Position_Type::s_dimension, typename Position_Type::value_type>;
-    return distance_t(p1.value() - p2.value());
+    return distance_t(p2.value() - p1.value());
 }
 
 [[gnu::const, nodiscard]]
