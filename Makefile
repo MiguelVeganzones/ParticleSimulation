@@ -1,6 +1,19 @@
 CXX = g++
 
 DEBUG_CXXFLAGS =	-O0 \
+			-fbounds-check \
+			-fdiagnostics-color=always \
+			-fdiagnostics-show-template-tree \
+			-fsanitize=address \
+			-fsanitize=leak \
+			-fsanitize=undefined \
+			-ggdb3 \
+			-mavx \
+			-pedantic \
+			-std=c++23
+			# -Wfloat-equal \
+
+DEBUG_CXXFLAGS_GCC =	-O0 \
 			-W \
 			-Wall \
 			-Wconversion \

@@ -51,7 +51,6 @@ concept is_manual_tick_clock_concept = requires {
     T::tick();
     std::chrono::is_clock_v<T>;
 };
-*/
 
 template <typename T>
 struct is_manual_tick_clock : std::false_type
@@ -72,7 +71,6 @@ inline constexpr bool is_manual_tick_clock_v = is_manual_tick_clock<T>::value;
 using manual_clock_impl::is_manual_tick_clock;
 using manual_clock_impl::is_manual_tick_clock_v;
 
-/*
 template <typename Clock>
 concept Clock = std::chrono::is_clock_v<Clock>;
 
