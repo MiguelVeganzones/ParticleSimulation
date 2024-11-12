@@ -10,6 +10,7 @@ DEBUG_CXXFLAGS =	-O0 \
 			-Wduplicated-cond \
 			-Werror \
 			-Wextra \
+			-Wfloat-equal \
 			-Wformat \
 			-Winvalid-pch \
 			-Wlogical-op \
