@@ -1,7 +1,24 @@
 CXX = g++
 
-DEBUG_CXXFLAGS =	-O0 \
-			-fbounds-check \
+DEBUG_CXXFLAGS_CLANG =	-O0 \
+			-W \
+			-Wall \
+			-Wconversion \
+			-Wdangling-else \
+			-Wdouble-promotion \
+			-Werror \
+			-Wextra \
+			-Wfloat-equal \
+			-Wformat \
+			-Winvalid-pch \
+			-Wmisleading-indentation \
+			-Wnull-dereference \
+			-Wodr \
+			-Wpointer-arith \
+			-Wshadow \
+			-Wswitch-default \
+			-Wswitch-enum \
+			-Wvla \
 			-fdiagnostics-color=always \
 			-fdiagnostics-show-template-tree \
 			-fsanitize=address \
@@ -50,7 +67,6 @@ DEBUG_CXXFLAGS_GCC =	-O0 \
 			-mavx \
 			-pedantic \
 			-std=c++23
-			# -Wfloat-equal \
 
 RELEASE_CXXFLAGS =	-fdiagnostics-color=always \
 			-fdiagnostics-show-template-tree \
@@ -99,7 +115,7 @@ else ifeq (${RELEASE}, 2)
     CXXFLAGS = ${FULL_RELEASE_CXXFLAGS}
 	OUT_DIR = bin/full_release
 else
-    CXXFLAGS = ${DEBUG_CXXFLAGS}
+    CXXFLAGS = ${DEBUG_CXXFLAGS_GCC}
 	OUT_DIR = bin/debug
 endif
 

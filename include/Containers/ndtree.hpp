@@ -181,7 +181,7 @@ public:
     using value_type                         = typename sample_t::value_type;
     inline static constexpr auto s_simension = sample_t::s_dimension;
     using boundary_t                         = ndboundary<point_t>;
-    using depth_t                            = int;
+    using depth_t                            = unsigned int;
     inline static constexpr auto s_1d_fanout = std::size_t{ 2 };
     inline static constexpr auto s_nd_fanout =
         utility::cx_functions::pow(s_1d_fanout, s_dimension);
@@ -294,7 +294,7 @@ public:
         return m_fragmented
                    ? std::ranges::fold_left(
                          subboxes(),
-                         0,
+                         0uz,
                          [](auto acc, const auto& e) { return acc + e.elements(); }
                      )
                    : std::ranges::size(contained_elements());
@@ -422,13 +422,12 @@ public:
     using position_t                         = typename sample_t::position_t;
     using value_type                         = typename sample_t::value_type;
     using size_type                          = std::size_t;
-    using depth_t                            = int;
     inline static constexpr auto s_dimension = sample_t::s_dimension;
     using box_t                              = ndbox<sample_t>;
+    using depth_t                            = typename box_t::depth_t;
     using point_t                            = typename sample_t::position_t;
     using boundary_t                         = ndboundary<point_t>;
     template <typename T>
-    using container                          = std::vector<T>;
     inline static constexpr auto s_1d_fanout = box_t::s_1d_fanout;
     inline static constexpr auto s_nd_fanout = box_t::s_nd_fanout;
 
@@ -443,7 +442,7 @@ public:
         m_box(
             limits.has_value() ? limits.value() : detail::compute_limits(collection),
             box_capacity,
-            0,
+            0uz,
             max_depth
         ),
         m_max_depth{ max_depth },

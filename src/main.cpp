@@ -25,7 +25,7 @@ auto generate_particle() noexcept -> P
         // operator*(mass, F)
         pm::magnitudes::mass<F>{ utility::random::srandom::randfloat<F>() * F{ 20 } },
         pm::magnitudes::linear_velocity<N, F>{
-            F{ 100.f } * -utility::random::srandom::randfloat<F>(),
+            F{ 100 } * -utility::random::srandom::randfloat<F>(),
             -utility::random::srandom::randfloat<F>(),
             -utility::random::srandom::randfloat<F>() },
 
@@ -57,7 +57,7 @@ int particle_test()
     {
         std::cout << "Sample: " << i++ << '\n' << s << '\n';
     }
-    ndtree<sample_t> tree(std::span{ samples }, 5, 4);
+    ndtree<sample_t> tree(std::span{ samples }, 5, 4uz);
     std::cout << tree;
 
     return EXIT_SUCCESS;

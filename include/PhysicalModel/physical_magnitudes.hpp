@@ -58,14 +58,14 @@ struct physical_vector
     }
 
     [[nodiscard]]
-    auto operator[](std::integral auto idx) const -> value_type
+    auto operator[](std::size_t idx) const -> value_type
     {
         assert_in_bounds(idx);
         return value_[idx];
     }
 
     [[nodiscard]]
-    auto operator[](std::integral auto idx) -> value_type&
+    auto operator[](std::size_t idx) -> value_type&
     {
         assert_in_bounds(idx);
         return value_[idx];
