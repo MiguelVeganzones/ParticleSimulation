@@ -1,1 +1,27 @@
-Add distance metric + dimension restrictions to ntree
+Items (Regroup) and (Cache) probably should be implemented as a function to be
+called after elements are reordered after a simulation step. (Regroup) could
+also be performed along with (ElementMove), but this could introduce unnecessary
+overhead due to premature regrouping.
+
+[[Necessary-feature]] (Regroup)
+ndbox needs a way to detect when the elements in its sub boxes could be stored
+in the current ndbox so that the tree can be simplified.
+
+[[Necessary-optimization]] (ElementMove)
+ndbox should hold a reference to its parent ndbox to make moving elements around
+more efficient. If an object moves out of the bounds of the current box, give it
+to your parent and let it handle it. Alternative would be to reintroduce the
+object from the root node, ignoring the fact that objects move only locally at
+each time step.
+
+[[Necessary-optimization]] (Cache)
+ndbox should contain a summary of all the objects they contain inside to cache
+repetitive computations. This would be implemented by caching results down to
+top recursively.
+
+[[Unnecessary-optimization]] (ArenaAllocator)
+ndbox variant member variable should be a different struct.
+    Right now std::vector is used to limit stack size, even though size is known
+    a compile time. This can be implemented more elegantly and efficiently using
+    an intermediate object and arenas. sub-boxes would be allocated and
+    deallocated at once in an aligned storage.
