@@ -60,7 +60,9 @@ Instructions to get the project up and running on your local machine.
 - Information on how to submit issues or pull requests.
 
 ## License
-- Specify the project's license (e.g., MIT, GPL).
+This project is licensed under the [GNU General Public License](./LICENSE).
+
+For more information, please see the [LICENSE](./LICENSE) file.
 
 ## Acknowledgments
 - Credits for any resources, libraries, or individuals who contributed to the project.
