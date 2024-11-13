@@ -39,7 +39,6 @@ auto update_acceleration(Particle_Type& p, std::span<Particle_Type, N> particles
             force += gravitational_interaction(p, other);
         }
     }
-    std::cout << "Force: " << force << '\n';
     p.acceleration() = force / p.mass();
 }
 

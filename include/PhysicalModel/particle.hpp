@@ -166,7 +166,8 @@ private:
 template <std::size_t N, std::floating_point F>
 auto operator<<(std::ostream& os, ndparticle<N, F> pp) noexcept -> std::ostream&
 {
-    os << pp.position() << '\n'
+    os << pp.id() << '\n'
+       << pp.position() << '\n'
        << pp.mass() << '\n'
        << pp.velocity() << '\n'
        << pp.acceleration();

@@ -17,7 +17,8 @@ auto generate_particle() noexcept -> P
 {
     using namespace pm::magnitudes;
     constexpr auto N = P::s_dimension;
-    using F          = typename P::value_type;
+    static_assert(N == 3, "TODO: Make a factory particle function...");
+    using F = typename P::value_type;
     return P(
         pm::magnitudes::position<N, F>{ utility::random::srandom::randfloat<F>() * F{ 3 },
                                         utility::random::srandom::randfloat<F>() * F{ 3 },
@@ -106,10 +107,10 @@ int particle_movement_test()
     static constexpr auto N = 3;
     using sample_t          = particle::ndparticle<N, F>;
 
-    using tick_t = synchronization::tick_period<std::chrono::milliseconds, 200>;
+    using tick_t             = synchronization::tick_period<std::chrono::seconds, 200>;
     using simulation_clock_t = synchronization::synthetic_clock<tick_t>;
 
-    const auto            size = 30000;
+    const auto            size = 5;
     std::vector<sample_t> samples;
 
     for ([[maybe_unused]]
@@ -140,6 +141,63 @@ int particle_movement_test()
     return EXIT_SUCCESS;
 }
 
+int particle_movement_simulation()
+{
+    using namespace pm;
+    using F                 = double;
+    static constexpr auto N = 3;
+    static constexpr auto K = 300; // Iterations
+    using particle_t        = particle::ndparticle<N, F>;
+
+    using tick_t             = synchronization::tick_period<std::chrono::seconds, 200>;
+    using simulation_clock_t = synchronization::synthetic_clock<tick_t>;
+
+    const auto              size = 500;
+    std::vector<particle_t> particles;
+    particles.reserve(size);
+
+    for ([[maybe_unused]]
+         auto _ : std::views::iota(0, size))
+    {
+        particles.push_back(generate_particle<particle_t>());
+    }
+
+    for (auto const& p : particles | std::views::take(10))
+    {
+        std::cout << p << '\n';
+    }
+
+    for (auto i = 0uz; i != K; ++i)
+    {
+        if (i % 1 == 0)
+        {
+            std::cout << "Iteration: " << i << '\n';
+        }
+        for (auto& p : particles)
+        {
+            pm::interaction::update_acceleration(
+                p, std::span<particle_t, size>{ particles }
+            );
+        }
+        for (auto& p : particles)
+        {
+            p.update_position(tick_t::period_duration);
+        }
+
+        if constexpr (utility::concepts::is_manual_tick_clock_v<simulation_clock_t>)
+        {
+            simulation_clock_t::tick();
+        }
+    }
+
+    for (auto const& p : particles | std::views::take(10))
+    {
+        std::cout << p << '\n';
+    }
+
+    return EXIT_SUCCESS;
+}
+
 int main()
 {
     utility::logging::init();
@@ -152,4 +210,5 @@ int main()
     particle_test();
     gravitational_interaction_test();
     particle_movement_test();
+    particle_movement_simulation();
 }
