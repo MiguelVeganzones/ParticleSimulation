@@ -1,8 +1,10 @@
+#include "factory.hpp"
 #include "particle.hpp"
 #include "particle_concepts.hpp"
 #include "particle_interaction.hpp"
 #include "random.hpp"
 #include "random_distributions.hpp"
+#include "stopwatch.hpp"
 #include "synthetic_clock.hpp"
 #include <chrono>
 #include <cmath>
@@ -11,34 +13,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-
-template <pm::particle_concepts::Particle P>
-auto generate_particle() noexcept -> P
-{
-    using namespace pm::magnitudes;
-    constexpr auto N = P::s_dimension;
-    static_assert(N == 3, "TODO: Make a factory particle function...");
-    using F = typename P::value_type;
-    return P(
-        pm::magnitudes::position<N, F>{ utility::random::srandom::randfloat<F>() * F{ 3 },
-                                        utility::random::srandom::randfloat<F>() * F{ 3 },
-                                        utility::random::srandom::randfloat<F>() *
-                                            F{ 3 } },
-        // operator*(mass, F)
-        pm::magnitudes::mass<F>{ utility::random::srandom::randfloat<F>() * F{ 200 } },
-        pm::magnitudes::linear_velocity<N, F>{
-            F{ 100 } * -utility::random::srandom::randfloat<F>(),
-            -utility::random::srandom::randfloat<F>(),
-            -utility::random::srandom::randfloat<F>() } *
-            F{ 0 },
-
-        pm::magnitudes::linear_acceleration<N, F>{
-            utility::random::srandom::randfloat<F>(),
-            utility::random::srandom::randfloat<F>() / F{ 10 },
-            utility::random::srandom::randfloat<F>() } *
-            F{ 0 }
-    );
-}
 
 int particle_test()
 {
@@ -54,7 +28,9 @@ int particle_test()
     for ([[maybe_unused]]
          auto _ : std::views::iota(0, size))
     {
-        samples.push_back(generate_particle<sample_t>());
+        samples.push_back(factory::particle_factory<N, F>([]() {
+            return utility::random::srandom::randfloat<F>();
+        }));
     }
 
     for (auto i = 0uz; auto const& s : samples)
@@ -75,13 +51,15 @@ int gravitational_interaction_test()
     static constexpr auto N = 3;
     using sample_t          = particle::ndparticle<N, F>;
 
-    const auto            size = 3000;
+    const auto            size = 30;
     std::vector<sample_t> samples;
 
     for ([[maybe_unused]]
          auto _ : std::views::iota(0, size))
     {
-        samples.push_back(generate_particle<sample_t>());
+        samples.push_back(factory::particle_factory<N, F>([]() {
+            return utility::random::srandom::randfloat<F>();
+        }));
     }
 
     for (auto i = 0uz; auto const& s : samples)
@@ -116,7 +94,9 @@ int particle_movement_test()
     for ([[maybe_unused]]
          auto _ : std::views::iota(0, size))
     {
-        samples.push_back(generate_particle<sample_t>());
+        samples.push_back(factory::particle_factory<N, F>([]() {
+            return utility::random::srandom::randfloat<F>();
+        }));
     }
 
     std::cout << "Start of particle 0: " << samples[0] << '\n';
@@ -152,14 +132,16 @@ int particle_movement_simulation()
     using tick_t             = synchronization::tick_period<std::chrono::seconds, 200>;
     using simulation_clock_t = synchronization::synthetic_clock<tick_t>;
 
-    const auto              size = 500;
+    const auto              size = 50000;
     std::vector<particle_t> particles;
     particles.reserve(size);
 
     for ([[maybe_unused]]
          auto _ : std::views::iota(0, size))
     {
-        particles.push_back(generate_particle<particle_t>());
+        particles.push_back(factory::particle_factory<N, F>([]() {
+            return utility::random::srandom::randfloat<F>();
+        }));
     }
 
     for (auto const& p : particles | std::views::take(10))
@@ -167,9 +149,10 @@ int particle_movement_simulation()
         std::cout << p << '\n';
     }
 
+    utility::timing::stopwatch s{ "Simulation" };
     for (auto i = 0uz; i != K; ++i)
     {
-        if (i % 1 == 0)
+        if (i % 10 == 0)
         {
             std::cout << "Iteration: " << i << '\n';
         }
