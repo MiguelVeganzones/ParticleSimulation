@@ -11,7 +11,7 @@ namespace pm::utils
 
 // Definitely premature optimization
 // std::Sqrt is pretty expensive and solution is nice tbf
-template <concepts::Position Position_Type>
+template <particle_concepts::Position Position_Type>
 [[gnu::const, nodiscard]]
 auto distance(Position_Type const& p1, Position_Type const& p2) noexcept
     -> magnitudes::
@@ -23,7 +23,7 @@ auto distance(Position_Type const& p1, Position_Type const& p2) noexcept
 }
 
 [[gnu::const, nodiscard]]
-auto l2_norm(concepts::Vector auto const& v) noexcept ->
+auto l2_norm(particle_concepts::Vector auto const& v) noexcept ->
     typename std::remove_cvref_t<decltype(v)>::value_type
 {
     return std::sqrt(std::ranges::fold_left(v, 0, [](const auto acc, const auto e) {
@@ -32,7 +32,7 @@ auto l2_norm(concepts::Vector auto const& v) noexcept ->
 }
 
 [[gnu::const, nodiscard]]
-auto normalize(concepts::Vector auto const& v) noexcept
+auto normalize(particle_concepts::Vector auto const& v) noexcept
     -> std::pair<
         std::remove_cvref_t<decltype(v)>,
         typename std::remove_cvref_t<decltype(v)>::value_type>

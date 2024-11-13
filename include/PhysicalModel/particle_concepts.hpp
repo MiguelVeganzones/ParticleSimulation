@@ -2,13 +2,13 @@
 
 #include <type_traits>
 
-namespace pm::concepts
+namespace pm::particle_concepts
 {
 
 template <typename P>
 concept Particle = requires(P p) {
-    { p.mass() } -> std::same_as<typename P::mass_t>;
-    { p.position() } -> std::same_as<typename P::position_t>;
+    { p.mass() } -> std::convertible_to<typename P::mass_t>;
+    { p.position() } -> std::convertible_to<typename P::position_t>;
 };
 
 template <typename P>
@@ -23,9 +23,9 @@ concept Position = requires(P p) {
 template <typename M>
 concept Magnitude = requires(M m) {
     M::_disambiguator_physical_magnitude_;
-    std::remove_reference_t<M>::s_dimension;
+    M::s_dimension;
 #if USE_UNIT_SYSTEM
-    std::remove_reference_t<M>::s_units;
+    M::s_units;
 #endif
     typename M::value_type;
     std::begin(m);
@@ -39,4 +39,4 @@ concept Vector = requires(V v) {
     typename V::value_type;
 };
 
-} // namespace pm::concepts
+} // namespace pm::particle_concepts

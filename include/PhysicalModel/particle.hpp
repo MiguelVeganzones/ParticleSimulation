@@ -15,11 +15,13 @@ class ndparticle
 public:
     using value_type                         = F;
     using size_type                          = decltype(N);
+    using id_t                               = std::size_t;
     inline static constexpr auto s_dimension = N;
-    using position_t     = magnitudes::position<s_dimension, value_type>;
-    using mass_t         = magnitudes::mass<value_type>;
-    using velocity_t     = magnitudes::linear_velocity<s_dimension, value_type>;
-    using acceleration_t = magnitudes::linear_acceleration<s_dimension, value_type>;
+    using position_t      = magnitudes::position<s_dimension, value_type>;
+    using mass_t          = magnitudes::mass<value_type>;
+    using velocity_t      = magnitudes::linear_velocity<s_dimension, value_type>;
+    using acceleration_t  = magnitudes::linear_acceleration<s_dimension, value_type>;
+    inline static auto ID = 0uz;
 
 public:
     constexpr ndparticle(
@@ -28,6 +30,7 @@ public:
         velocity_t        vel,
         acceleration_t    acc
     ) :
+        m_id{ ID++ },
         m_position{ pos },
         m_mass{ m },
         m_velocity{ vel },
@@ -36,27 +39,32 @@ public:
     }
 
 public:
+    constexpr auto id() const noexcept -> id_t
+    {
+        return m_id;
+    }
+
 #if __GNUC__ >= 14
     [[nodiscard]]
-    constexpr auto position(this auto&& self) noexcept -> decltype(auto)
+    constexpr auto position(this auto&& self) noexcept -> auto&&
     {
         return std::forward<decltype(self)>(self).m_position;
     }
 
     [[nodiscard]]
-    constexpr auto mass(this auto&& self) noexcept -> decltype(auto)
+    constexpr auto mass(this auto&& self) noexcept -> auto&&
     {
         return std::forward<decltype(self)>(self).m_mass;
     }
 
     [[nodiscard]]
-    constexpr auto velocity(this auto&& self) noexcept -> decltype(auto)
+    constexpr auto velocity(this auto&& self) noexcept -> auto&&
     {
         return std::forward<decltype(self)>(self).m_velocity;
     }
 
     [[nodiscard]]
-    constexpr auto acceleration(this auto&& self) noexcept -> decltype(auto)
+    constexpr auto acceleration(this auto&& self) noexcept -> auto&&
     {
         return std::forward<decltype(self)>(self).m_acceleration;
     }
@@ -72,25 +80,25 @@ public:
     }
 #else
     [[nodiscard]]
-    constexpr auto position() noexcept -> decltype(auto)
+    constexpr auto position() noexcept -> position_t&
     {
         return m_position;
     }
 
     [[nodiscard]]
-    constexpr auto mass() noexcept -> decltype(auto)
+    constexpr auto mass() noexcept -> mass_t&
     {
         return m_mass;
     }
 
     [[nodiscard]]
-    constexpr auto velocity() noexcept -> decltype(auto)
+    constexpr auto velocity() noexcept -> velocity_t&
     {
         return m_velocity;
     }
 
     [[nodiscard]]
-    constexpr auto acceleration() noexcept -> decltype(auto)
+    constexpr auto acceleration() noexcept -> acceleration_t&
     {
         return m_acceleration;
     }
@@ -102,25 +110,25 @@ public:
     }
 
     [[nodiscard]]
-    constexpr auto position() const noexcept -> decltype(auto)
+    constexpr auto position() const noexcept -> position_t const&
     {
         return m_position;
     }
 
     [[nodiscard]]
-    constexpr auto mass() const noexcept -> decltype(auto)
+    constexpr auto mass() const noexcept -> mass_t const&
     {
         return m_mass;
     }
 
     [[nodiscard]]
-    constexpr auto velocity() const noexcept -> decltype(auto)
+    constexpr auto velocity() const noexcept -> velocity_t const&
     {
         return m_velocity;
     }
 
     [[nodiscard]]
-    constexpr auto acceleration() const noexcept -> decltype(auto)
+    constexpr auto acceleration() const noexcept -> acceleration_t const&
     {
         return m_acceleration;
     }
@@ -132,7 +140,11 @@ public:
     }
 #endif
 
+    constexpr auto operator==(ndparticle const&) const -> bool = default;
+    constexpr auto operator!=(ndparticle const&) const -> bool = default;
+
 private:
+    id_t           m_id;
     position_t     m_position;
     mass_t         m_mass;
     velocity_t     m_velocity;

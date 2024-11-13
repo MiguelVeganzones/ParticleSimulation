@@ -48,7 +48,7 @@ template <typename T>
 concept sample_concept = requires(T t) {
     typename T::value_type;
     T::s_dimension;
-    { t.position() } -> std::same_as<typename T::position_t>;
+    { t.position() } -> std::convertible_to<typename T::position_t>;
     t.properties();
 };
 
@@ -302,26 +302,26 @@ public:
 
 private:
     // because you cannot portably have a macro expansion (assert) inside #if #endif
-    inline auto assert_fragmented() const -> void
+    inline auto assert_fragmented() const noexcept -> void
     {
         assert(m_fragmented);
     }
 
-    inline auto assert_not_fragmented() const -> void
+    inline auto assert_not_fragmented() const noexcept -> void
     {
         assert(!m_fragmented);
     }
 
 #if __GNUC__ >= 14
     [[nodiscard]]
-    auto contained_elements(this auto&& self) noexcept -> decltype(auto)
+    auto contained_elements(this auto&& self) noexcept -> auto&&
     {
         std::forward<decltype(self)>(self).assert_not_fragmented();
         return std::get<0>(std::forward<decltype(self)>(self).m_elements);
     }
 
     [[nodiscard]]
-    auto subboxes(this auto&& self) noexcept -> decltype(auto)
+    auto subboxes(this auto&& self) noexcept -> auto&&
     {
         std::forward<decltype(self)>(self).assert_fragmented();
         return std::get<1>(std::forward<decltype(self)>(self).m_elements);

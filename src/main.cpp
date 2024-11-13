@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-template <pm::concepts::Particle P>
+template <pm::particle_concepts::Particle P>
 auto generate_particle() noexcept -> P
 {
     using namespace pm::magnitudes;
@@ -23,7 +23,8 @@ auto generate_particle() noexcept -> P
                                         utility::random::srandom::randfloat<F>() *
                                             F{ 3 } },
         // operator*(mass, F)
-        pm::magnitudes::mass<F>{ utility::random::srandom::randfloat<F>() * F{ 20 } },
+        pm::magnitudes::mass<F>{ utility::random::srandom::randfloat<F>() *
+                                 F{ 200000000 } },
         pm::magnitudes::linear_velocity<N, F>{
             F{ 100 } * -utility::random::srandom::randfloat<F>(),
             -utility::random::srandom::randfloat<F>(),
@@ -92,6 +93,15 @@ int gravitational_interaction_test()
             std::cout << pm::interaction::gravitational_interaction(p1, p2) << '\n';
         }
     }
+
+    std::cout << "Initial acceleration of particle 0: " << samples[0].acceleration()
+              << '\n';
+    pm::interaction::update_acceleration(
+        samples[0], std::span<sample_t, size>{ samples }
+    );
+    std::cout << "Updated acceleration of particle 0: " << samples[0].acceleration()
+              << '\n';
+
     return EXIT_SUCCESS;
 }
 
