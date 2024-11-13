@@ -43,7 +43,6 @@ concept random_distribution = requires(T t) {
     requires std::constructible_from<T, typename T::param_type>;
 };
 
-/*
 namespace manual_clock_impl
 {
 template <typename T>
@@ -71,12 +70,11 @@ inline constexpr bool is_manual_tick_clock_v = is_manual_tick_clock<T>::value;
 using manual_clock_impl::is_manual_tick_clock;
 using manual_clock_impl::is_manual_tick_clock_v;
 
-template <typename Clock>
-concept Clock = std::chrono::is_clock_v<Clock>;
+template <typename Clock_Type>
+concept Clock = std::chrono::is_clock_v<Clock_Type>;
 
 template <typename T>
 concept Duration = requires(T t) { std::chrono::duration_cast<std::chrono::seconds>(t); };
-*/
 
 } // namespace utility::concepts
 

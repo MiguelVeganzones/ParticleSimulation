@@ -1,8 +1,10 @@
 #ifndef INLCLUDED_PARTICLE
 #define INLCLUDED_PARTICLE
 
+#include "concepts.hpp"
 #include "ndtree.hpp"
 #include "physical_magnitudes.hpp"
+#include <chrono>
 #include <tuple>
 #include <type_traits>
 
@@ -42,6 +44,16 @@ public:
     constexpr auto id() const noexcept -> id_t
     {
         return m_id;
+    }
+
+    constexpr auto update_position(utility::concepts::Duration auto delta_t
+    ) noexcept -> void
+    {
+        using duration_t = std::chrono::duration<float>; // float seconds
+        const auto d_t   = std::chrono::duration_cast<duration_t>(delta_t).count();
+        const auto d_v   = m_acceleration * d_t;
+        m_position += (m_velocity + value_type{ 0.5 } * d_v) * d_t;
+        m_velocity += d_v;
     }
 
 #if __GNUC__ >= 14

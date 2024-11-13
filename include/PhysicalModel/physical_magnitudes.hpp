@@ -228,7 +228,7 @@ public:
 
     template <particle_concepts::Magnitude Other>
         requires(std::remove_reference_t<Other>::s_units == units::Units::_runtime_unit_)
-    constexpr explicit physical_magnitude(Other&& other) noexcept :
+    constexpr physical_magnitude(Other&& other) noexcept :
         value_{ std::forward<Other>(other).value_ }
     {
     }
@@ -533,7 +533,7 @@ auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(au
             typename T1_t::value_type,
             units::Units::_runtime_unit_>{ operator_impl(
             std::forward<decltype(pma)>(pma).value(),
-            std::forward<decltype(pmb)>(pmb).value(),
+            std::forward<decltype(pmb)>(pmb),
             std::forward<decltype(binary_op)>(binary_op)
         ) };
     }
@@ -543,7 +543,7 @@ auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(au
             T2_t::s_dimension,
             typename T2_t::value_type,
             units::Units::_runtime_unit_>{ operator_impl(
-            std::forward<decltype(pma)>(pma).value(),
+            std::forward<decltype(pma)>(pma),
             std::forward<decltype(pmb)>(pmb).value(),
             std::forward<decltype(binary_op)>(binary_op)
         ) };
