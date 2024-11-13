@@ -26,15 +26,10 @@ public:
     inline static auto ID = 0uz;
 
 public:
-    constexpr ndparticle(
-        position_t const& pos,
-        mass_t            m,
-        velocity_t        vel,
-        acceleration_t    acc
-    ) :
+    constexpr ndparticle(mass_t m, position_t pos, velocity_t vel, acceleration_t acc) :
         m_id{ ID++ },
-        m_position{ pos },
         m_mass{ m },
+        m_position{ pos },
         m_velocity{ vel },
         m_acceleration{ acc }
     {
@@ -157,8 +152,8 @@ public:
 
 private:
     id_t           m_id;
-    position_t     m_position;
     mass_t         m_mass;
+    position_t     m_position;
     velocity_t     m_velocity;
     acceleration_t m_acceleration;
 };
@@ -166,7 +161,7 @@ private:
 template <std::size_t N, std::floating_point F>
 auto operator<<(std::ostream& os, ndparticle<N, F> pp) noexcept -> std::ostream&
 {
-    os << pp.id() << '\n'
+    os << "ID: " << pp.id() << '\n'
        << pp.position() << '\n'
        << pp.mass() << '\n'
        << pp.velocity() << '\n'

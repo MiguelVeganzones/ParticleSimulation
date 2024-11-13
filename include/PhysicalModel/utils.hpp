@@ -9,8 +9,6 @@
 namespace pm::utils
 {
 
-// Definitely premature optimization
-// std::Sqrt is pretty expensive and solution is nice tbf
 template <particle_concepts::Position Position_Type>
 [[gnu::const, nodiscard]]
 auto distance(Position_Type const& p1, Position_Type const& p2) noexcept

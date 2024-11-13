@@ -6,12 +6,15 @@
 #include <algorithm>
 #include <concepts>
 #include <functional>
-#include <initializer_list>
 #include <iostream>
 #include <ranges>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
+
+#if USE_UNIT_SYSTEM
+#include <initializer_list>
+#endif
 
 namespace pm::magnitudes
 {
@@ -187,7 +190,7 @@ template <
     std::floating_point F
 #if USE_UNIT_SYSTEM
     ,
-    auto U
+    units::Units U
 #endif
     >
 struct physical_magnitude
@@ -559,7 +562,7 @@ template <
     std::floating_point F
 #if USE_UNIT_SYSTEM
     ,
-    auto U
+    units::Units U
 #endif
     >
 auto operator<<(
