@@ -9,7 +9,9 @@
 namespace pm::interaction
 {
 
-template <concepts::Particle Particle_Type>
+using namespace particle_concepts;
+
+template <Particle Particle_Type>
 auto gravitational_interaction(Particle_Type const& p1, Particle_Type const& p2) noexcept
     -> magnitudes::force<Particle_Type::s_dimension, typename Particle_Type::value_type>
 {
@@ -23,9 +25,22 @@ auto gravitational_interaction(Particle_Type const& p1, Particle_Type const& p2)
     return force_t{ unit_vector * magnitude };
 }
 
-template <concepts::Particle Particle_Type>
-auto calculate_force() noexcept -> void
+template <Particle Particle_Type, std::size_t N>
+auto update_acceleration(Particle_Type& p, std::span<Particle_Type, N> particles) noexcept
+    -> void
 {
+    using force_t =
+        magnitudes::force<Particle_Type::s_dimension, typename Particle_Type::value_type>;
+    force_t force{};
+    for (auto const& other : particles)
+    {
+        if (p.id() != other.id())
+        {
+
+            force += gravitational_interaction(p, other);
+        }
+    }
+    p.acceleration() = force / p.mass();
 }
 
 } // namespace pm::interaction
