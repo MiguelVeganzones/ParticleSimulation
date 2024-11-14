@@ -6,6 +6,8 @@
 #include "utils.hpp"
 #include <ranges>
 
+#define DEBUG_PRINT (false)
+
 namespace pm::interaction
 {
 
@@ -22,6 +24,11 @@ auto gravitational_interaction(Particle_Type const& p1, Particle_Type const& p2)
     const auto [unit_vector, norm] = utils::normalize(distance.value());
     const auto magnitude = pm::physical_constants<value_type>::G * p1.mass().value() *
                            p2.mass().value() / norm / norm;
+#if DEBUG_PRINT
+    std::cout << "D: " << distance << '\n';
+    std::cout << "M: " << magnitude << '\n';
+    std::cout << "U: " << unit_vector << '\n';
+#endif
     return force_t{ unit_vector * magnitude };
 }
 

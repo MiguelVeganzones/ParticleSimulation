@@ -28,10 +28,10 @@ public:
 public:
     constexpr ndparticle(mass_t m, position_t pos, velocity_t vel, acceleration_t acc) :
         m_id{ ID++ },
-        m_mass{ m },
-        m_position{ pos },
-        m_velocity{ vel },
-        m_acceleration{ acc }
+        m_mass{ std::move(m) },
+        m_position{ std::move(pos) },
+        m_velocity{ std::move(vel) },
+        m_acceleration{ std::move(acc) }
     {
     }
 

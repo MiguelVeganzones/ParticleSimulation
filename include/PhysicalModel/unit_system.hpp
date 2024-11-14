@@ -1,7 +1,7 @@
 #pragma once
 
 #ifndef USE_UNIT_SYSTEM
-#define USE_UNIT_SYSTEM 1
+#define USE_UNIT_SYSTEM (true)
 #endif
 
 namespace pm::units

@@ -52,6 +52,7 @@ DEBUG_CXXFLAGS_GCC =	-O0 \
 			-Wshadow \
 			-Wswitch-default \
 			-Wswitch-enum \
+			-Wuninitialized \
 			-Wvla \
 			-fbounds-check \
 			-fconcepts-diagnostics-depth=3 \
@@ -59,6 +60,7 @@ DEBUG_CXXFLAGS_GCC =	-O0 \
 			-fdiagnostics-path-format=inline-events \
 			-fdiagnostics-show-caret \
 			-fdiagnostics-show-template-tree \
+			-ffinite-math-only \
 			-fmax-errors=5 \
 			-fsanitize=address \
 			-fsanitize=leak \
@@ -77,8 +79,9 @@ RELEASE_CXXFLAGS =	-fdiagnostics-color=always \
 			-Wall \
 			-Wextra \
 			-Wshadow \
-			-Wconversion \
 			-ffinite-math-only \
+			-Wconversion \
+			-Wuninitialized \
 			-Wmisleading-indentation \
 			-Werror \
 			-pedantic \

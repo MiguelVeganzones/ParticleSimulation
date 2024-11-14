@@ -14,7 +14,52 @@
 #include <string>
 #include <vector>
 
-int particle_test()
+template <std::size_t N, std::floating_point F>
+auto generate_particle_set(std::size_t size)
+{
+    using namespace pm::factory;
+    using namespace utility::random_distributions;
+
+    auto mass_generator = []() mutable -> F {
+        using distribution_t = random_distribution<F, DistributionCategory::Exponential>;
+        using param_type     = typename distribution_t::param_type;
+        param_type            params(F{ 0.001f });
+        static distribution_t d(params);
+        return d();
+    };
+
+    auto position_generator = []() mutable -> F {
+        using distribution_a_t = random_distribution<F, DistributionCategory::Uniform>;
+        using param_type_a     = typename distribution_a_t::param_type;
+        param_type_a            params_a(F{ -100 }, F{ 100 });
+        static distribution_a_t d_a(params_a);
+        using distribution_b_t = random_distribution<F, DistributionCategory::Gamma>;
+        using param_type_b     = typename distribution_b_t::param_type;
+        param_type_b            params_b(F{ 8 }, F{ 1 });
+        static distribution_b_t d_b(params_b);
+        return d_a() + d_b();
+    };
+
+    auto velocity_generator = []() mutable -> F {
+        using distribution_t = random_distribution<F, DistributionCategory::Uniform>;
+        using param_type     = typename distribution_t::param_type;
+        param_type            params(F{ -1 }, F{ 1 });
+        static distribution_t d(params);
+        return d();
+    };
+
+    auto acceleration_generator = []() -> F { return F{ 0 }; };
+
+    return particle_set_factory<N, F>(
+        size,
+        mass_generator,
+        position_generator,
+        velocity_generator,
+        acceleration_generator
+    );
+}
+
+int ndtree_test()
 {
     using namespace ndt;
     using namespace pm;
@@ -22,22 +67,14 @@ int particle_test()
     static constexpr auto N = 3;
     using sample_t          = particle::ndparticle<N, F>;
 
-    const auto            size = 30;
-    std::vector<sample_t> samples;
-
-    for ([[maybe_unused]]
-         auto _ : std::views::iota(0, size))
-    {
-        samples.push_back(factory::particle_factory<N, F>([]() {
-            return utility::random::srandom::randfloat<F>();
-        }));
-    }
+    const auto size    = 30;
+    auto       samples = generate_particle_set<N, F>(size);
 
     for (auto i = 0uz; auto const& s : samples)
     {
         std::cout << "Sample: " << i++ << '\n' << s << '\n';
     }
-    ndtree<sample_t> tree(std::span{ samples }, 5, 4uz);
+    ndtree<sample_t> tree(std::span<sample_t, size>{ samples }, 5, 4uz);
     std::cout << tree;
 
     return EXIT_SUCCESS;
@@ -49,18 +86,9 @@ int gravitational_interaction_test()
 
     using F                 = double;
     static constexpr auto N = 3;
-    using sample_t          = particle::ndparticle<N, F>;
 
-    const auto            size = 30;
-    std::vector<sample_t> samples;
-
-    for ([[maybe_unused]]
-         auto _ : std::views::iota(0, size))
-    {
-        samples.push_back(factory::particle_factory<N, F>([]() {
-            return utility::random::srandom::randfloat<F>();
-        }));
-    }
+    const auto size    = 30;
+    const auto samples = generate_particle_set<N, F>(size);
 
     for (auto i = 0uz; auto const& s : samples)
     {
@@ -88,16 +116,8 @@ int particle_movement_test()
     using tick_t             = synchronization::tick_period<std::chrono::seconds, 200>;
     using simulation_clock_t = synchronization::synthetic_clock<tick_t>;
 
-    const auto            size = 5;
-    std::vector<sample_t> samples;
-
-    for ([[maybe_unused]]
-         auto _ : std::views::iota(0, size))
-    {
-        samples.push_back(factory::particle_factory<N, F>([]() {
-            return utility::random::srandom::randfloat<F>();
-        }));
-    }
+    const auto size    = 5;
+    auto       samples = generate_particle_set<N, F>(size);
 
     std::cout << "Start of particle 0: " << samples[0] << '\n';
 
@@ -125,24 +145,15 @@ int particle_movement_simulation()
 {
     using namespace pm;
     using F                 = double;
-    static constexpr auto N = 3;
+    static constexpr auto N = 2;
     static constexpr auto K = 300; // Iterations
     using particle_t        = particle::ndparticle<N, F>;
 
     using tick_t             = synchronization::tick_period<std::chrono::seconds, 200>;
     using simulation_clock_t = synchronization::synthetic_clock<tick_t>;
 
-    const auto              size = 50000;
-    std::vector<particle_t> particles;
-    particles.reserve(size);
-
-    for ([[maybe_unused]]
-         auto _ : std::views::iota(0, size))
-    {
-        particles.push_back(factory::particle_factory<N, F>([]() {
-            return utility::random::srandom::randfloat<F>();
-        }));
-    }
+    const auto size      = 500;
+    auto       particles = generate_particle_set<N, F>(size);
 
     for (auto const& p : particles | std::views::take(10))
     {
@@ -190,8 +201,9 @@ int main()
     utility::logging::default_source::log(
         utility::logging::severity_level::error, "Huge error or sth..."
     );
-    particle_test();
+    ndtree_test();
     gravitational_interaction_test();
     particle_movement_test();
+    return EXIT_SUCCESS;
     particle_movement_simulation();
 }

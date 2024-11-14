@@ -557,6 +557,28 @@ auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(au
     }
 }
 
+template <std::size_t N, std::floating_point F>
+auto operator<<(std::ostream& os, physical_vector<N, F> const pv) noexcept
+    -> std::ostream&
+{
+    if constexpr (N == 1)
+    {
+        os << pv.value();
+    }
+    else
+    {
+        os << "{ ";
+        std::size_t n{ 0 };
+        for (auto const v : pv)
+        {
+            os << v << (++n != N ? ", " : " ");
+        }
+        os << '}';
+    }
+
+    return os;
+}
+
 template <
     std::size_t         N,
     std::floating_point F
@@ -596,26 +618,10 @@ auto operator<<(
     };
     constexpr auto unit = unit_name(U);
 #endif
-    if constexpr (N == 1)
-    {
-        os << pm.value();
+    os << pm.value();
 #if USE_UNIT_SYSTEM
-        os << '[' << unit << ']';
+    os << '[' << unit << ']';
 #endif
-    }
-    else
-    {
-        os << "{ ";
-        std::size_t n{ 0 };
-        for (auto const v : pm)
-        {
-            os << v << (++n != N ? ", " : " ");
-        }
-        os << '}';
-#if USE_UNIT_SYSTEM
-        os << '[' << unit << ']';
-#endif
-    }
 
     return os;
 }
