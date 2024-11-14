@@ -108,7 +108,6 @@ FULL_RELEASE_CXXFLAGS = -fdiagnostics-color=always \
 			-fconcepts-diagnostics-depth=3 \
 			-std=c++23
 			#-fno-exceptions
-			
 
 RELEASE ?= 0
 ifeq (${RELEASE}, 1)

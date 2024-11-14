@@ -1,7 +1,7 @@
 #ifndef INCLUDED_COMPOSABLE_FUNCTION
 #define INCLUDED_COMPOSABLE_FUNCTION
 
-#include "../Utility/concepts.hpp"
+#include "concepts.hpp"
 #include <functional>
 #include <type_traits>
 
@@ -72,9 +72,8 @@ class composable<Fn, Fns...>
 
 public:
     constexpr composable(Fn&& fn, Fns&&... fns) noexcept(
-        noexcept(std::is_nothrow_constructible_v<
-                 function_type,
-                 Fn&&>) && noexcept(std::is_nothrow_constructible_v<nested_type, Fns...>)
+        noexcept(std::is_nothrow_constructible_v<function_type, Fn&&>) &&
+        noexcept(std::is_nothrow_constructible_v<nested_type, Fns...>)
     ) :
         fn_(std::forward<function_type>(fn)),
         next_(std::forward<Fns>(fns)...)

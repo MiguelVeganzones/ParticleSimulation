@@ -1,5 +1,4 @@
-#ifndef INCLUDED_SYNTHETIC_CLOCK
-#define INCLUDED_SYNTHETIC_CLOCK
+#pragma once
 
 #include <chrono>
 
@@ -71,5 +70,3 @@ private:
 };
 
 } // namespace synchronization
-
-#endif // INCLUDED_SYNTHETIC_CLOCK

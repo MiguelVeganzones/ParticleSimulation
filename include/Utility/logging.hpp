@@ -1,4 +1,5 @@
-#pragma once
+#ifndef INCLUDED_UTILTIY_LOGGING
+#define INCLUDED_UTILTIY_LOGGING
 
 #define BOOST_LOG_DYN_LINK 1
 
@@ -137,3 +138,5 @@ public:
 };
 
 } // namespace utility::logging
+
+#endif // INCLUDED_UTILTIY_LOGGING

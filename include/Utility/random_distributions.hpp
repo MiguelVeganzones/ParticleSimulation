@@ -1,8 +1,8 @@
 #ifndef INCLUDED_RANDOM_DISTRIBUTIONS
 #define INCLUDED_RANDOM_DISTRIBUTIONS
 
-#include "../Utility/concepts.hpp"
-#include "../Utility/error_handling.hpp"
+#include "concepts.hpp"
+#include "error_handling.hpp"
 #include <cmath>
 #include <concepts>
 #include <random>

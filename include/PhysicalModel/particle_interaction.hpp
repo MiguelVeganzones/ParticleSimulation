@@ -4,7 +4,6 @@
 #include "physical_constants.hpp"
 #include "physical_magnitudes.hpp"
 #include "utils.hpp"
-#include <ranges>
 
 #define DEBUG_PRINT (false)
 

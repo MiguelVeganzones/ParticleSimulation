@@ -1,8 +1,8 @@
 #include "factory.hpp"
+#include "logging.hpp"
+#include "ndtree.hpp"
 #include "particle.hpp"
-#include "particle_concepts.hpp"
 #include "particle_interaction.hpp"
-#include "random.hpp"
 #include "random_distributions.hpp"
 #include "stopwatch.hpp"
 #include "synthetic_clock.hpp"
@@ -11,7 +11,6 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
-#include <string>
 #include <vector>
 
 template <std::size_t N, std::floating_point F>
@@ -204,6 +203,6 @@ int main()
     ndtree_test();
     gravitational_interaction_test();
     particle_movement_test();
-    return EXIT_SUCCESS;
     particle_movement_simulation();
+    return EXIT_SUCCESS;
 }

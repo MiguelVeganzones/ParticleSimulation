@@ -9,7 +9,6 @@
 #include <iostream>
 #include <ranges>
 #include <string_view>
-#include <tuple>
 #include <type_traits>
 
 #if USE_UNIT_SYSTEM
@@ -39,8 +38,8 @@ struct physical_vector
     constexpr physical_vector() noexcept                       = default;
     constexpr physical_vector(physical_vector const&) noexcept = default;
     constexpr physical_vector(physical_vector&&) noexcept      = default;
-    constexpr auto operator=(physical_vector const&) noexcept -> physical_vector& =
-                                                                     default;
+    constexpr auto operator=(physical_vector const&) noexcept
+        -> physical_vector&                                                  = default;
     constexpr auto operator=(physical_vector&&) noexcept -> physical_vector& = default;
     ~physical_vector() noexcept                                              = default;
 
@@ -208,10 +207,10 @@ public:
     constexpr physical_magnitude() noexcept                          = default;
     constexpr physical_magnitude(physical_magnitude const&) noexcept = default;
     constexpr physical_magnitude(physical_magnitude&&) noexcept      = default;
-    constexpr auto operator=(physical_magnitude const&) noexcept -> physical_magnitude& =
-                                                                        default;
-    constexpr auto operator=(physical_magnitude&&) noexcept -> physical_magnitude& =
-                                                                   default;
+    constexpr auto operator=(physical_magnitude const&) noexcept
+        -> physical_magnitude& = default;
+    constexpr auto operator=(physical_magnitude&&) noexcept
+        -> physical_magnitude&     = default;
     ~physical_magnitude() noexcept = default;
 
     physical_magnitude(std::initializer_list<value_type> init) noexcept :
@@ -255,14 +254,10 @@ public:
 
     template <typename Self>
     [[nodiscard]]
-    auto value(this Self&& self) noexcept -> auto&&
-        requires(N == 1)
-    {
-        return std::forward<Self>(self).value_[0];
-    }
+    auto value(this Self&& self) noexcept
+        -> auto&& requires(N == 1) { return std::forward<Self>(self).value_[0]; }
 
-    [[nodiscard]]
-    auto operator[](this auto&& self, std::integral auto idx) -> auto&&
+    [[nodiscard]] auto operator[](this auto&& self, std::integral auto idx) -> auto&&
     {
         return std::forward<decltype(self)>(self).value_[idx];
     }
@@ -287,14 +282,9 @@ public:
     }
 
     [[nodiscard]]
-    auto value() noexcept -> value_type&
-        requires(N == 1)
-    {
-        return value_[0];
-    }
+    auto value() noexcept -> value_type& requires(N == 1) { return value_[0]; }
 
-    [[nodiscard]]
-    auto operator[](std::integral auto idx) const -> value_type
+    [[nodiscard]] auto operator[](std::integral auto idx) const -> value_type
     {
         return value_[idx];
     }
@@ -458,8 +448,7 @@ auto operator/(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
 }
 
 template <typename T1, typename T2>
-    requires(particle_concepts::Vector<std::remove_reference_t<T1>> ||
-             particle_concepts::Vector<std::remove_reference_t<T2>>)
+    requires(particle_concepts::Vector<std::remove_reference_t<T1>> || particle_concepts::Vector<std::remove_reference_t<T2>>)
 [[nodiscard]]
 auto operator_impl(T1&& pva, T2&& pvb, auto&& binary_op) noexcept -> decltype(auto)
 {
@@ -510,8 +499,7 @@ auto operator_impl(T1&& pva, T2&& pvb, auto&& binary_op) noexcept -> decltype(au
 }
 
 template <typename T1, typename T2>
-    requires(particle_concepts::Magnitude<std::remove_reference_t<T1>> ||
-             particle_concepts::Magnitude<std::remove_reference_t<T2>>)
+    requires(particle_concepts::Magnitude<std::remove_reference_t<T1>> || particle_concepts::Magnitude<std::remove_reference_t<T2>>)
 [[nodiscard]]
 auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(auto)
 {

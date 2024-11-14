@@ -1,10 +1,7 @@
 #pragma once
 
-#include "generator.hpp"
 #include "particle.hpp"
 #include "physical_magnitudes.hpp"
-#include "random.hpp"
-#include "random_distributions.hpp"
 #include <ranges>
 #include <type_traits>
 #include <vector>
@@ -13,12 +10,10 @@ namespace pm::factory
 {
 
 template <std::size_t N, std::floating_point F, auto U, typename Fn, typename... Args>
-    requires std::is_invocable_r_v<
-                 F,
-                 std::remove_reference_t<Fn>,
-                 std::remove_reference_t<Args>...>
-[[nodiscard]]
-auto physical_magnitude_factory(Fn&& fn, Args&&... args) noexcept
+    requires std::
+        is_invocable_r_v<F, std::remove_reference_t<Fn>, std::remove_reference_t<Args>...>
+    [[nodiscard]]
+    auto physical_magnitude_factory(Fn&& fn, Args&&... args) noexcept
     -> pm::magnitudes::physical_magnitude_t<N, F, U>
 {
     using magnitude_t = magnitudes::physical_magnitude_t<N, F, U>;
@@ -38,9 +33,9 @@ template <
     typename Vel_Generator,
     typename Acc_Generator>
     requires std::is_invocable_r_v<F, Mass_Generator> &&
-                 std::is_invocable_r_v<F, Vel_Generator> &&
-                 std::is_invocable_r_v<F, Pos_Generator> &&
-                 std::is_invocable_r_v<F, Acc_Generator>
+             std::is_invocable_r_v<F, Vel_Generator> &&
+             std::is_invocable_r_v<F, Pos_Generator> &&
+             std::is_invocable_r_v<F, Acc_Generator>
 [[nodiscard]]
 auto particle_set_factory(
     std::size_t      size,

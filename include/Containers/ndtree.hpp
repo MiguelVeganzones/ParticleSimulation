@@ -8,14 +8,12 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
-#include <iomanip>
 #include <numeric>
 #include <optional>
 #include <ostream>
 #include <ranges>
 #include <string>
 #include <vector>
-
 
 #ifdef DEBUG_NDTREE
 #include <iostream>

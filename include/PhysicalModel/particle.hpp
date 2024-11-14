@@ -1,12 +1,9 @@
-#ifndef INLCLUDED_PARTICLE
-#define INLCLUDED_PARTICLE
+#pragma once
 
 #include "concepts.hpp"
-#include "ndtree.hpp"
 #include "physical_magnitudes.hpp"
 #include <chrono>
 #include <tuple>
-#include <type_traits>
 
 namespace pm::particle
 {
@@ -41,8 +38,8 @@ public:
         return m_id;
     }
 
-    constexpr auto update_position(utility::concepts::Duration auto delta_t
-    ) noexcept -> void
+    constexpr auto update_position(utility::concepts::Duration auto delta_t) noexcept
+        -> void
     {
         using duration_t = std::chrono::duration<float>; // float seconds
         const auto d_t   = std::chrono::duration_cast<duration_t>(delta_t).count();
@@ -170,5 +167,3 @@ auto operator<<(std::ostream& os, ndparticle<N, F> pp) noexcept -> std::ostream&
 }
 
 }; // namespace pm::particle
-
-#endif // INLCLUDED_PARTICLE
