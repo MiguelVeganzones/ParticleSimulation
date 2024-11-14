@@ -39,13 +39,7 @@ auto generate_particle_set(std::size_t size)
         return d_a() + d_b();
     };
 
-    auto velocity_generator = []() mutable -> F {
-        using distribution_t = random_distribution<F, DistributionCategory::Uniform>;
-        using param_type     = typename distribution_t::param_type;
-        param_type            params(F{ -1 }, F{ 1 });
-        static distribution_t d(params);
-        return d();
-    };
+    auto velocity_generator = []() -> F { return F{ 0 }; };
 
     auto acceleration_generator = []() -> F { return F{ 0 }; };
 
@@ -145,7 +139,7 @@ int particle_movement_simulation()
     using namespace pm;
     using F                 = double;
     static constexpr auto N = 2;
-    static constexpr auto K = 300; // Iterations
+    static constexpr auto K = 30000; // Iterations
     using particle_t        = particle::ndparticle<N, F>;
 
     using tick_t             = synchronization::tick_period<std::chrono::seconds, 200>;
@@ -153,6 +147,13 @@ int particle_movement_simulation()
 
     const auto size      = 500;
     auto       particles = generate_particle_set<N, F>(size);
+
+    std::cout << "<-------------- Simulation -------------->\n";
+
+    const auto initial_limtis = ndt::detail::compute_limits(particles);
+    std::cout << initial_limtis << '\n';
+
+    std::cout << "Particle Limits:\n";
 
     for (auto const& p : particles | std::views::take(10))
     {
@@ -162,9 +163,11 @@ int particle_movement_simulation()
     utility::timing::stopwatch s{ "Simulation" };
     for (auto i = 0uz; i != K; ++i)
     {
-        if (i % 10 == 0)
+        if (i % 100 == 0)
         {
             std::cout << "Iteration: " << i << '\n';
+            const auto current_limtis = ndt::detail::compute_limits(particles);
+            std::cout << current_limtis << '\n';
         }
         for (auto& p : particles)
         {
@@ -187,6 +190,10 @@ int particle_movement_simulation()
     {
         std::cout << p << '\n';
     }
+
+    const auto final_limtis = ndt::detail::compute_limits(particles);
+    std::cout << final_limtis << '\n';
+    std::cout << "<\\-------------- Simulation -------------->\n";
 
     return EXIT_SUCCESS;
 }
