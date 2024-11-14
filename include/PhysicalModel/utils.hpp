@@ -10,7 +10,7 @@ namespace pm::utils
 {
 
 template <particle_concepts::Position Position_Type>
-[[gnu::const, nodiscard]]
+[[gnu::pure, nodiscard]]
 auto distance(Position_Type const& p1, Position_Type const& p2) noexcept
     -> magnitudes::
         distance<Position_Type::s_dimension, typename Position_Type::value_type>
@@ -20,7 +20,7 @@ auto distance(Position_Type const& p1, Position_Type const& p2) noexcept
     return distance_t(p2.value() - p1.value());
 }
 
-[[gnu::const, nodiscard]]
+[[gnu::pure, nodiscard]]
 auto l2_norm(particle_concepts::Vector auto const& v) noexcept ->
     typename std::remove_cvref_t<decltype(v)>::value_type
 {
@@ -29,7 +29,7 @@ auto l2_norm(particle_concepts::Vector auto const& v) noexcept ->
     }));
 }
 
-[[gnu::const, nodiscard]]
+[[gnu::pure, nodiscard]]
 auto normalize(particle_concepts::Vector auto const& v) noexcept
     -> std::pair<
         std::remove_cvref_t<decltype(v)>,
