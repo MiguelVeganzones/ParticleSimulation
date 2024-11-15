@@ -139,13 +139,13 @@ int particle_movement_simulation()
     using namespace pm;
     using F                 = double;
     static constexpr auto N = 2;
-    static constexpr auto K = 30000; // Iterations
+    static constexpr auto K = 3000000; // Iterations
     using particle_t        = particle::ndparticle<N, F>;
 
-    using tick_t             = synchronization::tick_period<std::chrono::seconds, 200>;
+    using tick_t = synchronization::tick_period<std::chrono::milliseconds, 10000>;
     using simulation_clock_t = synchronization::synthetic_clock<tick_t>;
 
-    const auto size      = 500;
+    const auto size      = 3;
     auto       particles = generate_particle_set<N, F>(size);
 
     std::cout << "<-------------- Simulation -------------->\n";
@@ -163,11 +163,20 @@ int particle_movement_simulation()
     utility::timing::stopwatch s{ "Simulation" };
     for (auto i = 0uz; i != K; ++i)
     {
-        if (i % 100 == 0)
+        if (i % 1 == 0)
         {
+            for (auto const& p : particles | std::views::take(10))
+            {
+                std::cout << p << '\n';
+            }
             std::cout << "Iteration: " << i << '\n';
             const auto current_limtis = ndt::detail::compute_limits(particles);
             std::cout << current_limtis << '\n';
+            if (current_limtis.min()[0] < initial_limtis.min()[0] - 0.001)
+            {
+                std::cout << "END" << std::endl;
+                std::terminate();
+            }
         }
         for (auto& p : particles)
         {
@@ -207,9 +216,9 @@ int main()
     utility::logging::default_source::log(
         utility::logging::severity_level::error, "Huge error or sth..."
     );
-    ndtree_test();
-    gravitational_interaction_test();
-    particle_movement_test();
+    // ndtree_test();
+    // gravitational_interaction_test();
+    // particle_movement_test();
     particle_movement_simulation();
     return EXIT_SUCCESS;
 }

@@ -5,7 +5,7 @@
 #include "physical_magnitudes.hpp"
 #include "utils.hpp"
 
-#define DEBUG_PRINT (false)
+#define DEBUG_PRINT (true)
 
 namespace pm::interaction
 {
@@ -24,9 +24,9 @@ auto gravitational_interaction(Particle_Type const& p1, Particle_Type const& p2)
     const auto magnitude = pm::physical_constants<value_type>::G * p1.mass().value() *
                            p2.mass().value() / norm / norm;
 #if DEBUG_PRINT
-    std::cout << "D: " << distance << '\n';
-    std::cout << "M: " << magnitude << '\n';
-    std::cout << "U: " << unit_vector << '\n';
+    std::cout << "D:\t" << distance << '\n';
+    std::cout << "G:\t" << magnitude << '\n';
+    std::cout << "U:\t" << unit_vector << '\n';
 #endif
     return force_t{ unit_vector * magnitude };
 }
@@ -46,6 +46,11 @@ auto update_acceleration(Particle_Type& p, std::span<Particle_Type, N> particles
         }
     }
     p.acceleration() = force / p.mass();
+#if DEBUG_PRINT
+    std::cout << "M:\t" << p.mass() << '\n';
+    std::cout << "F:\t" << force << '\n';
+    std::cout << "A:\t" << p.acceleration() << '\n';
+#endif
 }
 
 } // namespace pm::interaction

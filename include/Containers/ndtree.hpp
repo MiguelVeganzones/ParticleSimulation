@@ -105,6 +105,9 @@ public:
         return std::midpoint(m_max[idx], m_min[idx]);
     }
 
+    [[nodiscard]]
+    constexpr auto operator<=>(ndboundary const&) const = default;
+
 private:
     point_t m_min;
     point_t m_max;
