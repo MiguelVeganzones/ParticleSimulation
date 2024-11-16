@@ -1,4 +1,4 @@
-CXX = g++-13
+CXX = g++
 
 DEBUG_CXXFLAGS_CLANG =	-O0 \
 			-W \
@@ -125,7 +125,7 @@ endif
 SRC_DIR			    =	src
 INCLUDE_DIR		    =	include
 UTILITY_DIR		    =	$(INCLUDE_DIR)/Utility
-ROOT_DIR		    =	$(INCLUDE_DIR)/Plotting
+PLOTTING_DIR		    =	$(INCLUDE_DIR)/Plotting
 CONTAINERS_DIR		    =	$(INCLUDE_DIR)/Containers
 TIMING_DIR		    =	$(INCLUDE_DIR)/Timing
 PHYSICAL_MODEL_DIR	    =	$(INCLUDE_DIR)/PhysicalModel
@@ -137,22 +137,34 @@ GENERAL_INCL			=	-I./$(UTILITY_DIR) $(UTILITY_INCL)
 PHYSICAL_MODEL_INCL		=	-I./$(PHYSICAL_MODEL_DIR)
 NDTREE_INCL			=	-I./$(CONTAINERS_DIR)
 TIMING_INCL			=	-I./$(TIMING_DIR)
+PLOTTING_INCL			=	-I./$(PLOTTING_DIR)
 #UNIT_SYSTEM_INCL		=	-I./$(UNIT_SYSTEM_CORE_DIR) -I./$(UNIT_SYSTEM_SYSTEMS_DIR)
-MAIN_SIMULATION_INCL		=	$(GENERAL_INCL) $(PHYSICAL_MODEL_INCL) $(NDTREE_INCL) $(TIMING_INCL)
+MAIN_SIMULATION_INCL		=	$(GENERAL_INCL) $(PHYSICAL_MODEL_INCL) $(NDTREE_INCL) $(TIMING_INCL) $(PLOTTING_INCL)
 
-ROOT_LIB			= `root-config --libs`
+PLOTTING_LIB			= `root-config --libs`
 LOG_LIB				= -lboost_log -lboost_thread -lboost_system -lpthread
-MAIN_SIMULATION_LIB		= $(LOG_LIB)
+MAIN_SIMULATION_LIB		= $(LOG_LIB) $(PLOTTING_LIB)
 
 ROOT_FLAGS			= `root-config --cflags` -Wno-cpp
 
-
 #=================================================================================================
-main: ${OUT_DIR}/main.o
+all: main plotting
+#=============================================================
 
-${OUT_DIR}/main.o: $(SRC_DIR)/*.cpp
+#=============================================================
+main: $(PLOTTING_DIR)/$(OUT_DIR)/plotting.o ${OUT_DIR}/main.o
+
+${OUT_DIR}/main.o: $(SRC_DIR)/*.cpp $(INCLUDE_DIR)/*/*.hpp
 	@echo -e Building $@..."\n"
 	@mkdir -p ${OUT_DIR}
-	$(CXX) $(CXXFLAGS) $(MAIN_SIMULATION_INCL) $(MAIN_SIMULATION_LIB) $(SRC_DIR)/main.cpp -o $@
+	$(CXX) $(CXXFLAGS) -Wno-cpp $(MAIN_SIMULATION_INCL) $(MAIN_SIMULATION_LIB) $(PLOTTING_DIR)/$(OUT_DIR)/plotting.o $(SRC_DIR)/main.cpp -o $@
 	@echo -e Built $@ successfully."\n"
-#================================================================================================
+#=============================================================
+
+#=============================================================
+$(PLOTTING_DIR)/$(OUT_DIR)/plotting.o: $(PLOTTING_DIR)/plotting.cpp $(PLOTTING_DIR)/plotting.hpp
+	@echo -e Building $@..."\n"
+	@mkdir -p $(PLOTTING_DIR)/${OUT_DIR}
+	$(CXX) $(ROOT_FLAGS) $(PLOTTING_INCL) $(PLOTTING_LIB) -c $(PLOTTING_DIR)/plotting.cpp -o $@
+	@echo -e Built $@ successfully."\n"
+#=============================================================

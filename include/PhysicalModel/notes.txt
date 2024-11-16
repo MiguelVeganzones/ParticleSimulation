@@ -1,0 +1,9 @@
+This is definitely an ugly optimization. It is also easy to try so...
+There is a common factor in the calculation of the gravitational force for a
+particle p_i. We can remove altogether the contribution of m_i to the force
+calculation and to the acceleration calculation as there is a cancellation.
+Math operations are really fast and m_i will be cached, but I have gotten
+significant improvements in simulations with this kind of stuff. This would
+remove (O(n)[mul] * O(1)[div]) * O(n) * N operations per iteration. That is in
+the range of 5E3*5E3*3 = 7.5E7 floating point operations per second per thread
+(with current performance).

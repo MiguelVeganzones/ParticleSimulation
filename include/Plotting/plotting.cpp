@@ -19,15 +19,15 @@ auto plot(
     auto gr3 = new TGraph(n, x, y3);
     auto gr4 = new TGraph(n, x, y4);
 
-    TCanvas* canvas = new TCanvas("canavs", "Graph Draw Options", 200, 10, 600, 400);
+    TCanvas* canvas = new TCanvas("canvas", "Graph Draw Options", 200, 10, 600, 400);
 
     gr1->SetLineColor(4);
     gr1->Draw("AC*");
-    gr1->SetLineColor(2);
+    gr2->SetLineColor(2);
     gr2->Draw("CP");
-    gr1->SetLineColor(1);
+    gr3->SetLineColor(1);
     gr3->Draw("C+");
-    gr1->SetLineColor(0);
+    gr4->SetLineColor(0);
     gr4->Draw("C.");
 }
 
@@ -43,7 +43,7 @@ auto plot(
     auto gr2 = new TGraph(n, x, y2);
     auto gr3 = new TGraph(n, x, y3);
 
-    TCanvas* canvas = new TCanvas("canavs", "Graph Draw Options", 200, 10, 600, 400);
+    TCanvas* canvas = new TCanvas("canvas", "Graph Draw Options", 200, 10, 600, 400);
 
     gr1->SetLineColor(4);
     gr1->Draw("AC*");
@@ -63,12 +63,15 @@ auto plot(int n, const float* const x, const float* const y1, const float* const
     auto gr1 = new TGraph(n, x, y1);
     auto gr2 = new TGraph(n, x, y2);
 
-    TCanvas* canvas = new TCanvas("canavs", "Graph Draw Options", 200, 10, 600, 400);
+    gr1->SetMinimum(std::min(*std::min_element(y1, y1 + n), *std::min_element(y2, y2 + n))
+    ); // Y-axis minimum
+    gr1->SetMaximum(std::max(*std::max_element(y1, y1 + n), *std::max_element(y2, y2 + n))
+    ); // Y-axis maximum
+
+    TCanvas* canvas = new TCanvas("canvas", "Graph Draw Options", 200, 10, 600, 400);
 
     gr1->SetLineColor(4);
     gr1->Draw("AC*");
-
-    gr2->SetMarkerStyle(21);
     gr2->SetLineColor(2);
     gr2->Draw("CP");
 }

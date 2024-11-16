@@ -1,8 +1,12 @@
+#include "TApplication.h"
+#include "TCanvas.h"
+#include "TGraph.h"
 #include "factory.hpp"
 #include "logging.hpp"
 #include "ndtree.hpp"
 #include "particle.hpp"
 #include "particle_interaction.hpp"
+#include "plotting.hpp"
 #include "random_distributions.hpp"
 #include "stopwatch.hpp"
 #include "synthetic_clock.hpp"
@@ -154,22 +158,16 @@ int particle_movement_simulation()
     std::cout << initial_limtis << '\n';
 
     std::cout << "Particle Limits:\n";
-
-    for (auto const& p : particles | std::views::take(10))
-    {
-        std::cout << p << '\n';
-    }
-
     utility::timing::stopwatch s{ "Simulation" };
     for (auto i = 0uz; i != K; ++i)
     {
-        if (i % 1 == 0)
+        if (i % 10000 == 0)
         {
+            std::cout << "Iteration: " << i << '\n';
             for (auto const& p : particles | std::views::take(10))
             {
                 std::cout << p << '\n';
             }
-            std::cout << "Iteration: " << i << '\n';
             const auto current_limtis = ndt::detail::compute_limits(particles);
             std::cout << current_limtis << '\n';
             if (current_limtis.min()[0] < initial_limtis.min()[0] - 0.001)
@@ -207,6 +205,83 @@ int particle_movement_simulation()
     return EXIT_SUCCESS;
 }
 
+int particle_movement_visualization()
+{
+    using namespace pm;
+    using F                 = double;
+    static constexpr auto N = 1;
+    static constexpr auto K = 3000000000000; // Iterations
+    using particle_t        = particle::ndparticle<N, F>;
+
+    using tick_t = synchronization::tick_period<std::chrono::microseconds, 10>;
+    using simulation_clock_t = synchronization::synthetic_clock<tick_t>;
+
+    const auto size      = 8;
+    auto       particles = generate_particle_set<N, F>(size);
+
+    std::cout << "<-------------- Simulation -------------->\n";
+
+    const auto initial_limtis = ndt::detail::compute_limits(particles);
+    std::cout << initial_limtis << '\n';
+
+    std::cout << "Particle Limits:\n";
+    utility::timing::stopwatch s{ "Simulation" };
+
+    std::vector<float> x{};
+    std::vector<float> y1{};
+    std::vector<float> y2{};
+
+    for (auto i = 0uz; i != K; ++i)
+    {
+        if (i % 10000000 == 0)
+        {
+            x.push_back(static_cast<float>(i));
+            y1.push_back(static_cast<float>(particles[0].position().value()[0]));
+            y2.push_back(static_cast<float>(particles[1].position().value()[0]));
+            std::cout << "Iteration: " << i << '\n';
+            const auto current_limtis = ndt::detail::compute_limits(particles);
+            std::cout << current_limtis << '\n';
+        }
+        for (auto& p : particles)
+        {
+            pm::interaction::update_acceleration(
+                p, std::span<particle_t, size>{ particles }
+            );
+        }
+        for (auto& p : particles)
+        {
+            p.update_position(tick_t::period_duration);
+        }
+
+        if constexpr (utility::concepts::is_manual_tick_clock_v<simulation_clock_t>)
+        {
+            simulation_clock_t::tick();
+        }
+    }
+
+    for (auto const& p : particles | std::views::take(10))
+    {
+        std::cout << p << '\n';
+    }
+
+    const auto final_limtis = ndt::detail::compute_limits(particles);
+    std::cout << final_limtis << '\n';
+    std::cout << "<\\-------------- Simulation -------------->\n";
+
+    TApplication app = TApplication("Root app", 0, nullptr);
+
+    for (int i = 0; i != (int)y1.size(); ++i)
+    {
+        std::cout << y1[i] << " " << y2[i] << '\n';
+    }
+
+    root_plotting::plot((int)x.size(), &x[0], &y1[0], &y2[0]);
+
+    app.Run();
+
+    return EXIT_SUCCESS;
+}
+
 int main()
 {
     utility::logging::init();
@@ -219,6 +294,7 @@ int main()
     // ndtree_test();
     // gravitational_interaction_test();
     // particle_movement_test();
-    particle_movement_simulation();
+    // particle_movement_simulation();
+    particle_movement_visualization();
     return EXIT_SUCCESS;
 }

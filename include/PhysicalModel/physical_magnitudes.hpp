@@ -87,7 +87,7 @@ public:
 
     template <typename Self>
     [[nodiscard]]
-    auto value(this Self&& self) noexcept
+    auto magnitude(this Self&& self) noexcept
         -> auto&& requires(N == 1) { return std::forward<Self>(self).value_[0]; }
 
     [[nodiscard]] auto operator[](this auto&& self, std::integral auto idx) -> auto&&
@@ -108,14 +108,14 @@ public:
     }
 
     [[nodiscard]]
-    auto value() const noexcept -> value_type
+    auto magnitude() const noexcept -> value_type
         requires(N == 1)
     {
         return value_[0];
     }
 
     [[nodiscard]]
-    auto value() noexcept -> value_type& requires(N == 1) { return value_[0]; }
+    auto magnitude() noexcept -> value_type& requires(N == 1) { return value_[0]; }
 
     [[nodiscard]] auto operator[](std::integral auto idx) const -> value_type
     {
@@ -308,8 +308,8 @@ auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(au
             T1_t::s_dimension,
             typename T1_t::value_type,
             units::Units::_runtime_unit_>{ operator_impl(
-            std::forward<decltype(pma)>(pma).value(),
-            std::forward<decltype(pmb)>(pmb).value(),
+            std::forward<T1>(pma).value(),
+            std::forward<T2>(pmb).value(),
             std::forward<decltype(binary_op)>(binary_op)
         ) };
     }
@@ -319,8 +319,8 @@ auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(au
             T1_t::s_dimension,
             typename T1_t::value_type,
             units::Units::_runtime_unit_>{ operator_impl(
-            std::forward<decltype(pma)>(pma).value(),
-            std::forward<decltype(pmb)>(pmb),
+            std::forward<T1>(pma).value(),
+            std::forward<T2>(pmb),
             std::forward<decltype(binary_op)>(binary_op)
         ) };
     }
@@ -330,8 +330,8 @@ auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(au
             T2_t::s_dimension,
             typename T2_t::value_type,
             units::Units::_runtime_unit_>{ operator_impl(
-            std::forward<decltype(pma)>(pma),
-            std::forward<decltype(pmb)>(pmb).value(),
+            std::forward<T1>(pma),
+            std::forward<T2>(pmb).value(),
             std::forward<decltype(binary_op)>(binary_op)
         ) };
     }

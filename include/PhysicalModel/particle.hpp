@@ -5,6 +5,10 @@
 #include <chrono>
 #include <tuple>
 
+#ifndef DEBUG_PRINT
+#define DEBUG_PRINT (false)
+#endif
+
 namespace pm::particle
 {
 
@@ -44,8 +48,10 @@ public:
         using duration_t = std::chrono::duration<float>; // float seconds
         const auto d_t   = std::chrono::duration_cast<duration_t>(delta_t).count();
         const auto d_v   = m_acceleration * d_t;
+#if DEBUG_PRINT
         std::cout << "d_t:\t" << d_t << '\n';
         std::cout << "d_v:\t" << d_v << '\n';
+#endif
         const auto p = m_position;
         m_position += (m_velocity + value_type{ 0.5 } * d_v) * d_t;
         m_velocity += d_v;

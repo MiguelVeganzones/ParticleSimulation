@@ -202,15 +202,16 @@ auto operator_impl(T1&& pva, T2&& pvb, auto&& binary_op) noexcept -> decltype(au
     constexpr auto at_idx = [](auto&& v, std::integral auto idx) noexcept
         requires(particle_concepts::Vector<std::remove_reference_t<decltype(v)>> || std::is_floating_point_v<std::remove_reference_t<decltype(v)>>)
     {
-        if constexpr (particle_concepts::Vector<std::remove_reference_t<decltype(v)>>)
+        using v_t = std::remove_reference_t<decltype(v)>;
+        if constexpr (particle_concepts::Vector<v_t>)
         {
             return v[idx];
         }
-        if constexpr (std::ranges::range<std::remove_reference_t<decltype(v)>>)
+        if constexpr (std::ranges::range<v_t>)
         {
             return v[idx];
         }
-        else if constexpr (std::is_floating_point_v<std::remove_reference_t<decltype(v)>>)
+        else if constexpr (std::is_floating_point_v<v_t>)
         {
             return v;
         }
@@ -247,20 +248,13 @@ template <std::size_t N, std::floating_point F>
 auto operator<<(std::ostream& os, physical_vector<N, F> const pv) noexcept
     -> std::ostream&
 {
-    if constexpr (N == 1)
+    os << "{ ";
+    std::size_t n{ 0 };
+    for (auto const v : pv)
     {
-        os << pv.value();
+        os << v << (++n != N ? ", " : " ");
     }
-    else
-    {
-        os << "{ ";
-        std::size_t n{ 0 };
-        for (auto const v : pv)
-        {
-            os << v << (++n != N ? ", " : " ");
-        }
-        os << '}';
-    }
+    os << '}';
 
     return os;
 }
