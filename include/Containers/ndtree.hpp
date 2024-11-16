@@ -4,7 +4,7 @@
 
 #include "constexpr_functions.hpp"
 #include "error_handling.hpp"
-#include "logging.hpp"
+// #include "logging.hpp"
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -220,17 +220,19 @@ public:
             }
             else
             {
-#if DEBUG_NDTREE
-                utility::logging::default_source::log(
-                    utility::logging::severity_level::info, "Fragentation started"
-                );
-#endif
+                // #if DEBUG_NDTREE
+                //                 utility::logging::default_source::log(
+                //                     utility::logging::severity_level::info,
+                //                     "Fragentation started"
+                //                 );
+                // #endif
                 fragment();
-#if DEBUG_NDTREE
-                utility::logging::default_source::log(
-                    utility::logging::severity_level::info, "Fragentation finished"
-                );
-#endif
+                // #if DEBUG_NDTREE
+                //                 utility::logging::default_source::log(
+                //                     utility::logging::severity_level::info,
+                //                     "Fragentation finished"
+                //                 );
+                // #endif
             }
         }
         if (m_fragmented)

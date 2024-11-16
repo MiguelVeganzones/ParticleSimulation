@@ -1,9 +1,10 @@
 #include "factory.hpp"
-#include "logging.hpp"
+// #include "logging.hpp"
 #include "ndtree.hpp"
 #include "particle.hpp"
 #include "particle_interaction.hpp"
 #include "random_distributions.hpp"
+#include "solar_system.hpp"
 #include "stopwatch.hpp"
 #include "synthetic_clock.hpp"
 #include <chrono>
@@ -137,16 +138,17 @@ int particle_movement_test()
 int particle_movement_simulation()
 {
     using namespace pm;
-    using F                 = double;
-    static constexpr auto N = 2;
-    static constexpr auto K = 30000; // Iterations
-    using particle_t        = particle::ndparticle<N, F>;
-
+    using F = double;
+    // static constexpr auto N = 2;
+    static constexpr auto K = 30000;               // Iterations
+    using particle_t = particle::ndparticle<3, F>; // this is provisional because I had
+                                                   // typing erroes if this was set to N
     using tick_t             = synchronization::tick_period<std::chrono::seconds, 200>;
     using simulation_clock_t = synchronization::synthetic_clock<tick_t>;
 
-    const auto size      = 500;
-    auto       particles = generate_particle_set<N, F>(size);
+    const auto size = 500;
+    // auto       particles = generate_particle_set<N, F>(size);
+    auto particles = create_solar_system();
 
     std::cout << "<-------------- Simulation -------------->\n";
 
@@ -200,16 +202,16 @@ int particle_movement_simulation()
 
 int main()
 {
-    utility::logging::init();
-    utility::logging::default_source::log(
-        utility::logging::severity_level::info, "Inside main function."
-    );
-    utility::logging::default_source::log(
-        utility::logging::severity_level::error, "Huge error or sth..."
-    );
-    ndtree_test();
-    gravitational_interaction_test();
-    particle_movement_test();
+    // utility::logging::init();
+    // utility::logging::default_source::log(
+    //     utility::logging::severity_level::info, "Inside main function."
+    // );
+    // utility::logging::default_source::log(
+    //     utility::logging::severity_level::error, "Huge error or sth..."
+    // );
+    // ndtree_test();
+    // gravitational_interaction_test();
+    // particle_movement_test();
     particle_movement_simulation();
     return EXIT_SUCCESS;
 }
