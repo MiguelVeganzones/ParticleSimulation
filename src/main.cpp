@@ -1,5 +1,5 @@
 #include "factory.hpp"
-// #include "logging.hpp"
+#include "logging.hpp"
 #include "ndtree.hpp"
 #include "particle.hpp"
 #include "particle_interaction.hpp"
@@ -138,17 +138,19 @@ int particle_movement_test()
 int particle_movement_simulation()
 {
     using namespace pm;
-    using F = double;
-    // static constexpr auto N = 2;
-    static constexpr auto K = 30000;               // Iterations
-    using particle_t = particle::ndparticle<3, F>; // this is provisional because I had
-                                                   // typing erroes if this was set to N
-    using tick_t             = synchronization::tick_period<std::chrono::seconds, 200>;
+
+    using F                 = double;
+    static constexpr auto N = 2;
+    static constexpr auto K = 3000000; // Iterations
+    using particle_t        = particle::ndparticle<N, F>;
+
+    using tick_t = synchronization::tick_period<std::chrono::milliseconds, 10000>;
     using simulation_clock_t = synchronization::synthetic_clock<tick_t>;
 
-    const auto size = 500;
-    // auto       particles = generate_particle_set<N, F>(size);
-    auto particles = create_solar_system();
+    const auto size      = 3;
+    auto       particles = create_solar_system();
+    auto       particles = generate_particle_set<N, F>(size);
+
 
     std::cout << "<-------------- Simulation -------------->\n";
 
@@ -165,11 +167,20 @@ int particle_movement_simulation()
     utility::timing::stopwatch s{ "Simulation" };
     for (auto i = 0uz; i != K; ++i)
     {
-        if (i % 100 == 0)
+        if (i % 1 == 0)
         {
+            for (auto const& p : particles | std::views::take(10))
+            {
+                std::cout << p << '\n';
+            }
             std::cout << "Iteration: " << i << '\n';
             const auto current_limtis = ndt::detail::compute_limits(particles);
             std::cout << current_limtis << '\n';
+            if (current_limtis.min()[0] < initial_limtis.min()[0] - 0.001)
+            {
+                std::cout << "END" << std::endl;
+                std::terminate();
+            }
         }
         for (auto& p : particles)
         {
@@ -202,13 +213,14 @@ int particle_movement_simulation()
 
 int main()
 {
-    // utility::logging::init();
-    // utility::logging::default_source::log(
-    //     utility::logging::severity_level::info, "Inside main function."
-    // );
-    // utility::logging::default_source::log(
-    //     utility::logging::severity_level::error, "Huge error or sth..."
-    // );
+    utility::logging::init();
+    utility::logging::default_source::log(
+        utility::logging::severity_level::info, "Inside main function."
+    );
+    utility::logging::default_source::log(
+        utility::logging::severity_level::error, "Huge error or sth..."
+    );
+
     // ndtree_test();
     // gravitational_interaction_test();
     // particle_movement_test();
