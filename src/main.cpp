@@ -3,8 +3,8 @@
 #include "ndtree.hpp"
 #include "particle.hpp"
 #include "particle_interaction.hpp"
+#include "particle_systems.hpp"
 #include "random_distributions.hpp"
-#include "solar_system.hpp"
 #include "stopwatch.hpp"
 #include "synthetic_clock.hpp"
 #include <chrono>
@@ -135,6 +135,21 @@ int particle_movement_test()
     return EXIT_SUCCESS;
 }
 
+int solar_system_test()
+{
+    using namespace pm;
+    using F = double;
+
+    auto particles = pm::particle_systems::create_solar_system<F>();
+
+    for (auto const& p : particles)
+    {
+        std::cout << p << '\n';
+    }
+
+    return EXIT_SUCCESS;
+}
+
 int particle_movement_simulation()
 {
     using namespace pm;
@@ -148,7 +163,6 @@ int particle_movement_simulation()
     using simulation_clock_t = synchronization::synthetic_clock<tick_t>;
 
     const auto size      = 3;
-    auto       particles = create_solar_system();
     auto       particles = generate_particle_set<N, F>(size);
 
 
@@ -224,6 +238,7 @@ int main()
     // ndtree_test();
     // gravitational_interaction_test();
     // particle_movement_test();
-    particle_movement_simulation();
+    // particle_movement_simulation();
+    solar_system_test();
     return EXIT_SUCCESS;
 }

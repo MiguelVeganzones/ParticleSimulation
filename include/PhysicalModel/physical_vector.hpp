@@ -2,6 +2,7 @@
 
 #include "casts.hpp"
 #include "particle_concepts.hpp"
+#include "unit_system.hpp"
 #include <algorithm>
 #include <array>
 #include <concepts>

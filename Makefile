@@ -1,4 +1,4 @@
-CXX = g++-13
+CXX = g++
 
 DEBUG_CXXFLAGS_CLANG =	-O0 \
 			-W \
