@@ -6,6 +6,7 @@
 #include "ndtree.hpp"
 #include "particle.hpp"
 #include "particle_interaction.hpp"
+#include "particle_systems.hpp"
 #include "plotting.hpp"
 #include "random_distributions.hpp"
 #include "stopwatch.hpp"
@@ -138,9 +139,25 @@ int particle_movement_test()
     return EXIT_SUCCESS;
 }
 
+int solar_system_test()
+{
+    using namespace pm;
+    using F = double;
+
+    auto particles = pm::particle_systems::create_solar_system<F>();
+
+    for (auto const& p : particles)
+    {
+        std::cout << p << '\n';
+    }
+
+    return EXIT_SUCCESS;
+}
+
 int particle_movement_simulation()
 {
     using namespace pm;
+
     using F                 = double;
     static constexpr auto N = 2;
     static constexpr auto K = 3000000; // Iterations
@@ -151,6 +168,7 @@ int particle_movement_simulation()
 
     const auto size      = 3;
     auto       particles = generate_particle_set<N, F>(size);
+
 
     std::cout << "<-------------- Simulation -------------->\n";
 
@@ -291,10 +309,12 @@ int main()
     utility::logging::default_source::log(
         utility::logging::severity_level::error, "Huge error or sth..."
     );
+
     // ndtree_test();
     // gravitational_interaction_test();
     // particle_movement_test();
     // particle_movement_simulation();
     particle_movement_visualization();
+    solar_system_test();
     return EXIT_SUCCESS;
 }
