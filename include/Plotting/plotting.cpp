@@ -64,9 +64,9 @@ auto plot(int n, const float* const x, const float* const y1, const float* const
     auto gr2 = new TGraph(n, x, y2);
 
     gr1->SetMinimum(std::min(*std::min_element(y1, y1 + n), *std::min_element(y2, y2 + n))
-    ); // Y-axis minimum
+    );
     gr1->SetMaximum(std::max(*std::max_element(y1, y1 + n), *std::max_element(y2, y2 + n))
-    ); // Y-axis maximum
+    );
 
     TCanvas* canvas = new TCanvas("canvas", "Graph Draw Options", 200, 10, 600, 400);
 
