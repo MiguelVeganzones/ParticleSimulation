@@ -9,6 +9,7 @@
 #include "particle_systems.hpp"
 #include "plotting.hpp"
 #include "random_distributions.hpp"
+#include "scatter_plot.hpp"
 #include "stopwatch.hpp"
 #include "synthetic_clock.hpp"
 #include "time_plotter.hpp"
@@ -18,10 +19,9 @@
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
-#include <thread>
 #include <vector>
 
-constexpr auto universe_diameter = 0.01f;
+constexpr auto universe_diameter = 10.f;
 
 template <std::size_t N, std::floating_point F>
 auto generate_particle_set(std::size_t size)
@@ -164,14 +164,14 @@ int particle_movement_simulation()
     using namespace pm;
 
     using F                 = double;
-    static constexpr auto N = 2;
+    static constexpr auto N = 3;
     static constexpr auto K = 3000000; // Iterations
     using particle_t        = particle::ndparticle<N, F>;
 
-    using tick_t = synchronization::tick_period<std::chrono::milliseconds, 10000>;
+    using tick_t             = synchronization::tick_period<std::chrono::milliseconds, 5>;
     using simulation_clock_t = synchronization::synthetic_clock<tick_t>;
 
-    const auto size      = 3;
+    const auto size      = 40;
     auto       particles = generate_particle_set<N, F>(size);
 
 
@@ -180,6 +180,13 @@ int particle_movement_simulation()
     const auto initial_limtis = ndt::detail::compute_limits(particles);
     std::cout << initial_limtis << '\n';
 
+    std::array<float, size> x;
+    std::array<float, size> y;
+    std::array<float, size> z;
+
+    TApplication                   app = TApplication("Root app", 0, nullptr);
+    root_plotting::scatter_plot_3D scatter_plot;
+
     std::cout << "Particle Limits:\n";
     utility::timing::stopwatch s{ "Simulation" };
     for (auto i = 0uz; i != K; ++i)
@@ -187,17 +194,13 @@ int particle_movement_simulation()
         if (i % 10000 == 0)
         {
             std::cout << "Iteration: " << i << '\n';
-            for (auto const& p : particles | std::views::take(10))
+            for (int j = 0; j != size; ++j)
             {
-                std::cout << p << '\n';
+                x[j] = static_cast<float>(particles[j].position()[0]);
+                y[j] = static_cast<float>(particles[j].position()[1]);
+                z[j] = static_cast<float>(particles[j].position()[2]);
             }
-            const auto current_limtis = ndt::detail::compute_limits(particles);
-            std::cout << current_limtis << '\n';
-            if (current_limtis.min()[0] < initial_limtis.min()[0] - 0.001)
-            {
-                std::cout << "END" << std::endl;
-                std::terminate();
-            }
+            scatter_plot.plot(size, &x[0], &y[0], &z[0]);
         }
         for (auto& p : particles)
         {
@@ -225,6 +228,8 @@ int particle_movement_simulation()
     std::cout << final_limtis << '\n';
     std::cout << "<\\-------------- Simulation -------------->\n";
 
+    app.Run();
+
     return EXIT_SUCCESS;
 }
 
@@ -250,10 +255,6 @@ int particle_movement_visualization_debug()
     std::cout << "Particle Limits:\n";
     utility::timing::stopwatch s{ "Simulation" };
 
-    std::vector<float> x{};
-    std::vector<float> y1{};
-    std::vector<float> y2{};
-
     TApplication app = TApplication("Root app", 0, nullptr);
 
     root_plotting::time_plotter plotter;
@@ -269,10 +270,10 @@ int particle_movement_visualization_debug()
             const auto [_, d] = utils::normalize(
                 current_limtis.min().value() - current_limtis.max().value()
             );
-            x.push_back(static_cast<float>(i));
-            y1.push_back(static_cast<float>(particles[0].position().value()[0]));
-            y2.push_back(static_cast<float>(particles[1].position().value()[0]));
-            plotter.plot((int)y1.size(), &y1[0], &y2[0]);
+            plotter.append(
+                static_cast<float>(particles[0].position().value()[0]),
+                static_cast<float>(particles[1].position().value()[0])
+            );
             std::cout << "D: " << d << '\n';
             if (d >= delta)
             {
@@ -343,10 +344,6 @@ int particle_movement_visualization()
     std::cout << "Particle Limits:\n";
     utility::timing::stopwatch s{ "Simulation" };
 
-    std::vector<float> x{};
-    std::vector<float> y1{};
-    std::vector<float> y2{};
-
     TApplication app = TApplication("Root app", 0, nullptr);
 
     root_plotting::time_plotter plotter;
@@ -360,10 +357,10 @@ int particle_movement_visualization()
             const auto [_, d] = utils::normalize(
                 current_limtis.min().value() - current_limtis.max().value()
             );
-            x.push_back(static_cast<float>(i));
-            y1.push_back(static_cast<float>(particles[0].position().value()[0]));
-            y2.push_back(static_cast<float>(particles[1].position().value()[0]));
-            plotter.plot((int)y1.size(), &y1[0], &y2[0]);
+            plotter.append(
+                static_cast<float>(particles[0].position().value()[0]),
+                static_cast<float>(particles[1].position().value()[0])
+            );
             std::cout << "D: " << d << '\n';
         }
         for (auto& p : particles)
@@ -406,7 +403,8 @@ int main()
     // gravitational_interaction_test();
     // particle_movement_test();
     // particle_movement_simulation();
-    particle_movement_visualization();
-    solar_system_test();
+    // particle_movement_visualization();
+    // solar_system_test();
+    particle_movement_simulation();
     return EXIT_SUCCESS;
 }

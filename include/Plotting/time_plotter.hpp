@@ -7,16 +7,20 @@
 
 namespace root_plotting
 {
+
 class time_plotter
 {
 public:
     std::unique_ptr<TCanvas> c1;
     std::unique_ptr<TGraph>  gr1;
     std::unique_ptr<TGraph>  gr2;
+    float                    min_y;
+    float                    max_y;
+    int                      n;
 
     explicit time_plotter();
 
-    auto plot(const int n, float const* const y1, float const* const y2) -> void;
+    auto append(const float y1, float y2) -> void;
 };
 
 } // namespace root_plotting

@@ -28,7 +28,7 @@ auto gravitational_interaction(Particle_Type const& p1, Particle_Type const& p2)
     auto [unit_vector, r] = utils::normalize(distance.value());
     constexpr auto r_s    = 1e-3;
     // TODO: Optimize out p1_mass - Read note
-    const auto magnitude = pm::physical_constants<value_type>::G * p1.mass().value() *
+    const auto magnitude = pm::physical_constants<value_type>::G * p1.mass().magnitude() *
                            p2.mass().magnitude() * r /
                            std::pow(r * r + r_s * r_s, value_type{ 1.5 });
 #if DEBUG_PRINT

@@ -152,7 +152,7 @@ all: main plotting
 #=============================================================
 
 #=============================================================
-main: $(PLOTTING_DIR)/$(OUT_DIR)/plotting.o $(PLOTTING_DIR)/$(OUT_DIR)/time_plotter.o ${OUT_DIR}/main.o
+main: $(PLOTTING_DIR)/$(OUT_DIR)/plotting.o $(PLOTTING_DIR)/$(OUT_DIR)/time_plotter.o $(PLOTTING_DIR)/$(OUT_DIR)/scatter_plot.o ${OUT_DIR}/main.o
 
 ${OUT_DIR}/main.o: $(SRC_DIR)/*.cpp $(INCLUDE_DIR)/*/*.hpp
 	@echo -e Building $@..."\n"
@@ -177,3 +177,10 @@ $(PLOTTING_DIR)/$(OUT_DIR)/time_plotter.o: $(PLOTTING_DIR)/time_plotter.cpp $(PL
 	@echo -e Built $@ successfully."\n"
 #=============================================================
 
+#=============================================================
+$(PLOTTING_DIR)/$(OUT_DIR)/scatter_plot.o: $(PLOTTING_DIR)/scatter_plot.cpp $(PLOTTING_DIR)/scatter_plot.hpp
+	@echo -e Building $@..."\n"
+	@mkdir -p $(PLOTTING_DIR)/${OUT_DIR}
+	$(CXX) $(ROOT_FLAGS) $(PLOTTING_INCL) $(PLOTTING_LIB) -c $(PLOTTING_DIR)/scatter_plot.cpp -o $@
+	@echo -e Built $@ successfully."\n"
+#=============================================================
