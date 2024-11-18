@@ -9,6 +9,9 @@
 #define DEBUG_PRINT (false)
 #endif
 
+// TODO
+#define OPTIMIZE_AWAY_MASS(x)
+
 namespace pm::interaction
 {
 
@@ -21,15 +24,17 @@ auto gravitational_interaction(Particle_Type const& p1, Particle_Type const& p2)
     using value_type = typename Particle_Type::value_type;
     using force_t    = magnitudes::force<Particle_Type::s_dimension, value_type>;
     [[maybe_unused]]
-    const auto distance            = utils::distance(p1.position(), p2.position());
-    const auto [unit_vector, norm] = utils::normalize(distance.value());
+    const auto distance   = utils::distance(p1.position(), p2.position());
+    auto [unit_vector, r] = utils::normalize(distance.value());
+    constexpr auto r_s    = 1e-3;
     // TODO: Optimize out p1_mass - Read note
     const auto magnitude = pm::physical_constants<value_type>::G * p1.mass().value() *
-                           p2.mass().magnitude() / norm / norm;
+                           p2.mass().magnitude() * r /
+                           std::pow(r * r + r_s * r_s, value_type{ 1.5 });
 #if DEBUG_PRINT
-    std::cout << "D:\t" << distance << '\n';
-    std::cout << "G:\t" << magnitude << '\n';
-    std::cout << "U:\t" << unit_vector << '\n';
+    std::cout << "D_v:\t" << unit_vector << '\n';
+    std::cout << "D_m:\t" << distance << '\n';
+    std::cout << "G_f:\t" << magnitude << '\n';
 #endif
     return force_t{ unit_vector * magnitude };
 }

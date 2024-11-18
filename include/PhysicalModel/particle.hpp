@@ -51,10 +51,14 @@ public:
 #if DEBUG_PRINT
         std::cout << "d_t:\t" << d_t << '\n';
         std::cout << "d_v:\t" << d_v << '\n';
+        std::cout << "v_i:\t" << m_velocity << '\n';
 #endif
         const auto p = m_position;
         m_position += (m_velocity + value_type{ 0.5 } * d_v) * d_t;
         m_velocity += d_v;
+#if DEBUG_PRINT
+        std::cout << "v_f:\t" << m_velocity << '\n';
+#endif
     }
 
 #if __GNUC__ >= 14

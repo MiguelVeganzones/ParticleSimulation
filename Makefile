@@ -152,12 +152,12 @@ all: main plotting
 #=============================================================
 
 #=============================================================
-main: $(PLOTTING_DIR)/$(OUT_DIR)/plotting.o ${OUT_DIR}/main.o
+main: $(PLOTTING_DIR)/$(OUT_DIR)/plotting.o $(PLOTTING_DIR)/$(OUT_DIR)/time_plotter.o ${OUT_DIR}/main.o
 
 ${OUT_DIR}/main.o: $(SRC_DIR)/*.cpp $(INCLUDE_DIR)/*/*.hpp
 	@echo -e Building $@..."\n"
 	@mkdir -p ${OUT_DIR}
-	$(CXX) $(CXXFLAGS) -Wno-cpp $(MAIN_SIMULATION_INCL) $(MAIN_SIMULATION_LIB) $(PLOTTING_DIR)/$(OUT_DIR)/plotting.o $(SRC_DIR)/main.cpp -o $@
+	$(CXX) $(CXXFLAGS) -Wno-cpp $(MAIN_SIMULATION_INCL) $(MAIN_SIMULATION_LIB) $(PLOTTING_DIR)/$(OUT_DIR)/*.o $(SRC_DIR)/main.cpp -o $@
 	@echo -e Built $@ successfully."\n"
 #=============================================================
 
@@ -168,3 +168,12 @@ $(PLOTTING_DIR)/$(OUT_DIR)/plotting.o: $(PLOTTING_DIR)/plotting.cpp $(PLOTTING_D
 	$(CXX) $(ROOT_FLAGS) $(PLOTTING_INCL) $(PLOTTING_LIB) -c $(PLOTTING_DIR)/plotting.cpp -o $@
 	@echo -e Built $@ successfully."\n"
 #=============================================================
+
+#=============================================================
+$(PLOTTING_DIR)/$(OUT_DIR)/time_plotter.o: $(PLOTTING_DIR)/time_plotter.cpp $(PLOTTING_DIR)/time_plotter.hpp
+	@echo -e Building $@..."\n"
+	@mkdir -p $(PLOTTING_DIR)/${OUT_DIR}
+	$(CXX) $(ROOT_FLAGS) $(PLOTTING_INCL) $(PLOTTING_LIB) -c $(PLOTTING_DIR)/time_plotter.cpp -o $@
+	@echo -e Built $@ successfully."\n"
+#=============================================================
+

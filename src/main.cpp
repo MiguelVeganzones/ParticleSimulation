@@ -11,12 +11,17 @@
 #include "random_distributions.hpp"
 #include "stopwatch.hpp"
 #include "synthetic_clock.hpp"
+#include "time_plotter.hpp"
+#include "utils.hpp"
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
 #include <iostream>
+#include <thread>
 #include <vector>
+
+constexpr auto universe_diameter = 0.01f;
 
 template <std::size_t N, std::floating_point F>
 auto generate_particle_set(std::size_t size)
@@ -29,19 +34,19 @@ auto generate_particle_set(std::size_t size)
         using param_type     = typename distribution_t::param_type;
         param_type            params(F{ 0.001f });
         static distribution_t d(params);
-        return d();
+        return d() * F{ 100 };
     };
 
     auto position_generator = []() mutable -> F {
         using distribution_a_t = random_distribution<F, DistributionCategory::Uniform>;
         using param_type_a     = typename distribution_a_t::param_type;
-        param_type_a            params_a(F{ -100 }, F{ 100 });
+        param_type_a            params_a(F{ -universe_diameter }, F{ universe_diameter });
         static distribution_a_t d_a(params_a);
         using distribution_b_t = random_distribution<F, DistributionCategory::Gamma>;
         using param_type_b     = typename distribution_b_t::param_type;
-        param_type_b            params_b(F{ 8 }, F{ 1 });
+        param_type_b            params_b(F{ 1 }, F{ 1 });
         static distribution_b_t d_b(params_b);
-        return d_a() + d_b();
+        return d_a(); // + universe_diameter;
     };
 
     auto velocity_generator = []() -> F { return F{ 0 }; };
@@ -223,7 +228,7 @@ int particle_movement_simulation()
     return EXIT_SUCCESS;
 }
 
-int particle_movement_visualization()
+int particle_movement_visualization_debug()
 {
     using namespace pm;
     using F                 = double;
@@ -231,10 +236,10 @@ int particle_movement_visualization()
     static constexpr auto K = 3000000000000; // Iterations
     using particle_t        = particle::ndparticle<N, F>;
 
-    using tick_t = synchronization::tick_period<std::chrono::microseconds, 10>;
-    using simulation_clock_t = synchronization::synthetic_clock<tick_t>;
+    using high_freq_tick_t = synchronization::tick_period<std::chrono::nanoseconds, 100>;
+    using low_freq_tick_t  = synchronization::tick_period<std::chrono::microseconds, 100>;
 
-    const auto size      = 8;
+    const auto size      = 2;
     auto       particles = generate_particle_set<N, F>(size);
 
     std::cout << "<-------------- Simulation -------------->\n";
@@ -249,17 +254,45 @@ int particle_movement_visualization()
     std::vector<float> y1{};
     std::vector<float> y2{};
 
+    TApplication app = TApplication("Root app", 0, nullptr);
+
+    root_plotting::time_plotter plotter;
+
+    bool    flag  = false;
+    const F delta = 0.00001;
     for (auto i = 0uz; i != K; ++i)
     {
-        if (i % 10000000 == 0)
+        if (flag)
         {
+            const auto current_limtis = ndt::detail::compute_limits(particles);
+            std::cout << current_limtis << '\n';
+            const auto [_, d] = utils::normalize(
+                current_limtis.min().value() - current_limtis.max().value()
+            );
             x.push_back(static_cast<float>(i));
             y1.push_back(static_cast<float>(particles[0].position().value()[0]));
             y2.push_back(static_cast<float>(particles[1].position().value()[0]));
-            std::cout << "Iteration: " << i << '\n';
+            plotter.plot((int)y1.size(), &y1[0], &y2[0]);
+            std::cout << "D: " << d << '\n';
+            if (d >= delta)
+            {
+                std::cout << "END" << std::endl;
+                break;
+            }
+        }
+        else if (i % 1000000)
+        {
             const auto current_limtis = ndt::detail::compute_limits(particles);
             std::cout << current_limtis << '\n';
+            const auto [_, d] = utils::normalize(
+                current_limtis.min().value() - current_limtis.max().value()
+            );
+            if (d < delta)
+            {
+                flag = true;
+            }
         }
+
         for (auto& p : particles)
         {
             pm::interaction::update_acceleration(
@@ -268,12 +301,10 @@ int particle_movement_visualization()
         }
         for (auto& p : particles)
         {
-            p.update_position(tick_t::period_duration);
-        }
-
-        if constexpr (utility::concepts::is_manual_tick_clock_v<simulation_clock_t>)
-        {
-            simulation_clock_t::tick();
+            p.update_position(
+                flag ? high_freq_tick_t::period_duration
+                     : low_freq_tick_t::period_duration
+            );
         }
     }
 
@@ -286,14 +317,75 @@ int particle_movement_visualization()
     std::cout << final_limtis << '\n';
     std::cout << "<\\-------------- Simulation -------------->\n";
 
+    app.Run();
+
+    return EXIT_SUCCESS;
+}
+
+int particle_movement_visualization()
+{
+    using namespace pm;
+    using F                 = double;
+    static constexpr auto N = 1;
+    static constexpr auto K = 3000000000000; // Iterations
+    using particle_t        = particle::ndparticle<N, F>;
+
+    using tick_t = synchronization::tick_period<std::chrono::milliseconds, 1>;
+
+    const auto size      = 2;
+    auto       particles = generate_particle_set<N, F>(size);
+
+    std::cout << "<-------------- Simulation -------------->\n";
+
+    const auto initial_limtis = ndt::detail::compute_limits(particles);
+    std::cout << initial_limtis << '\n';
+
+    std::cout << "Particle Limits:\n";
+    utility::timing::stopwatch s{ "Simulation" };
+
+    std::vector<float> x{};
+    std::vector<float> y1{};
+    std::vector<float> y2{};
+
     TApplication app = TApplication("Root app", 0, nullptr);
 
-    for (int i = 0; i != (int)y1.size(); ++i)
+    root_plotting::time_plotter plotter;
+
+    for (auto i = 0uz; i != K; ++i)
     {
-        std::cout << y1[i] << " " << y2[i] << '\n';
+        if (i % 1000000)
+        {
+            const auto current_limtis = ndt::detail::compute_limits(particles);
+            std::cout << current_limtis << '\n';
+            const auto [_, d] = utils::normalize(
+                current_limtis.min().value() - current_limtis.max().value()
+            );
+            x.push_back(static_cast<float>(i));
+            y1.push_back(static_cast<float>(particles[0].position().value()[0]));
+            y2.push_back(static_cast<float>(particles[1].position().value()[0]));
+            plotter.plot((int)y1.size(), &y1[0], &y2[0]);
+            std::cout << "D: " << d << '\n';
+        }
+        for (auto& p : particles)
+        {
+            pm::interaction::update_acceleration(
+                p, std::span<particle_t, size>{ particles }
+            );
+        }
+        for (auto& p : particles)
+        {
+            p.update_position(tick_t::period_duration);
+        }
     }
 
-    root_plotting::plot((int)x.size(), &x[0], &y1[0], &y2[0]);
+    for (auto const& p : particles | std::views::take(10))
+    {
+        std::cout << p << '\n';
+    }
+
+    const auto final_limtis = ndt::detail::compute_limits(particles);
+    std::cout << final_limtis << '\n';
+    std::cout << "<\\-------------- Simulation -------------->\n";
 
     app.Run();
 
