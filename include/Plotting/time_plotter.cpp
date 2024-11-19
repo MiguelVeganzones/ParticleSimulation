@@ -3,6 +3,8 @@
 #include <TCanvas.h>
 #include <memory>
 
+#include <iostream>
+
 namespace root_plotting
 {
 
@@ -21,8 +23,17 @@ time_plotter::time_plotter()
 
 auto time_plotter::append(const float y1, const float y2) -> void
 {
-    min_y = std::min(min_y, std::min(y1, y2));
-    max_y = std::max(max_y, std::max(y1, y2));
+    if (!std::isfinite(y1) || !std::isfinite(y2))
+    {
+        std::cout << "Invalid point: x=" << y1 << ", y=" << y2 << std::endl;
+    }
+
+    if (n < 0)
+    {
+        std::cout << "Invalid index: n=" << n << std::endl;
+    }
+    min_y = n == 0 ? std::min(y1, y2) : std::min(min_y, std::min(y1, y2));
+    max_y = n == 0 ? std::max(y1, y2) : std::max(max_y, std::max(y1, y2));
     gr1->SetMinimum(min_y);
     gr1->SetMaximum(max_y);
 

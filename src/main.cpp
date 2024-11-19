@@ -21,7 +21,7 @@
 #include <iostream>
 #include <vector>
 
-constexpr auto universe_diameter = 10.f;
+constexpr auto universe_diameter = 0.5f;
 
 template <std::size_t N, std::floating_point F>
 auto generate_particle_set(std::size_t size)
@@ -62,177 +62,6 @@ auto generate_particle_set(std::size_t size)
     );
 }
 
-int ndtree_test()
-{
-    using namespace ndt;
-    using namespace pm;
-    using F                 = float;
-    static constexpr auto N = 3;
-    using sample_t          = particle::ndparticle<N, F>;
-
-    const auto size    = 30;
-    auto       samples = generate_particle_set<N, F>(size);
-
-    for (auto i = 0uz; auto const& s : samples)
-    {
-        std::cout << "Sample: " << i++ << '\n' << s << '\n';
-    }
-    ndtree<sample_t> tree(std::span<sample_t, size>{ samples }, 5, 4uz);
-    std::cout << tree;
-
-    return EXIT_SUCCESS;
-}
-
-int gravitational_interaction_test()
-{
-    using namespace pm;
-
-    using F                 = double;
-    static constexpr auto N = 3;
-
-    const auto size    = 30;
-    const auto samples = generate_particle_set<N, F>(size);
-
-    for (auto i = 0uz; auto const& s : samples)
-    {
-        std::cout << "Sample: " << i++ << '\n' << s << '\n';
-    }
-
-    for (auto const& p1 : samples | std::views::take(10))
-    {
-        for (auto const& p2 : samples | std::views::take(10))
-        {
-            std::cout << pm::interaction::gravitational_interaction(p1, p2) << '\n';
-        }
-    }
-
-    return EXIT_SUCCESS;
-}
-
-int particle_movement_test()
-{
-    using namespace pm;
-    using F                 = double;
-    static constexpr auto N = 3;
-    using sample_t          = particle::ndparticle<N, F>;
-
-    using tick_t             = synchronization::tick_period<std::chrono::seconds, 200>;
-    using simulation_clock_t = synchronization::synthetic_clock<tick_t>;
-
-    const auto size    = 5;
-    auto       samples = generate_particle_set<N, F>(size);
-
-    std::cout << "Start of particle 0: " << samples[0] << '\n';
-
-    for (auto i = 0uz; i != 10; ++i)
-    {
-        pm::interaction::update_acceleration(
-            samples[0], std::span<sample_t, size>{ samples }
-        );
-        samples[0].update_position(tick_t::period_duration);
-
-        std::cout << i << "\tPosition of particle 0: " << samples[0].position() << '\n';
-
-        if constexpr (utility::concepts::is_manual_tick_clock_v<simulation_clock_t>)
-        {
-            simulation_clock_t::tick();
-        }
-    }
-
-    std::cout << "End of particle 0: " << samples[0] << '\n';
-
-    return EXIT_SUCCESS;
-}
-
-int solar_system_test()
-{
-    using namespace pm;
-    using F = double;
-
-    auto particles = pm::particle_systems::create_solar_system<F>();
-
-    for (auto const& p : particles)
-    {
-        std::cout << p << '\n';
-    }
-
-    return EXIT_SUCCESS;
-}
-
-int particle_movement_simulation()
-{
-    using namespace pm;
-
-    using F                 = double;
-    static constexpr auto N = 3;
-    static constexpr auto K = 3000000; // Iterations
-    using particle_t        = particle::ndparticle<N, F>;
-
-    using tick_t             = synchronization::tick_period<std::chrono::milliseconds, 5>;
-    using simulation_clock_t = synchronization::synthetic_clock<tick_t>;
-
-    const auto size      = 40;
-    auto       particles = generate_particle_set<N, F>(size);
-
-
-    std::cout << "<-------------- Simulation -------------->\n";
-
-    const auto initial_limtis = ndt::detail::compute_limits(particles);
-    std::cout << initial_limtis << '\n';
-
-    std::array<float, size> x;
-    std::array<float, size> y;
-    std::array<float, size> z;
-
-    TApplication                   app = TApplication("Root app", 0, nullptr);
-    root_plotting::scatter_plot_3D scatter_plot;
-
-    std::cout << "Particle Limits:\n";
-    utility::timing::stopwatch s{ "Simulation" };
-    for (auto i = 0uz; i != K; ++i)
-    {
-        if (i % 10000 == 0)
-        {
-            std::cout << "Iteration: " << i << '\n';
-            for (int j = 0; j != size; ++j)
-            {
-                x[j] = static_cast<float>(particles[j].position()[0]);
-                y[j] = static_cast<float>(particles[j].position()[1]);
-                z[j] = static_cast<float>(particles[j].position()[2]);
-            }
-            scatter_plot.plot(size, &x[0], &y[0], &z[0]);
-        }
-        for (auto& p : particles)
-        {
-            pm::interaction::update_acceleration(
-                p, std::span<particle_t, size>{ particles }
-            );
-        }
-        for (auto& p : particles)
-        {
-            p.update_position(tick_t::period_duration);
-        }
-
-        if constexpr (utility::concepts::is_manual_tick_clock_v<simulation_clock_t>)
-        {
-            simulation_clock_t::tick();
-        }
-    }
-
-    for (auto const& p : particles | std::views::take(10))
-    {
-        std::cout << p << '\n';
-    }
-
-    const auto final_limtis = ndt::detail::compute_limits(particles);
-    std::cout << final_limtis << '\n';
-    std::cout << "<\\-------------- Simulation -------------->\n";
-
-    app.Run();
-
-    return EXIT_SUCCESS;
-}
-
 int particle_movement_visualization_debug()
 {
     using namespace pm;
@@ -241,8 +70,7 @@ int particle_movement_visualization_debug()
     static constexpr auto K = 3000000000000; // Iterations
     using particle_t        = particle::ndparticle<N, F>;
 
-    using high_freq_tick_t = synchronization::tick_period<std::chrono::nanoseconds, 100>;
-    using low_freq_tick_t  = synchronization::tick_period<std::chrono::microseconds, 100>;
+    using tick_t = synchronization::tick_period<std::chrono::milliseconds, 10>;
 
     const auto size      = 2;
     auto       particles = generate_particle_set<N, F>(size);
@@ -255,123 +83,27 @@ int particle_movement_visualization_debug()
     std::cout << "Particle Limits:\n";
     utility::timing::stopwatch s{ "Simulation" };
 
+    std::cout << "Here0:\n";
     TApplication app = TApplication("Root app", 0, nullptr);
 
+    std::cout << "Here2:\n";
     root_plotting::time_plotter plotter;
 
-    bool    flag  = false;
-    const F delta = 0.00001;
+    std::cout << "Here3:\n";
+    interaction::runge_kutta_solver<4, particle_t> solver(particles);
+    std::cout << "Here4:\n";
+
     for (auto i = 0uz; i != K; ++i)
     {
-        if (flag)
+        if (i % 1000000000 == 0)
         {
             const auto current_limtis = ndt::detail::compute_limits(particles);
             std::cout << current_limtis << '\n';
-            const auto [_, d] = utils::normalize(
-                current_limtis.min().value() - current_limtis.max().value()
-            );
             plotter.append(
                 static_cast<float>(particles[0].position().value()[0]),
                 static_cast<float>(particles[1].position().value()[0])
             );
-            std::cout << "D: " << d << '\n';
-            if (d >= delta)
-            {
-                std::cout << "END" << std::endl;
-                break;
-            }
-        }
-        else if (i % 1000000)
-        {
-            const auto current_limtis = ndt::detail::compute_limits(particles);
-            std::cout << current_limtis << '\n';
-            const auto [_, d] = utils::normalize(
-                current_limtis.min().value() - current_limtis.max().value()
-            );
-            if (d < delta)
-            {
-                flag = true;
-            }
-        }
-
-        for (auto& p : particles)
-        {
-            pm::interaction::update_acceleration(
-                p, std::span<particle_t, size>{ particles }
-            );
-        }
-        for (auto& p : particles)
-        {
-            p.update_position(
-                flag ? high_freq_tick_t::period_duration
-                     : low_freq_tick_t::period_duration
-            );
-        }
-    }
-
-    for (auto const& p : particles | std::views::take(10))
-    {
-        std::cout << p << '\n';
-    }
-
-    const auto final_limtis = ndt::detail::compute_limits(particles);
-    std::cout << final_limtis << '\n';
-    std::cout << "<\\-------------- Simulation -------------->\n";
-
-    app.Run();
-
-    return EXIT_SUCCESS;
-}
-
-int particle_movement_visualization()
-{
-    using namespace pm;
-    using F                 = double;
-    static constexpr auto N = 1;
-    static constexpr auto K = 3000000000000; // Iterations
-    using particle_t        = particle::ndparticle<N, F>;
-
-    using tick_t = synchronization::tick_period<std::chrono::milliseconds, 1>;
-
-    const auto size      = 2;
-    auto       particles = generate_particle_set<N, F>(size);
-
-    std::cout << "<-------------- Simulation -------------->\n";
-
-    const auto initial_limtis = ndt::detail::compute_limits(particles);
-    std::cout << initial_limtis << '\n';
-
-    std::cout << "Particle Limits:\n";
-    utility::timing::stopwatch s{ "Simulation" };
-
-    TApplication app = TApplication("Root app", 0, nullptr);
-
-    root_plotting::time_plotter plotter;
-
-    for (auto i = 0uz; i != K; ++i)
-    {
-        if (i % 1000000)
-        {
-            const auto current_limtis = ndt::detail::compute_limits(particles);
-            std::cout << current_limtis << '\n';
-            const auto [_, d] = utils::normalize(
-                current_limtis.min().value() - current_limtis.max().value()
-            );
-            plotter.append(
-                static_cast<float>(particles[0].position().value()[0]),
-                static_cast<float>(particles[1].position().value()[0])
-            );
-            std::cout << "D: " << d << '\n';
-        }
-        for (auto& p : particles)
-        {
-            pm::interaction::update_acceleration(
-                p, std::span<particle_t, size>{ particles }
-            );
-        }
-        for (auto& p : particles)
-        {
-            p.update_position(tick_t::period_duration);
+            solver.run(tick_t::period_duration);
         }
     }
 
@@ -399,12 +131,6 @@ int main()
         utility::logging::severity_level::error, "Huge error or sth..."
     );
 
-    // ndtree_test();
-    // gravitational_interaction_test();
-    // particle_movement_test();
-    // particle_movement_simulation();
-    // particle_movement_visualization();
-    // solar_system_test();
-    particle_movement_simulation();
+    particle_movement_visualization_debug();
     return EXIT_SUCCESS;
 }

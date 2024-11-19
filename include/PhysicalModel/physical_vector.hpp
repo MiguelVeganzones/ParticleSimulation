@@ -7,6 +7,7 @@
 #include <array>
 #include <concepts>
 #include <ranges>
+#include <type_traits>
 
 // physical_vector cannot be in its own namespace unfortunately to enable ADL
 // of physical_vector construction in direct list initialization of physical_magnitudes
@@ -142,52 +143,44 @@ public:
 };
 
 auto operator+(auto&& pva, auto&& pvb) noexcept -> decltype(auto)
-    requires particle_concepts::Vector<std::remove_reference_t<std::remove_reference_t<
-                 std::remove_reference_t<std::remove_reference_t<decltype(pva)>>>>> ||
+    requires particle_concepts::Vector<std::remove_reference_t<decltype(pva)>> ||
              particle_concepts::Vector<std::remove_reference_t<decltype(pvb)>>
 {
     return operator_impl(
-        std::forward<std::remove_reference_t<std::remove_reference_t<
-            std::remove_reference_t<std::remove_reference_t<decltype(pva)>>>>>(pva),
+        std::forward<std::remove_reference_t<decltype(pva)>>(pva),
         std::forward<std::remove_reference_t<decltype(pvb)>>(pvb),
         std::plus{}
     );
 }
 
 auto operator-(auto&& pva, auto&& pvb) noexcept -> decltype(auto)
-    requires particle_concepts::Vector<std::remove_reference_t<std::remove_reference_t<
-                 std::remove_reference_t<std::remove_reference_t<decltype(pva)>>>>> ||
+    requires particle_concepts::Vector<std::remove_reference_t<decltype(pva)>> ||
              particle_concepts::Vector<std::remove_reference_t<decltype(pvb)>>
 {
     return operator_impl(
-        std::forward<std::remove_reference_t<std::remove_reference_t<
-            std::remove_reference_t<std::remove_reference_t<decltype(pva)>>>>>(pva),
+        std::forward<std::remove_reference_t<decltype(pva)>>(pva),
         std::forward<std::remove_reference_t<decltype(pvb)>>(pvb),
         std::minus{}
     );
 }
 
 auto operator*(auto&& pva, auto&& pvb) noexcept -> decltype(auto)
-    requires particle_concepts::Vector<std::remove_reference_t<std::remove_reference_t<
-                 std::remove_reference_t<std::remove_reference_t<decltype(pva)>>>>> ||
+    requires particle_concepts::Vector<std::remove_reference_t<decltype(pva)>> ||
              particle_concepts::Vector<std::remove_reference_t<decltype(pvb)>>
 {
     return operator_impl(
-        std::forward<std::remove_reference_t<std::remove_reference_t<
-            std::remove_reference_t<std::remove_reference_t<decltype(pva)>>>>>(pva),
+        std::forward<std::remove_reference_t<decltype(pva)>>(pva),
         std::forward<std::remove_reference_t<decltype(pvb)>>(pvb),
         std::multiplies{}
     );
 }
 
 auto operator/(auto&& pva, auto&& pvb) noexcept -> decltype(auto)
-    requires particle_concepts::Vector<std::remove_reference_t<std::remove_reference_t<
-                 std::remove_reference_t<std::remove_reference_t<decltype(pva)>>>>> ||
+    requires particle_concepts::Vector<std::remove_reference_t<decltype(pva)>> ||
              particle_concepts::Vector<std::remove_reference_t<decltype(pvb)>>
 {
     return operator_impl(
-        std::forward<std::remove_reference_t<std::remove_reference_t<
-            std::remove_reference_t<std::remove_reference_t<decltype(pva)>>>>>(pva),
+        std::forward<std::remove_reference_t<decltype(pva)>>(pva),
         std::forward<std::remove_reference_t<decltype(pvb)>>(pvb),
         std::divides{}
     );

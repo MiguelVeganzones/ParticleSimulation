@@ -14,9 +14,9 @@ public:
     std::unique_ptr<TCanvas> c1;
     std::unique_ptr<TGraph>  gr1;
     std::unique_ptr<TGraph>  gr2;
-    float                    min_y;
-    float                    max_y;
-    int                      n;
+    float                    min_y{};
+    float                    max_y{};
+    int                      n{};
 
     explicit time_plotter();
 
