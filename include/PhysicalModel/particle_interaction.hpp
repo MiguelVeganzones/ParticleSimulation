@@ -70,19 +70,19 @@ template <std::size_t Order, particle_concepts::Particle Particle_Type>
     requires(Order > 1)
 struct runge_kutta_solver
 {
-    inline static constexpr auto O = Order;
-    using particle_t               = Particle_Type;
-    using value_type               = typename particle_t::value_type;
-    using position_t               = typename particle_t::position_t;
-    using velocity_t               = typename particle_t::velocity_t;
-    using interaction_t            = gravitational_interaction_calculator<particle_t>;
+    inline static constexpr auto s_order = Order;
+    using particle_t                     = Particle_Type;
+    using value_type                     = typename particle_t::value_type;
+    using position_t                     = typename particle_t::position_t;
+    using velocity_t                     = typename particle_t::velocity_t;
+    using interaction_t = gravitational_interaction_calculator<particle_t>;
 
     // Try with O-1 and do not copy x0
     // Also, not copy the mass all the time
-    std::array<std::vector<particle_t>, O> particle_buffer_{};
-    interaction_t                          interaction;
-    std::span<particle_t>                  particles_;
-    std::size_t                            size_;
+    std::array<std::vector<particle_t>, s_order> particle_buffer_{};
+    interaction_t                                interaction;
+    std::span<particle_t>                        particles_;
+    std::size_t                                  size_;
 
     runge_kutta_solver(std::span<particle_t> particles) :
         particles_{ particles },
@@ -93,7 +93,7 @@ struct runge_kutta_solver
         {
             v.reserve(size_);
         }
-        for (std::size_t j = 0; j != O; ++j)
+        for (std::size_t j = 0; j != s_order; ++j)
         {
             for (std::size_t i = 0; i != size_; ++i)
             {
@@ -104,13 +104,13 @@ struct runge_kutta_solver
 
     auto run(utility::concepts::Duration auto delta_t) -> void
     {
-        using duration_t = std::chrono::duration<double>; // float seconds
+        using duration_t = std::chrono::duration<double>; // default is seconds
 
         const auto h  = std::chrono::duration_cast<duration_t>(delta_t).count();
         const auto h2 = h / value_type{ 2 };
         const auto h_ = std::array{ value_type{ 0 }, h2, h2, h };
 
-        for (std::size_t j = 0; j != O + 1; ++j)
+        for (std::size_t j = 0; j != s_order + 1; ++j)
         {
             for (auto i = decltype(size_){ 0 }; i != size_; ++i)
             {
@@ -120,7 +120,7 @@ struct runge_kutta_solver
                     particle_buffer_[j][i].position() = particles_[i].position();
                     particle_buffer_[j][i].velocity() = particles_[i].velocity();
                 }
-                else if (j != O)
+                else if (j != s_order)
                 {
                     particle_buffer_[j - 1][i].acceleration() =
                         interaction.get_acceleration(i, particle_buffer_[j - 1]);

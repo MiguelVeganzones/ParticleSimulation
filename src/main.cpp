@@ -21,7 +21,7 @@
 #include <iostream>
 #include <vector>
 
-constexpr auto universe_diameter = 0.5f;
+constexpr auto universe_diameter = 0.3f;
 
 template <std::size_t N, std::floating_point F>
 auto generate_particle_set(std::size_t size)
@@ -70,7 +70,7 @@ int particle_movement_visualization_debug()
     static constexpr auto K = 3000000000000; // Iterations
     using particle_t        = particle::ndparticle<N, F>;
 
-    using tick_t = synchronization::tick_period<std::chrono::milliseconds, 10>;
+    using tick_t = synchronization::tick_period<std::chrono::milliseconds, 50>;
 
     const auto size      = 2;
     auto       particles = generate_particle_set<N, F>(size);

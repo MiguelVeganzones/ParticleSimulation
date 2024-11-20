@@ -59,6 +59,11 @@ Instructions to get the project up and running on your local machine.
 - Guidelines for contributing to the project.
 - Information on how to submit issues or pull requests.
 
+## Documentation
+
+- [Numerical simulations of gravitational dynamics](docs/numerical_simulation_of_gravitational_dynamics.pdf)
+- [Optimal doftening for gravitational computations.pdf](docs/optimal_doftening_for_gravitational_computations.pdf)
+
 ## License
 This project is licensed under the [GNU General Public License](./LICENSE).
 
