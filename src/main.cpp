@@ -4,16 +4,18 @@
 #include "factory.hpp"
 #include "logging.hpp"
 #include "ndtree.hpp"
+#include "odex2.hpp"
 #include "particle.hpp"
-#include "particle_interaction.hpp"
-#include "particle_systems.hpp"
+#include "physical_magnitudes.hpp"
 #include "plotting.hpp"
 #include "random_distributions.hpp"
+#include "runge_kutta.hpp"
 #include "scatter_plot.hpp"
 #include "stopwatch.hpp"
 #include "synthetic_clock.hpp"
 #include "time_plotter.hpp"
 #include "utils.hpp"
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
@@ -22,6 +24,24 @@
 #include <vector>
 
 constexpr auto universe_diameter = 0.3f;
+
+template <std::floating_point F>
+auto generate_particle_pair()
+{
+    const F m = 1e8;
+    return std::array{ pm::particle::ndparticle<1, F>(
+                           pm::magnitudes::mass<F>{ m },
+                           pm::magnitudes::position<1, F>{ -universe_diameter },
+                           pm::magnitudes::linear_velocity<1, F>{ 0 },
+                           pm::magnitudes::linear_acceleration<1, F>{ 0 }
+                       ),
+                       pm::particle::ndparticle<1, F>(
+                           pm::magnitudes::mass<F>{ m },
+                           pm::magnitudes::position<1, F>{ universe_diameter },
+                           pm::magnitudes::linear_velocity<1, F>{ 0 },
+                           pm::magnitudes::linear_acceleration<1, F>{ 0 }
+                       ) };
+}
 
 template <std::size_t N, std::floating_point F>
 auto generate_particle_set(std::size_t size)
@@ -72,8 +92,7 @@ int particle_movement_visualization_debug()
 
     using tick_t = synchronization::tick_period<std::chrono::milliseconds, 50>;
 
-    const auto size      = 2;
-    auto       particles = generate_particle_set<N, F>(size);
+    auto particles = generate_particle_set<1, F>(2);
 
     std::cout << "<-------------- Simulation -------------->\n";
 
@@ -90,20 +109,21 @@ int particle_movement_visualization_debug()
     root_plotting::time_plotter plotter;
 
     std::cout << "Here3:\n";
-    interaction::runge_kutta_solver<4, particle_t> solver(particles);
+    solvers::odex2_solver<4, particle_t> solver(particles);
     std::cout << "Here4:\n";
 
     for (auto i = 0uz; i != K; ++i)
     {
-        if (i % 1000000000 == 0)
+        solver.run(tick_t::period_duration);
+        if (i % 10 == 0)
         {
+            std::cout << i << '\n';
             const auto current_limtis = ndt::detail::compute_limits(particles);
             std::cout << current_limtis << '\n';
             plotter.append(
                 static_cast<float>(particles[0].position().value()[0]),
                 static_cast<float>(particles[1].position().value()[0])
             );
-            solver.run(tick_t::period_duration);
         }
     }
 
