@@ -33,7 +33,7 @@ struct gravitational_interaction_calculator
     {
         const auto     distance = utils::distance(pos1, pos2);
         const auto     d        = utils::l2_norm(distance.value());
-        constexpr auto rs       = value_type{ 8e-2 };
+        constexpr auto rs       = value_type{ 1e-1 };
 #if DEBUG_PRINT_INTERACTION
         std::cout << "Mj: " << mass2.magnitude() << '\n';
         std::cout << "D: " << distance << '\n';
