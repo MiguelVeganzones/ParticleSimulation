@@ -86,13 +86,14 @@ int particle_movement_visualization_debug()
 {
     using namespace pm;
     using F                 = double;
-    static constexpr auto N = 3;
+    static constexpr auto N = 2;
     static constexpr auto K = 3000000000000; // Iterations
     using particle_t        = particle::ndparticle<N, F>;
 
     using tick_t = synchronization::tick_period<std::chrono::milliseconds, 20>;
 
-    auto particles = generate_particle_set<N, F>(50);
+    const auto size      = 4;
+    auto       particles = generate_particle_set<N, F>(size);
 
     std::cout << "<-------------- Simulation -------------->\n";
 
@@ -106,7 +107,7 @@ int particle_movement_visualization_debug()
     TApplication app = TApplication("Root app", 0, nullptr);
 
     std::cout << "Here2:\n";
-    root_plotting::time_plotter plotter;
+    root_plotting::time_plotter4 plotter;
 
     std::cout << "Here3:\n";
     solvers::odex2_solver<4, particle_t> solver(particles);
@@ -115,14 +116,16 @@ int particle_movement_visualization_debug()
     for (auto i = 0uz; i != K; ++i)
     {
         solver.run(tick_t::period_duration);
-        if (i % 1000 == 0)
+        if (i % 10000 == 0)
         {
             std::cout << i << '\n';
             const auto current_limtis = ndt::detail::compute_limits(particles);
             std::cout << current_limtis << '\n';
             plotter.append(
                 static_cast<float>(particles[0].position().value()[0]),
-                static_cast<float>(particles[1].position().value()[0])
+                static_cast<float>(particles[1].position().value()[0]),
+                static_cast<float>(particles[2].position().value()[0]),
+                static_cast<float>(particles[3].position().value()[0])
             );
         }
     }
@@ -214,7 +217,7 @@ int main()
         utility::logging::severity_level::error, "Huge error or sth..."
     );
 
-    // particle_movement_visualization_debug();
-    particle_movement_visualization_test();
+    particle_movement_visualization_debug();
+    // particle_movement_visualization_test();
     return EXIT_SUCCESS;
 }
