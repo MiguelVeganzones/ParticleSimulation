@@ -25,22 +25,24 @@ struct gravitational_interaction_calculator
     using position_t     = typename particle_t::position_t;
     using mass_t         = typename particle_t::mass_t;
 
+    inline static constexpr auto epsilon = static_cast<value_type>(5e-1);
+
     auto acceleration_contribution(
         position_t const& pos1,
         position_t const& pos2,
         mass_t const&     mass2
     ) noexcept -> acceleration_t
     {
-        const auto     distance = utils::distance(pos1, pos2);
-        const auto     d        = utils::l2_norm(distance.value());
-        constexpr auto rs       = value_type{ 1 };
+        const auto distance = utils::distance(pos1, pos2);
+        const auto d        = utils::l2_norm(distance.value());
 #if DEBUG_PRINT_INTERACTION
         std::cout << "Mj: " << mass2.magnitude() << '\n';
         std::cout << "D: " << distance << '\n';
         std::cout << "d3: " << d * d * d << '\n';
 #endif
         return acceleration_t{ pm::physical_constants<value_type>::G * mass2.magnitude() *
-                               distance / std::pow(d * d + rs * rs, value_type{ 1.5 }) };
+                               distance /
+                               std::pow(d * d + epsilon * epsilon, value_type{ 1.5 }) };
     }
 
     auto get_acceleration(

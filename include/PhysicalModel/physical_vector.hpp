@@ -7,6 +7,7 @@
 #include <array>
 #include <concepts>
 #include <ranges>
+#include <tuple>
 #include <type_traits>
 
 // physical_vector cannot be in its own namespace unfortunately to enable ADL
@@ -184,6 +185,26 @@ auto operator/(auto&& pva, auto&& pvb) noexcept -> decltype(auto)
         std::forward<std::remove_reference_t<decltype(pvb)>>(pvb),
         std::divides{}
     );
+}
+
+template <particle_concepts::Vector Vector_Type>
+auto max(Vector_Type const& pva, Vector_Type const& pvb) noexcept -> decltype(auto)
+{
+    Vector_Type ret{};
+    std::ranges::transform(std::views::zip(pva, pvb), std::begin(ret), [](const auto& e) {
+        return std::max(std::get<0>(e), std::get<1>(e));
+    });
+    return ret;
+}
+
+template <particle_concepts::Vector Vector_Type>
+auto min(Vector_Type const& pva, Vector_Type const& pvb) noexcept -> decltype(auto)
+{
+    Vector_Type ret{};
+    std::ranges::transform(std::views::zip(pva, pvb), std::begin(ret), [](const auto& e) {
+        return std::min(std::get<0>(e), std::get<1>(e));
+    });
+    return ret;
 }
 
 template <typename T1, typename T2>

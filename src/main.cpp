@@ -23,7 +23,7 @@
 #include <iostream>
 #include <vector>
 
-constexpr auto universe_diameter = 5.f;
+constexpr auto universe_diameter = 50.f;
 
 template <std::floating_point F>
 auto generate_particle_pair()
@@ -90,7 +90,9 @@ int particle_movement_visualization_debug()
     static constexpr auto K = 3000000000000; // Iterations
     using particle_t        = particle::ndparticle<N, F>;
 
-    using tick_t = synchronization::tick_period<std::chrono::milliseconds, 20>;
+    using low_frequency_tick_t = synchronization::tick_period<std::chrono::seconds, 1>;
+    using high_frequency_tick_t =
+        synchronization::tick_period<std::chrono::microseconds, 20>;
 
     const auto size      = 4;
     auto       particles = generate_particle_set<N, F>(size);
@@ -110,12 +112,17 @@ int particle_movement_visualization_debug()
     root_plotting::time_plotter4 plotter;
 
     std::cout << "Here3:\n";
-    solvers::odex2_solver<4, particle_t> solver(particles);
+    solvers::odex2_solver<13, particle_t> solver(
+        particles,
+        high_frequency_tick_t::period_duration,
+        low_frequency_tick_t::period_duration
+
+    );
     std::cout << "Here4:\n";
 
     for (auto i = 0uz; i != K; ++i)
     {
-        solver.run(tick_t::period_duration);
+        solver.run();
         if (i % 10000 == 0)
         {
             std::cout << i << '\n';
@@ -152,7 +159,9 @@ int particle_movement_visualization_test()
     static constexpr auto K = 3000000000000; // Iterations
     using particle_t        = particle::ndparticle<N, F>;
 
-    using tick_t = synchronization::tick_period<std::chrono::milliseconds, 20>;
+    using low_frequency_tick_t = synchronization::tick_period<std::chrono::seconds, 1>;
+    using high_frequency_tick_t =
+        synchronization::tick_period<std::chrono::microseconds, 20>;
 
     const auto size      = 50;
     auto       particles = generate_particle_set<N, F>(size);
@@ -167,8 +176,13 @@ int particle_movement_visualization_test()
 
     TApplication app = TApplication("Root app", 0, nullptr);
 
-    root_plotting::scatter_plot_3D       scatter_plot;
-    solvers::odex2_solver<4, particle_t> solver(particles);
+    root_plotting::scatter_plot_3D        scatter_plot;
+    solvers::odex2_solver<13, particle_t> solver(
+        particles,
+        high_frequency_tick_t::period_duration,
+        low_frequency_tick_t::period_duration
+
+    );
 
     std::array<float, size> x;
     std::array<float, size> y;
@@ -176,7 +190,7 @@ int particle_movement_visualization_test()
 
     for (auto i = 0uz; i != K; ++i)
     {
-        solver.run(tick_t::period_duration);
+        solver.run();
         if (i % 100 == 0)
         {
             std::cout << i << '\n';

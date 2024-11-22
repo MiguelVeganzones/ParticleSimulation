@@ -294,6 +294,18 @@ auto operator/(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
     );
 }
 
+template <particle_concepts::Magnitude Magnitude_Type>
+auto max(Magnitude_Type const& pma, Magnitude_Type const& pmb) noexcept -> decltype(auto)
+{
+    return Magnitude_Type{ max(pma.value(), pmb.value()) };
+}
+
+template <particle_concepts::Magnitude Magnitude_Type>
+auto min(Magnitude_Type const& pma, Magnitude_Type const& pmb) noexcept -> decltype(auto)
+{
+    return Magnitude_Type{ min(pma.value(), pmb.value()) };
+}
+
 template <typename T1, typename T2>
     requires(particle_concepts::Magnitude<std::remove_reference_t<T1>> || particle_concepts::Magnitude<std::remove_reference_t<T2>>)
 [[nodiscard]]
