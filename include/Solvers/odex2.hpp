@@ -10,7 +10,6 @@ namespace solvers
 {
 
 using namespace pm;
-using namespace pm::interaction;
 
 template <std::size_t Order, particle_concepts::Particle Particle_Type>
     requires(Order > 1)
@@ -23,7 +22,7 @@ struct odex2_solver
     using velocity_t                     = typename particle_t::velocity_t;
     using acceleration_t                 = typename particle_t::acceleration_t;
     using mass_t                         = typename particle_t::mass_t;
-    using interaction_t = gravitational_interaction_calculator<particle_t>;
+    using interaction_t = interaction::gravitational_interaction_calculator<particle_t>;
     using duration_t    = std::chrono::duration<value_type>; // default is seconds
 
     // Try with O-1 and do not copy x0
@@ -49,7 +48,7 @@ struct odex2_solver
         max_dt_{ std::chrono::duration_cast<duration_t>(max_delta_t) },
         dt_{ min_delta_t }
     {
-        assert(min_delta_t < max_delta_t);
+        assert(min_delta_t <= max_delta_t);
         mass_buffer_.resize(size_);
         for (std::size_t i = 0; i != size_; ++i)
         {
@@ -126,7 +125,7 @@ struct odex2_solver
                                             velocity_buffer_[s_order][p_idx]) *
                                            value_type{ 0.5 };
         }
-        // dt \propto \sqrt{\epsilon / abs{alpha}}
+        /* dt \propto \sqrt{\epsilon / abs{alpha}}
         dt_ = std::clamp(
             duration_t{
                 std::sqrt(value_type{ 1e-10 } * interaction_t::epsilon / max_acc) },
@@ -134,6 +133,7 @@ struct odex2_solver
             max_dt_
         );
         std::cout << "dt: " << dt_.count() << '\n';
+        */
 
 #if DEBUG_PRINT_ODEX2
         for (std::size_t i = 0; i != size_; ++i)

@@ -26,6 +26,7 @@ struct runge_kutta_solver
     using acceleration_t                 = typename particle_t::acceleration_t;
     using interaction_t = gravitational_interaction_calculator<particle_t>;
     using mass_t        = typename particle_t::mass_t;
+    using duration_t    = std::chrono::duration<value_type>; // default is seconds
 
     // Try with O-1 and do not copy x0
     // Also, not copy the mass all the time
@@ -36,10 +37,15 @@ struct runge_kutta_solver
     interaction_t                                    interaction;
     std::span<particle_t>                            particles_;
     std::size_t                                      size_;
+    duration_t                                       dt_;
 
-    runge_kutta_solver(std::span<particle_t> particles) :
+    runge_kutta_solver(
+        std::span<particle_t>            particles,
+        utility::concepts::Duration auto delta_t
+    ) :
         particles_{ particles },
-        size_{ std::ranges::size(particles) }
+        size_{ std::ranges::size(particles) },
+        dt_{ std::chrono::duration_cast<duration_t>(delta_t) }
     {
         mass_buffer_.resize(size_);
         for (std::size_t i = 0; i != size_; ++i)
@@ -60,12 +66,11 @@ struct runge_kutta_solver
         }
     }
 
-    auto run(utility::concepts::Duration auto delta_t) -> void
+    auto run() -> void
     {
-        using duration_t = std::chrono::duration<value_type>; // default is seconds
-        const auto h     = std::chrono::duration_cast<duration_t>(delta_t).count();
-        const auto h2    = h / value_type{ 2 };
-        const auto h_    = std::array{ value_type{ 0 }, h2, h2, h };
+        const auto h  = dt_.count();
+        const auto h2 = h / value_type{ 2 };
+        const auto h_ = std::array{ value_type{ 0 }, h2, h2, h };
 
         for (std::size_t j = 0; j != s_order + 1; ++j)
         {

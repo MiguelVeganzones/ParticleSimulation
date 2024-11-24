@@ -31,6 +31,13 @@ auto l2_norm(particle_concepts::Vector auto const& v) noexcept ->
 }
 
 [[gnu::pure, nodiscard]]
+auto linfinity_norm(particle_concepts::Vector auto const& v) noexcept ->
+    typename std::remove_cvref_t<decltype(v)>::value_type
+{
+    return std::ranges::max(v);
+}
+
+[[gnu::pure, nodiscard]]
 auto normalize(particle_concepts::Vector auto const& v) noexcept -> std::pair<
     std::remove_cvref_t<decltype(v)>,
     typename std::remove_cvref_t<decltype(v)>::value_type>

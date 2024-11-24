@@ -15,6 +15,7 @@
 #include "synthetic_clock.hpp"
 #include "time_plotter.hpp"
 #include "utils.hpp"
+#include "yoshida.hpp"
 #include <array>
 #include <chrono>
 #include <cmath>
@@ -86,13 +87,12 @@ int particle_movement_visualization_debug()
 {
     using namespace pm;
     using F                 = double;
-    static constexpr auto N = 2;
+    static constexpr auto N = 3;
     static constexpr auto K = 3000000000000; // Iterations
     using particle_t        = particle::ndparticle<N, F>;
 
-    using low_frequency_tick_t = synchronization::tick_period<std::chrono::seconds, 1>;
     using high_frequency_tick_t =
-        synchronization::tick_period<std::chrono::microseconds, 20>;
+        synchronization::tick_period<std::chrono::milliseconds, 100>;
 
     const auto size      = 4;
     auto       particles = generate_particle_set<N, F>(size);
@@ -112,11 +112,21 @@ int particle_movement_visualization_debug()
     root_plotting::time_plotter4 plotter;
 
     std::cout << "Here3:\n";
-    solvers::odex2_solver<13, particle_t> solver(
+
+    /*
+    solvers::runge_kutta_solver<4, particle_t> solver(
+        particles, high_frequency_tick_t::period_duration
+    );
+    */
+    /*
+    solvers::yoshida4_solver<particle_t> solver(
+        particles, high_frequency_tick_t::period_duration
+    );
+    */
+    solvers::odex2_solver<2, particle_t> solver(
         particles,
         high_frequency_tick_t::period_duration,
-        low_frequency_tick_t::period_duration
-
+        high_frequency_tick_t::period_duration
     );
     std::cout << "Here4:\n";
 

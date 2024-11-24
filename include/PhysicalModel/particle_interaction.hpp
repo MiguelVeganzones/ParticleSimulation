@@ -25,7 +25,7 @@ struct gravitational_interaction_calculator
     using position_t     = typename particle_t::position_t;
     using mass_t         = typename particle_t::mass_t;
 
-    inline static constexpr auto epsilon = static_cast<value_type>(5e-1);
+    inline static constexpr auto epsilon = static_cast<value_type>(8e-1);
 
     auto acceleration_contribution(
         position_t const& pos1,
