@@ -1,6 +1,8 @@
 #ifndef INCLUDED_UTILTIY_LOGGING
 #define INCLUDED_UTILTIY_LOGGING
 
+
+#ifdef USE_BOOST_LOGGING
 #define BOOST_LOG_DYN_LINK 1
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
@@ -23,21 +25,12 @@
 #include <fstream>
 #include <iomanip>
 #include <ios>
+#else
+#include <iostream>
+#endif
 
 namespace utility::logging
 {
-
-namespace log   = boost::log;
-namespace src   = boost::log::sources;
-namespace expr  = boost::log::expressions;
-namespace sinks = boost::log::sinks;
-namespace attrs = boost::log::attributes;
-
-#define LOGGING_UTILITY_SCOPED_LOG_TIMELINE                                              \
-    BOOST_LOG_SCOPED_THREAD_ATTR("Timeline", attrs::timer());
-
-#define LOGGING_UTILITY_SCOPED_ADD_TAG(tag)                                              \
-    BOOST_LOG_SCOPED_THREAD_ATTR("Tag", attrs::constant<std::string>(tag));
 
 // Define our own severity levels
 enum severity_level
@@ -50,6 +43,19 @@ enum severity_level
     error,
     fatal,
 };
+
+#ifdef USE_BOOST_LOGGING
+namespace log   = boost::log;
+namespace src   = boost::log::sources;
+namespace expr  = boost::log::expressions;
+namespace sinks = boost::log::sinks;
+namespace attrs = boost::log::attributes;
+
+#define LOGGING_UTILITY_SCOPED_LOG_TIMELINE                                              \
+    BOOST_LOG_SCOPED_THREAD_ATTR("Timeline", attrs::timer());
+
+#define LOGGING_UTILITY_SCOPED_ADD_TAG(tag)                                              \
+    BOOST_LOG_SCOPED_THREAD_ATTR("Tag", attrs::constant<std::string>(tag));
 
 // Enable streaming of severity_level enum
 auto operator<<(std::ostream& strm, severity_level level) -> std::ostream&
@@ -126,15 +132,46 @@ auto init() -> void
 
     log::add_common_attributes();
 }
+#endif
 
 class default_source
 {
 public:
     inline static auto log(severity_level sev, std::string_view message) -> void
     {
+#if USE_BOOST_LOGGING
+        if (!initialized)
+        {
+            init();
+            initialized = true;
+        }
         static src::severity_logger<severity_level> lg;
         BOOST_LOG_SEV(lg, sev) << message;
+#else
+        std::cout << "Log <" << severity_name(sev) << "> " << message << '\n';
+#endif
     }
+
+#if USE_BOOST_LOGGING
+private:
+    inline static bool initialized = false;
+#else
+
+    inline static auto severity_name(severity_level sev) noexcept -> std::string_view
+    {
+        switch (sev)
+        {
+        case utility::logging::severity_level::info: return "info";
+        case utility::logging::severity_level::debug: return "debug";
+        case utility::logging::severity_level::error: return "error";
+        case utility::logging::severity_level::fatal: return "fatal";
+        case utility::logging::severity_level::trace: return "trace";
+        case utility::logging::severity_level::warning: return "warning";
+        case utility::logging::severity_level::important_info: return "important info";
+        default: return "UNKNOWN";
+        }
+    };
+#endif
 };
 
 } // namespace utility::logging

@@ -227,7 +227,6 @@ int particle_movement_visualization_test()
 
 int main()
 {
-    utility::logging::init();
     utility::logging::default_source::log(
         utility::logging::severity_level::info, "Inside main function."
     );

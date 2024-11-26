@@ -122,7 +122,6 @@ else
 	OUT_DIR = bin/debug
 endif
 
-
 SRC_DIR			    =	src
 INCLUDE_DIR		    =	include
 UTILITY_DIR		    =	$(INCLUDE_DIR)/Utility
@@ -131,8 +130,6 @@ CONTAINERS_DIR		    =	$(INCLUDE_DIR)/Containers
 TIMING_DIR		    =	$(INCLUDE_DIR)/Timing
 PHYSICAL_MODEL_DIR	    =	$(INCLUDE_DIR)/PhysicalModel
 SOLVERS_DIR		    =	$(INCLUDE_DIR)/Solvers
-#UNIT_SYSTEM_CORE_DIR	    =	mp-units/src/core/include
-#UNIT_SYSTEM_SYSTEMS_DIR	    =	mp-units/src/systems/include
 
 UTILITY_INCL			=
 GENERAL_INCL			=	-I./$(UTILITY_DIR) $(UTILITY_INCL)
@@ -141,14 +138,19 @@ NDTREE_INCL			=	-I./$(CONTAINERS_DIR)
 TIMING_INCL			=	-I./$(TIMING_DIR)
 PLOTTING_INCL			=	-I./$(PLOTTING_DIR)
 SOLVERS_INCL			=	-I./$(SOLVERS_DIR)
-#UNIT_SYSTEM_INCL		=	-I./$(UNIT_SYSTEM_CORE_DIR) -I./$(UNIT_SYSTEM_SYSTEMS_DIR)
 MAIN_SIMULATION_INCL		=	$(GENERAL_INCL) $(PHYSICAL_MODEL_INCL) $(NDTREE_INCL) $(TIMING_INCL) $(PLOTTING_INCL) $(SOLVERS_INCL)
 
 PLOTTING_LIB			= `root-config --libs`
+ifdef ENABLE_BOOST_LOGGING
+CXXFLAGS			+= -DUSE_BOOST_LOGGING
 LOG_LIB				= -lboost_log -lboost_thread -lboost_system -lpthread
+else
+LOG_LIB =
+endif
 MAIN_SIMULATION_LIB		= $(LOG_LIB) $(PLOTTING_LIB)
 
 ROOT_FLAGS			= `root-config --cflags` -Wno-cpp
+
 
 #=================================================================================================
 all: main plotting
