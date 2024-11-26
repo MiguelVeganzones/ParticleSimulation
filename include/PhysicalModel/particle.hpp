@@ -1,7 +1,9 @@
 #pragma once
 
 #include "concepts.hpp"
+#include "particle_concepts.hpp"
 #include "physical_magnitudes.hpp"
+#include <ranges>
 #include <tuple>
 
 #ifndef DEBUG_PRINT
@@ -17,13 +19,15 @@ class ndparticle
 public:
     using value_type                         = F;
     using size_type                          = decltype(N);
-    using id_t                               = std::size_t;
+    using id_t                               = std::int64_t;
     inline static constexpr auto s_dimension = N;
-    using position_t      = magnitudes::position<s_dimension, value_type>;
-    using mass_t          = magnitudes::mass<value_type>;
-    using velocity_t      = magnitudes::linear_velocity<s_dimension, value_type>;
-    using acceleration_t  = magnitudes::linear_acceleration<s_dimension, value_type>;
-    inline static auto ID = 0uz;
+    using position_t        = magnitudes::position<s_dimension, value_type>;
+    using mass_t            = magnitudes::mass<value_type>;
+    using velocity_t        = magnitudes::linear_velocity<s_dimension, value_type>;
+    using acceleration_t    = magnitudes::linear_acceleration<s_dimension, value_type>;
+    using runtime_1d_unit_t = magnitudes::runtime_unit<1, value_type>;
+    using runtime_nd_unit_t = magnitudes::runtime_unit<s_dimension, value_type>;
+    inline static id_t ID   = 0;
 
 public:
     constexpr ndparticle(mass_t m, position_t pos, velocity_t vel) :
@@ -31,6 +35,14 @@ public:
         m_mass{ std::move(m) },
         m_position{ std::move(pos) },
         m_velocity{ std::move(vel) }
+    {
+    }
+
+    constexpr ndparticle() :
+        m_id{ -1 },
+        m_mass{},
+        m_position{},
+        m_velocity{}
     {
     }
 
@@ -127,6 +139,40 @@ private:
     position_t m_position;
     velocity_t m_velocity;
 };
+
+[[nodiscard]]
+auto merge(std::ranges::range auto const& particles) noexcept
+    -> std::ranges::range_value_t<decltype(particles)>
+    requires particle_concepts::Particle<std::ranges::range_value_t<decltype(particles)>>
+{
+    using particle_t        = std::ranges::range_value_t<decltype(particles)>;
+    using mass_t            = typename particle_t::mass_t;
+    using position_t        = typename particle_t::position_t;
+    using velocity_t        = typename particle_t::velocity_t;
+    using runtime_1d_unit_t = typename particle_t::runtime_1d_unit_t;
+    using runtime_nd_unit_t = typename particle_t::runtime_nd_unit_t;
+
+    const auto total_mass = mass_t(std::ranges::fold_left(
+        particles,
+        runtime_1d_unit_t{},
+        [](auto const& acc, auto const& p) { return acc + p.mass(); }
+    ));
+    const auto merged_pos = position_t(std::ranges::fold_left(
+        particles,
+        runtime_nd_unit_t{},
+        [&total_mass](auto const& acc, auto const& p) {
+            return acc + p.mass().magnitude() / total_mass.magnitude() * p.position();
+        }
+    ));
+    const auto merged_vel = velocity_t(std::ranges::fold_left(
+        particles,
+        runtime_nd_unit_t{},
+        [&total_mass](auto const& acc, auto const& p) {
+            return acc + p.mass().magnitude() / total_mass.magnitude() * p.velocity();
+        }
+    ));
+    return particle_t(total_mass, merged_pos, merged_vel);
+}
 
 template <std::size_t N, std::floating_point F>
 auto operator<<(std::ostream& os, ndparticle<N, F> pp) noexcept -> std::ostream&

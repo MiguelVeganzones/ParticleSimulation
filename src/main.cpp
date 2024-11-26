@@ -77,6 +77,25 @@ auto generate_particle_set(std::size_t size)
     );
 }
 
+int ndtree_test()
+{
+    using namespace pm;
+    using F                 = double;
+    static constexpr auto N = 3;
+
+    const auto size      = 33;
+    auto       particles = generate_particle_set<N, F>(size);
+
+    const auto  depth        = 3;
+    const auto  box_capacity = 2;
+    ndt::ndtree tree(std::span{ particles }, depth, box_capacity);
+    tree.cache_summary();
+
+    std::cout << tree << '\n';
+
+    return EXIT_SUCCESS;
+}
+
 int particle_movement_visualization_debug()
 {
     using namespace pm;
@@ -234,7 +253,8 @@ int main()
         utility::logging::severity_level::error, "Huge error or sth..."
     );
 
-    particle_movement_visualization_debug();
+    // particle_movement_visualization_debug();
     // particle_movement_visualization_test();
+    ndtree_test();
     return EXIT_SUCCESS;
 }

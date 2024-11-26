@@ -249,6 +249,10 @@ template <std::floating_point F>
 using mass = physical_magnitude_t<1, F, units::Units::kg>;
 template <std::size_t N, std::floating_point F>
 using force = physical_magnitude_t<N, F, units::Units::newton>;
+template <std::size_t N, std::floating_point F>
+using energy = physical_magnitude_t<1, F, units::Units::joule>;
+template <std::size_t N, std::floating_point F>
+using runtime_unit = physical_magnitude_t<N, F, units::Units::_runtime_unit_>;
 
 auto operator+(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
     requires particle_concepts::Magnitude<std::remove_reference_t<decltype(pma)>> ||
@@ -386,6 +390,7 @@ auto operator<<(
         case units::Units::rad_s2: return "rad/s^2";
         case units::Units::kg: return "kg";
         case units::Units::newton: return "N";
+        case units::Units::joule: return "J";
         case units::Units::_runtime_unit_: return "?";
         default: return "UNKNOWN";
         }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <type_traits>
 #define DEBUG_NDTREE 1
 
 #include "constexpr_functions.hpp"
@@ -48,7 +49,8 @@ concept sample_concept = requires(T t) {
     T::s_dimension;
     { t.position() } -> std::convertible_to<typename T::position_t>;
     t.properties();
-};
+    { merge(std::array{ t, t }) } -> std::same_as<T>;
+} && std::is_destructible_v<T>;
 
 } // namespace concepts
 
@@ -196,6 +198,7 @@ public:
     ) :
         m_boundary{ boundary },
         m_elements{},
+        m_summary{},
         m_capacity{ max_elements },
         m_max_depth{ max_depth },
         m_depth{ depth }
@@ -250,6 +253,33 @@ public:
         utility::error_handling::assert_unreachable();
     }
 
+    auto cache_summary() noexcept -> void
+    {
+        if (m_fragmented)
+        {
+            for (auto&& b : subboxes())
+            {
+                b.cache_summary();
+            }
+            m_summary = merge(std::views::transform(subboxes(), [](auto const& b) {
+                return b.summary();
+            }));
+        }
+        else
+        {
+            m_summary =
+                merge(std::views::transform(contained_elements(), [](auto const& b) {
+                    return *b;
+                }));
+        }
+    }
+
+    [[nodiscard]]
+    auto summary() const noexcept -> sample_t const&
+    {
+        return m_summary;
+    }
+
     auto print_info(std::ostream& os) const -> void
     {
         static auto header = [](auto depth) { return std::string(depth, '\t'); };
@@ -259,6 +289,7 @@ public:
         os << header(m_depth + 1) << "Depth " << m_depth << '\n';
         os << header(m_depth + 1) << "Fragmented: " << m_fragmented << '\n';
         os << header(m_depth + 1) << "Boxes: " << boxes() << '\n';
+        os << header(m_depth + 1) << "Summary: " << summary() << '\n';
         os << header(m_depth + 1) << "Elements: " << elements() << '\n';
         if (!m_fragmented)
         {
@@ -405,6 +436,7 @@ private:
 private:
     boundary_t                                               m_boundary;
     std::variant<std::vector<sample_t*>, std::vector<ndbox>> m_elements;
+    sample_t                                                 m_summary;
     std::size_t                                              m_capacity;
     bool                                                     m_fragmented = false;
     depth_t                                                  m_max_depth;
@@ -462,6 +494,11 @@ public:
         return m_box.insert(p);
     }
 
+    auto cache_summary() noexcept -> void
+    {
+        m_box.cache_summary();
+    }
+
     auto print_info(std::ostream& os = std::cout) const -> void
     {
         os << "<ndtree <" << s_dimension << ">>\n";
@@ -469,6 +506,7 @@ public:
         os << "Max depth: " << m_max_depth << '\n';
         os << "Elements: " << m_box.elements() << " out of "
            << std::ranges::size(m_data_view) << '\n';
+        os << "Summary: " << m_box.summary() << '\n';
         os << "<\\ndtree<" << s_dimension << ">>\n";
     }
 

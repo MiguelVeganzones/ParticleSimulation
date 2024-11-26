@@ -18,6 +18,7 @@ enum struct Units
     rad_s2,
     kg,
     newton,
+    joule,
     _runtime_unit_,
 };
 
