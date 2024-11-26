@@ -30,19 +30,16 @@ template <
     std::floating_point F,
     typename Mass_Generator,
     typename Pos_Generator,
-    typename Vel_Generator,
-    typename Acc_Generator>
+    typename Vel_Generator>
     requires std::is_invocable_r_v<F, Mass_Generator> &&
              std::is_invocable_r_v<F, Vel_Generator> &&
-             std::is_invocable_r_v<F, Pos_Generator> &&
-             std::is_invocable_r_v<F, Acc_Generator>
+             std::is_invocable_r_v<F, Pos_Generator>
 [[nodiscard]]
 auto particle_set_factory(
     std::size_t      size,
     Mass_Generator&& mass_gen,
     Pos_Generator&&  pos_gen,
-    Vel_Generator&&  vel_gen,
-    Acc_Generator&&  acc_gen
+    Vel_Generator&&  vel_gen
 ) noexcept -> std::vector<pm::particle::ndparticle<N, F>>
 {
     using particle_t  = pm::particle::ndparticle<N, F>;
@@ -61,9 +58,6 @@ auto particle_set_factory(
             ),
             physical_magnitude_factory<N, F, units::Units::m_s>(
                 std::forward<Vel_Generator>(vel_gen)
-            ),
-            physical_magnitude_factory<N, F, units::Units::m_s2>(
-                std::forward<Acc_Generator>(acc_gen)
             )
         ));
     return ret;

@@ -2,9 +2,9 @@
 #include "TCanvas.h"
 #include "TGraph.h"
 #include "factory.hpp"
+#include "leapfrog.hpp"
 #include "logging.hpp"
 #include "ndtree.hpp"
-#include "odex2.hpp"
 #include "particle.hpp"
 #include "physical_magnitudes.hpp"
 #include "plotting.hpp"
@@ -72,14 +72,8 @@ auto generate_particle_set(std::size_t size)
 
     auto velocity_generator = []() -> F { return F{ 0 }; };
 
-    auto acceleration_generator = []() -> F { return F{ 0 }; };
-
     return particle_set_factory<N, F>(
-        size,
-        mass_generator,
-        position_generator,
-        velocity_generator,
-        acceleration_generator
+        size, mass_generator, position_generator, velocity_generator
     );
 }
 
@@ -123,7 +117,7 @@ int particle_movement_visualization_debug()
         particles, high_frequency_tick_t::period_duration
     );
     */
-    solvers::odex2_solver<2, particle_t> solver(
+    solvers::leapfrog_solver<2, particle_t> solver(
         particles,
         high_frequency_tick_t::period_duration,
         high_frequency_tick_t::period_duration
@@ -186,8 +180,8 @@ int particle_movement_visualization_test()
 
     TApplication app = TApplication("Root app", 0, nullptr);
 
-    root_plotting::scatter_plot_3D        scatter_plot;
-    solvers::odex2_solver<13, particle_t> solver(
+    root_plotting::scatter_plot_3D           scatter_plot;
+    solvers::leapfrog_solver<13, particle_t> solver(
         particles,
         high_frequency_tick_t::period_duration,
         low_frequency_tick_t::period_duration

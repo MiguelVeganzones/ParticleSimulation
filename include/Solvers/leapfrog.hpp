@@ -135,7 +135,7 @@ struct leapfrog_solver
         std::cout << "dt: " << dt_.count() << '\n';
         */
 
-#if DEBUG_PRINT_ODEX2
+#if DEBUG_PRINT_LEAPFROG
         for (std::size_t i = 0; i != size_; ++i)
         {
             for (std::size_t j = 0; j != s_order; ++j)

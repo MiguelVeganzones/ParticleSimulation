@@ -26,12 +26,11 @@ public:
     inline static auto ID = 0uz;
 
 public:
-    constexpr ndparticle(mass_t m, position_t pos, velocity_t vel, acceleration_t acc) :
+    constexpr ndparticle(mass_t m, position_t pos, velocity_t vel) :
         m_id{ ID++ },
         m_mass{ std::move(m) },
         m_position{ std::move(pos) },
-        m_velocity{ std::move(vel) },
-        m_acceleration{ std::move(acc) }
+        m_velocity{ std::move(vel) }
     {
     }
 
@@ -62,18 +61,11 @@ public:
     }
 
     [[nodiscard]]
-    constexpr auto acceleration(this auto&& self) noexcept -> auto&&
-    {
-        return std::forward<decltype(self)>(self).m_acceleration;
-    }
-
-    [[nodiscard]]
     constexpr auto properties(this auto&& self) noexcept -> decltype(auto)
     {
         return std::tie(
             std::forward<decltype(self)>(self).m_mass,
-            std::forward<decltype(self)>(self).m_velocity,
-            std::forward<decltype(self)>(self).m_acceleration
+            std::forward<decltype(self)>(self).m_velocity
         );
     }
 #else
@@ -96,15 +88,9 @@ public:
     }
 
     [[nodiscard]]
-    constexpr auto acceleration() noexcept -> acceleration_t&
-    {
-        return m_acceleration;
-    }
-
-    [[nodiscard]]
     constexpr auto properties() noexcept -> decltype(auto)
     {
-        return std::tie(m_mass, m_velocity, m_acceleration);
+        return std::tie(m_mass, m_velocity);
     }
 
     [[nodiscard]]
@@ -126,15 +112,9 @@ public:
     }
 
     [[nodiscard]]
-    constexpr auto acceleration() const noexcept -> acceleration_t const&
-    {
-        return m_acceleration;
-    }
-
-    [[nodiscard]]
     constexpr auto properties() const noexcept -> decltype(auto)
     {
-        return std::tie(m_mass, m_velocity, m_acceleration);
+        return std::tie(m_mass, m_velocity);
     }
 #endif
 
@@ -142,11 +122,10 @@ public:
     constexpr auto operator!=(ndparticle const&) const -> bool = default;
 
 private:
-    id_t           m_id;
-    mass_t         m_mass;
-    position_t     m_position;
-    velocity_t     m_velocity;
-    acceleration_t m_acceleration;
+    id_t       m_id;
+    mass_t     m_mass;
+    position_t m_position;
+    velocity_t m_velocity;
 };
 
 template <std::size_t N, std::floating_point F>
@@ -155,8 +134,7 @@ auto operator<<(std::ostream& os, ndparticle<N, F> pp) noexcept -> std::ostream&
     os << "ID: " << pp.id() << '\n'
        << pp.position() << '\n'
        << pp.mass() << '\n'
-       << pp.velocity() << '\n'
-       << pp.acceleration();
+       << pp.velocity();
     return os;
 }
 
