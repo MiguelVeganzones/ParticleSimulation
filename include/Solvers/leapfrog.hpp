@@ -4,40 +4,40 @@
 #include "particle_interaction.hpp"
 #include "utils.hpp"
 
-#define DEBUG_PRINT_ODEX2 (false)
+#define DEBUG_PRINT_LEAPFROG (false)
 
 namespace solvers
 {
 
 using namespace pm;
 
-template <std::size_t Order, particle_concepts::Particle Particle_Type>
-    requires(Order > 1)
-struct odex2_solver
+template <std::size_t Intermediate_Steps, particle_concepts::Particle Particle_Type>
+    requires(Intermediate_Steps > 1)
+struct leapfrog_solver
 {
-    inline static constexpr auto s_order = Order;
-    using particle_t                     = Particle_Type;
-    using value_type                     = typename particle_t::value_type;
-    using position_t                     = typename particle_t::position_t;
-    using velocity_t                     = typename particle_t::velocity_t;
-    using acceleration_t                 = typename particle_t::acceleration_t;
-    using mass_t                         = typename particle_t::mass_t;
+    inline static constexpr auto substeps = Intermediate_Steps;
+    using particle_t                      = Particle_Type;
+    using value_type                      = typename particle_t::value_type;
+    using position_t                      = typename particle_t::position_t;
+    using velocity_t                      = typename particle_t::velocity_t;
+    using acceleration_t                  = typename particle_t::acceleration_t;
+    using mass_t                          = typename particle_t::mass_t;
     using interaction_t = interaction::gravitational_interaction_calculator<particle_t>;
     using duration_t    = std::chrono::duration<value_type>; // default is seconds
 
     // Try with O-1 and do not copy x0
     // Also, not copy the mass all the time
-    std::vector<mass_t>                              mass_buffer_{};
-    std::array<std::vector<position_t>, s_order + 1> position_buffer_{};
-    std::array<std::vector<velocity_t>, s_order + 1> velocity_buffer_{};
-    interaction_t                                    interaction;
-    std::span<particle_t>                            particles_;
-    std::size_t                                      size_;
-    duration_t                                       min_dt_;
-    duration_t                                       max_dt_;
-    duration_t                                       dt_;
+    std::vector<mass_t>                               mass_buffer_{};
+    std::array<std::vector<position_t>, substeps + 1> position_buffer_{};
+    std::array<std::vector<velocity_t>, substeps + 1> velocity_buffer_{};
+    interaction_t                                     interaction;
+    std::span<particle_t>                             particles_;
+    std::size_t                                       size_;
+    duration_t                                        min_dt_;
+    duration_t                                        max_dt_;
+    duration_t                                        dt_;
 
-    odex2_solver(
+    leapfrog_solver(
         std::span<particle_t>                  particles,
         utility::concepts::Duration auto const min_delta_t,
         utility::concepts::Duration auto const max_delta_t
@@ -67,7 +67,7 @@ struct odex2_solver
     auto run() -> void
     {
         const auto H  = dt_.count();
-        const auto h  = H / (2 * s_order);
+        const auto h  = H / (2 * substeps);
         const auto h2 = h * 2;
 
         for (auto& v : position_buffer_)
@@ -93,7 +93,7 @@ struct odex2_solver
             velocity_buffer_[0][p_idx] = particles_[p_idx].velocity() + a * h;
             max_acc                    = std::max(max_acc, utils::l2_norm(a.value()));
         }
-        for (std::size_t i = 2; i != 2 * s_order + 4; i += 2)
+        for (std::size_t i = 2; i != 2 * substeps + 4; i += 2)
         {
             for (std::size_t p_idx = 0; p_idx != size_; ++p_idx)
             {
@@ -109,7 +109,7 @@ struct odex2_solver
                         velocity_buffer_[(int)std::floor((i - 3) / 2)][p_idx] + a * h2;
                     max_acc = std::max(max_acc, utils::l2_norm(a.value()));
                 }
-                if (i != 2 * s_order + 2)
+                if (i != 2 * substeps + 2)
                 {
                     // Compute y_i
                     position_buffer_[(int)std::floor(i / 2)][p_idx] =
@@ -120,9 +120,9 @@ struct odex2_solver
         }
         for (std::size_t p_idx = 0; p_idx != size_; ++p_idx)
         {
-            particles_[p_idx].position() = position_buffer_[s_order][p_idx];
-            particles_[p_idx].velocity() = (velocity_buffer_[s_order - 1][p_idx] +
-                                            velocity_buffer_[s_order][p_idx]) *
+            particles_[p_idx].position() = position_buffer_[substeps][p_idx];
+            particles_[p_idx].velocity() = (velocity_buffer_[substeps - 1][p_idx] +
+                                            velocity_buffer_[substeps][p_idx]) *
                                            value_type{ 0.5 };
         }
         /* dt \propto \sqrt{\epsilon / abs{alpha}}
@@ -153,4 +153,5 @@ struct odex2_solver
 #endif
     }
 };
+
 } // namespace solvers
