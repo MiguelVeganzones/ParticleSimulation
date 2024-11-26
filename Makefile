@@ -13,6 +13,7 @@ DEBUG_CXXFLAGS_CLANG =	-O0 \
 			-Winvalid-pch \
 			-Wmisleading-indentation \
 			-Wnull-dereference \
+			-Wnrvo \
 			-Wodr \
 			-Wpointer-arith \
 			-Wshadow \
