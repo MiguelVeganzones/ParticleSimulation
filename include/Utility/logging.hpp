@@ -27,6 +27,7 @@
 #include <ios>
 #else
 #include <iostream>
+#include <string_view>
 #endif
 
 namespace utility::logging
