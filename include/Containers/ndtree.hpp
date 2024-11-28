@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iterator>
+#include <sstream>
 #include <type_traits>
 #define DEBUG_NDTREE 1
 
@@ -194,11 +196,13 @@ public:
         boundary_t  boundary,
         std::size_t max_elements,
         depth_t     depth,
-        depth_t     max_depth
+        depth_t     max_depth,
+        ndbox*      parent
     ) :
         m_boundary{ boundary },
         m_elements{},
         m_summary{},
+        m_parent{ parent },
         m_capacity{ max_elements },
         m_max_depth{ max_depth },
         m_depth{ depth }
@@ -206,9 +210,9 @@ public:
     }
 
     [[nodiscard]]
-    auto insert(sample_t const& s) noexcept -> bool
+    auto insert(sample_t const* const sp) noexcept -> bool
     {
-        if (!detail::in(s.position(), m_boundary))
+        if (!detail::in(sp->position(), m_boundary))
         {
             return false;
         }
@@ -217,11 +221,11 @@ public:
             auto&& elements = contained_elements();
             if (elements.size() < m_capacity || m_depth == m_max_depth)
             {
+                elements.push_back(sp);
 #if DEBUG_NDTREE
-                std::cout << "Value at " << s.position() << " stored in Box at depth "
+                std::cout << "Value at " << sp->position() << " stored in Box at depth "
                           << m_depth << " with bounds " << m_boundary << '\n';
 #endif
-                elements.push_back(const_cast<sample_t*>(&s));
                 return true;
             }
             else
@@ -243,7 +247,7 @@ public:
         {
             for (auto&& b : subboxes())
             {
-                if (const auto success = b.insert(s); success)
+                if (const auto success = b.insert(sp); success)
                 {
                     return true;
                 }
@@ -251,6 +255,87 @@ public:
             return false;
         }
         utility::error_handling::assert_unreachable();
+    }
+
+    auto reorganize() noexcept -> void
+    {
+        if (m_fragmented)
+        {
+            for (auto&& b : subboxes())
+            {
+                b.reorganize();
+            }
+        }
+        else
+        {
+#if DEBUG_NDTREE
+            const bool flag =
+                std::ranges::any_of(contained_elements(), [this](auto const& e) {
+                    return !detail::in(e->position(), m_boundary);
+                });
+            if (flag)
+            {
+                std::cout << "Bounds: " << m_boundary << '\n';
+                for (auto p : contained_elements())
+                {
+                    std::cout << p->repr() << std::endl;
+                }
+            }
+#endif
+            const auto out_of_bounds_range =
+                std::ranges::partition(contained_elements(), [this](auto const* const p) {
+                    return detail::in(p->position(), m_boundary);
+                });
+#if DEBUG_NDTREE
+            if (flag)
+            {
+                std::cout << "Bounds: " << m_boundary << '\n';
+                for (auto p : contained_elements())
+                {
+                    std::cout << p->repr() << std::endl;
+                }
+            }
+#endif
+            if (out_of_bounds_range.begin() != out_of_bounds_range.end())
+            {
+                if (m_parent)
+                {
+                    for (auto const* const p : out_of_bounds_range)
+                    {
+                        assert(!detail::in(p->position(), m_boundary));
+                        m_parent->relocate(p);
+                    }
+                }
+                contained_elements().erase(
+                    out_of_bounds_range.begin(), out_of_bounds_range.end()
+                );
+            }
+        }
+    }
+
+    auto relocate(sample_t const* const sp) noexcept -> void
+    {
+        if (!detail::in(sp->position(), m_boundary))
+        {
+            if (m_parent)
+            {
+                m_parent->relocate(sp);
+            }
+#if DEBUG_NDTREE
+            else
+            {
+                std::ostringstream ss;
+                ss << "Sample at " << sp->position()
+                   << " no longer tracked by the tree...";
+                utility::logging::default_source::log(utility::logging::info, ss.str());
+            }
+#endif
+        }
+        else
+        {
+            const auto inserted = insert(sp);
+            assert(inserted);
+        }
     }
 
     auto cache_summary() noexcept -> void
@@ -289,14 +374,14 @@ public:
         os << header(m_depth + 1) << "Depth " << m_depth << '\n';
         os << header(m_depth + 1) << "Fragmented: " << m_fragmented << '\n';
         os << header(m_depth + 1) << "Boxes: " << boxes() << '\n';
-        os << header(m_depth + 1) << "Summary: " << summary() << '\n';
+        os << header(m_depth + 1) << "Summary: " << summary().repr() << '\n';
         os << header(m_depth + 1) << "Elements: " << elements() << '\n';
         if (!m_fragmented)
         {
             auto&& elements = contained_elements();
             for (auto const& e : elements)
             {
-                os << header(m_depth + 1) << e->position() << '\n';
+                os << header(m_depth + 1) << e->repr() << '\n';
             }
         }
         else
@@ -415,7 +500,7 @@ private:
                 max[i]              = top_half ? m_boundary.max(i) : m_boundary.mid(i);
             }
             subboxes().push_back(box_t{
-                boundary_t{ min, max }, m_capacity, m_depth + 1, m_max_depth });
+                boundary_t{ min, max }, m_capacity, m_depth + 1, m_max_depth, this });
         }
         for (auto const* const s : samples)
         {
@@ -425,7 +510,7 @@ private:
             }
             for (auto&& b : subboxes())
             {
-                if (const auto success = b.insert(*s); success)
+                if (const auto success = b.insert(s); success)
                 {
                     break;
                 }
@@ -434,13 +519,14 @@ private:
     }
 
 private:
-    boundary_t                                               m_boundary;
-    std::variant<std::vector<sample_t*>, std::vector<ndbox>> m_elements;
-    sample_t                                                 m_summary;
-    std::size_t                                              m_capacity;
-    bool                                                     m_fragmented = false;
-    depth_t                                                  m_max_depth;
-    depth_t                                                  m_depth;
+    boundary_t                                                     m_boundary;
+    std::variant<std::vector<sample_t const*>, std::vector<ndbox>> m_elements;
+    sample_t                                                       m_summary;
+    ndbox*                                                         m_parent;
+    std::size_t                                                    m_capacity;
+    bool                                                           m_fragmented = false;
+    depth_t                                                        m_max_depth;
+    depth_t                                                        m_depth;
 };
 
 template <concepts::sample_concept Sample_Type>
@@ -476,22 +562,28 @@ public:
             limits.has_value() ? limits.value() : detail::compute_limits(collection),
             box_capacity,
             0uz,
-            max_depth
+            max_depth,
+            nullptr
         ),
         m_max_depth{ max_depth },
         m_capacity{ box_capacity }
     {
-        for (auto& e : collection)
+        for (auto const& e : collection)
         {
             [[maybe_unused]]
-            auto _ = insert(e);
+            auto _ = insert(&e);
         }
     }
 
     [[nodiscard]]
-    auto insert(sample_t const& p) noexcept -> bool
+    auto insert(sample_t const* const sp) noexcept -> bool
     {
-        return m_box.insert(p);
+        return m_box.insert(sp);
+    }
+
+    auto reorganize() noexcept -> void
+    {
+        m_box.reorganize();
     }
 
     auto cache_summary() noexcept -> void
@@ -506,7 +598,7 @@ public:
         os << "Max depth: " << m_max_depth << '\n';
         os << "Elements: " << m_box.elements() << " out of "
            << std::ranges::size(m_data_view) << '\n';
-        os << "Summary: " << m_box.summary() << '\n';
+        os << "Summary: " << m_box.summary().repr() << '\n';
         os << "<\\ndtree<" << s_dimension << ">>\n";
     }
 

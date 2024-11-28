@@ -14,11 +14,6 @@ to your parent and let it handle it. Alternative would be to reintroduce the
 object from the root node, ignoring the fact that objects move only locally at
 each time step.
 
-[[Necessary-optimization]] (Cache)
-ndbox should contain a summary of all the objects they contain inside to cache
-repetitive computations. This would be implemented by caching results down to
-top recursively.
-
 [[Unnecessary-optimization]] (ArenaAllocator)
 ndbox variant member variable should be a different struct.
     Right now std::vector is used to limit stack size, even though size is known

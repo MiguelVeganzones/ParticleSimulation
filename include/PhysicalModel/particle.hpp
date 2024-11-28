@@ -4,6 +4,8 @@
 #include "particle_concepts.hpp"
 #include "physical_magnitudes.hpp"
 #include <ranges>
+#include <sstream>
+#include <string>
 #include <tuple>
 
 #ifndef DEBUG_PRINT
@@ -12,6 +14,12 @@
 
 namespace pm::particle
 {
+
+enum struct ParticleType
+{
+    real,
+    fictitious,
+};
 
 template <std::size_t N, std::floating_point F>
 class ndparticle
@@ -27,11 +35,17 @@ public:
     using acceleration_t    = magnitudes::linear_acceleration<s_dimension, value_type>;
     using runtime_1d_unit_t = magnitudes::runtime_unit<1, value_type>;
     using runtime_nd_unit_t = magnitudes::runtime_unit<s_dimension, value_type>;
-    inline static id_t ID   = 0;
+    inline static id_t           ID                     = 0;
+    inline static constexpr id_t fictitious_particle_id = -1;
 
 public:
-    constexpr ndparticle(mass_t m, position_t pos, velocity_t vel) :
-        m_id{ ID++ },
+    constexpr ndparticle(
+        mass_t       m,
+        position_t   pos,
+        velocity_t   vel,
+        ParticleType type = ParticleType::real
+    ) :
+        m_id{ type == ParticleType::real ? ID++ : fictitious_particle_id },
         m_mass{ std::move(m) },
         m_position{ std::move(pos) },
         m_velocity{ std::move(vel) }
@@ -39,7 +53,7 @@ public:
     }
 
     constexpr ndparticle() :
-        m_id{ -1 },
+        m_id{ fictitious_particle_id },
         m_mass{},
         m_position{},
         m_velocity{}
@@ -128,7 +142,17 @@ public:
     {
         return std::tie(m_mass, m_velocity);
     }
+
 #endif
+
+    [[nodiscard]]
+    auto repr() const noexcept -> std::string
+    {
+        std::ostringstream ss;
+        ss << "ID: " << id() << ", mass: " << mass() << ", pos " << position()
+           << ", vel: " << velocity();
+        return ss.str();
+    }
 
     constexpr auto operator==(ndparticle const&) const -> bool = default;
     constexpr auto operator!=(ndparticle const&) const -> bool = default;
@@ -171,7 +195,7 @@ auto merge(std::ranges::range auto const& particles) noexcept
             return acc + p.mass().magnitude() / total_mass.magnitude() * p.velocity();
         }
     ));
-    return particle_t(total_mass, merged_pos, merged_vel);
+    return particle_t(total_mass, merged_pos, merged_vel, ParticleType::fictitious);
 }
 
 template <std::size_t N, std::floating_point F>

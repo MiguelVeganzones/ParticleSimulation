@@ -82,17 +82,29 @@ int ndtree_test()
     using namespace pm;
     using F                 = double;
     static constexpr auto N = 3;
+    using particle_t        = particle::ndparticle<N, F>;
+    using high_frequency_tick_t =
+        synchronization::tick_period<std::chrono::milliseconds, 400>;
 
-    const auto size      = 33;
+    const auto size      = 10;
     auto       particles = generate_particle_set<N, F>(size);
 
-    const auto  depth        = 3;
-    const auto  box_capacity = 2;
+    const auto  depth        = 2;
+    const auto  box_capacity = 3;
     ndt::ndtree tree(std::span{ particles }, depth, box_capacity);
-    tree.cache_summary();
+
+    solvers::yoshida4_solver<particle_t> solver(
+        particles, high_frequency_tick_t::period_duration
+    );
 
     std::cout << tree << '\n';
-
+    for (auto i = 0; i != 300000; ++i)
+    {
+        solver.run();
+        tree.reorganize();
+        tree.cache_summary();
+    }
+    std::cout << tree << '\n';
     return EXIT_SUCCESS;
 }
 
@@ -131,16 +143,16 @@ int particle_movement_visualization_debug()
         particles, high_frequency_tick_t::period_duration
     );
     */
-    /*
     solvers::yoshida4_solver<particle_t> solver(
         particles, high_frequency_tick_t::period_duration
     );
-    */
+    /*
     solvers::leapfrog_solver<2, particle_t> solver(
         particles,
         high_frequency_tick_t::period_duration,
         high_frequency_tick_t::period_duration
     );
+    */
     std::cout << "Here4:\n";
 
     for (auto i = 0uz; i != K; ++i)
@@ -199,7 +211,8 @@ int particle_movement_visualization_test()
 
     TApplication app = TApplication("Root app", 0, nullptr);
 
-    root_plotting::scatter_plot_3D           scatter_plot;
+    root_plotting::scatter_plot_3D scatter_plot;
+
     solvers::leapfrog_solver<13, particle_t> solver(
         particles,
         high_frequency_tick_t::period_duration,

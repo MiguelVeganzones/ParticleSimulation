@@ -1,36 +1,5 @@
 CXX = g++
 
-DEBUG_CXXFLAGS_CLANG =	-O0 \
-			-W \
-			-Wall \
-			-Wconversion \
-			-Wdangling-else \
-			-Wdouble-promotion \
-			-Werror \
-			-Wextra \
-			-Wfloat-equal \
-			-Wformat \
-			-Winvalid-pch \
-			-Wmisleading-indentation \
-			-Wnull-dereference \
-			-Wnrvo \
-			-Wodr \
-			-Wpointer-arith \
-			-Wshadow \
-			-Wswitch-default \
-			-Wswitch-enum \
-			-Wvla \
-			-fdiagnostics-color=always \
-			-fdiagnostics-show-template-tree \
-			-fsanitize=address \
-			-fsanitize=leak \
-			-fsanitize=undefined \
-			-ggdb3 \
-			-mavx \
-			-pedantic \
-			-std=c++23
-			# -Wfloat-equal \
-
 DEBUG_CXXFLAGS_GCC =	-O0 \
 			-W \
 			-Wall \
@@ -51,7 +20,7 @@ DEBUG_CXXFLAGS_GCC =	-O0 \
 			-Wpointer-arith \
 			-Wrestrict \
 			-Wshadow \
-			-Wswitch-default \
+		-Wswitch-default \
 			-Wswitch-enum \
 			-Wuninitialized \
 			-Wvla \
