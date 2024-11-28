@@ -51,7 +51,7 @@ concept sample_concept = requires(T t) {
     T::s_dimension;
     { t.position() } -> std::convertible_to<typename T::position_t>;
     t.properties();
-    { merge(std::array{ t, t }) } -> std::same_as<T>;
+    { merge(std::array{ t, t }) } -> std::same_as<std::optional<T>>;
 } && std::is_destructible_v<T>;
 
 } // namespace concepts
@@ -201,7 +201,7 @@ public:
     ) :
         m_boundary{ boundary },
         m_elements{},
-        m_summary{},
+        m_summary{ std::nullopt },
         m_parent{ parent },
         m_capacity{ max_elements },
         m_max_depth{ max_depth },
@@ -346,21 +346,26 @@ public:
             {
                 b.cache_summary();
             }
-            m_summary = merge(std::views::transform(subboxes(), [](auto const& b) {
-                return b.summary();
-            }));
+            m_summary = merge(
+                subboxes() | std::views::filter([](auto const& b) {
+                    return b.summary().has_value();
+                }) |
+                std::views::transform([](auto const& b) { return b.summary().value(); })
+            );
         }
+
         else
         {
             m_summary =
-                merge(std::views::transform(contained_elements(), [](auto const& b) {
-                    return *b;
-                }));
+                merge(contained_elements() | std::views::transform([](auto const& b) {
+                          return *b;
+                      }));
         }
     }
 
     [[nodiscard]]
-    auto summary() const noexcept -> sample_t const&
+    auto summary() const noexcept -> std::optional<sample_t> const&
+
     {
         return m_summary;
     }
@@ -374,7 +379,10 @@ public:
         os << header(m_depth + 1) << "Depth " << m_depth << '\n';
         os << header(m_depth + 1) << "Fragmented: " << m_fragmented << '\n';
         os << header(m_depth + 1) << "Boxes: " << boxes() << '\n';
-        os << header(m_depth + 1) << "Summary: " << summary().repr() << '\n';
+        if (summary().has_value())
+        {
+            os << header(m_depth + 1) << "Summary: " << summary().value().repr() << '\n';
+        }
         os << header(m_depth + 1) << "Elements: " << elements() << '\n';
         if (!m_fragmented)
         {
@@ -521,7 +529,7 @@ private:
 private:
     boundary_t                                                     m_boundary;
     std::variant<std::vector<sample_t const*>, std::vector<ndbox>> m_elements;
-    sample_t                                                       m_summary;
+    std::optional<sample_t>                                        m_summary;
     ndbox*                                                         m_parent;
     std::size_t                                                    m_capacity;
     bool                                                           m_fragmented = false;
@@ -598,7 +606,10 @@ public:
         os << "Max depth: " << m_max_depth << '\n';
         os << "Elements: " << m_box.elements() << " out of "
            << std::ranges::size(m_data_view) << '\n';
-        os << "Summary: " << m_box.summary().repr() << '\n';
+        if (m_box.summary().has_value())
+        {
+            os << "Summary: " << m_box.summary().value().repr() << '\n';
+        }
         os << "<\\ndtree<" << s_dimension << ">>\n";
     }
 

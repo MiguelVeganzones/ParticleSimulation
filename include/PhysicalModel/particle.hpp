@@ -3,6 +3,7 @@
 #include "concepts.hpp"
 #include "particle_concepts.hpp"
 #include "physical_magnitudes.hpp"
+#include <optional>
 #include <ranges>
 #include <sstream>
 #include <string>
@@ -165,8 +166,8 @@ private:
 };
 
 [[nodiscard]]
-auto merge(std::ranges::range auto const& particles) noexcept
-    -> std::ranges::range_value_t<decltype(particles)>
+auto merge(std::ranges::input_range auto&& particles) noexcept
+    -> std::optional<std::ranges::range_value_t<decltype(particles)>>
     requires particle_concepts::Particle<std::ranges::range_value_t<decltype(particles)>>
 {
     using particle_t        = std::ranges::range_value_t<decltype(particles)>;
@@ -176,6 +177,10 @@ auto merge(std::ranges::range auto const& particles) noexcept
     using runtime_1d_unit_t = typename particle_t::runtime_1d_unit_t;
     using runtime_nd_unit_t = typename particle_t::runtime_nd_unit_t;
 
+    if (std::ranges::begin(particles) == std::ranges::end(particles))
+    {
+        return std::nullopt;
+    }
     const auto total_mass = mass_t(std::ranges::fold_left(
         particles,
         runtime_1d_unit_t{},
