@@ -89,9 +89,9 @@ int ndtree_test()
     const auto size      = 10;
     auto       particles = generate_particle_set<N, F>(size);
 
-    const auto  depth        = 2;
-    const auto  box_capacity = 3;
-    ndt::ndtree tree(std::span{ particles }, depth, box_capacity);
+    const auto                 depth        = 2;
+    const auto                 box_capacity = 3;
+    ndt::ndtree<3, particle_t> tree(std::span{ particles }, depth, box_capacity);
 
     solvers::yoshida4_solver<particle_t> solver(
         particles, high_frequency_tick_t::period_duration

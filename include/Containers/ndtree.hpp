@@ -1,8 +1,5 @@
 #pragma once
 
-#include <iterator>
-#include <sstream>
-#include <type_traits>
 #define DEBUG_NDTREE 1
 
 #include "constexpr_functions.hpp"
@@ -11,11 +8,15 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cmath>
+#include <iterator>
 #include <numeric>
 #include <optional>
 #include <ostream>
 #include <ranges>
+#include <sstream>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #ifdef DEBUG_NDTREE
@@ -129,12 +130,17 @@ namespace detail
 
 template <concepts::Point Point_Type>
 [[nodiscard]]
-auto in(Point_Type const& p, ndboundary<Point_Type> const& b) noexcept -> bool
+auto in(
+    Point_Type const&               p,
+    ndboundary<Point_Type> const&   b,
+    typename Point_Type::value_type tol
+) noexcept -> bool
 {
+    assert(tol > 0);
     for (auto i = decltype(Point_Type::s_dimension){ 0 }; i != Point_Type::s_dimension;
          ++i)
     {
-        if (p[i] < b.min(i) || p[i] > b.max(i))
+        if (p[i] < (b.min(i) - tol) || p[i] > (b.max(i) + tol))
         {
             return false;
         }
@@ -175,21 +181,21 @@ auto compute_limits(std::ranges::range auto const& data) noexcept
 
 } // namespace detail
 
-template <concepts::sample_concept Sample_Type>
+template <std::size_t Fanout, concepts::sample_concept Sample_Type>
 class ndbox
 {
 public:
     using sample_t                           = Sample_Type;
     using point_t                            = typename sample_t::position_t;
-    using box_t                              = ndbox<sample_t>;
+    using box_t                              = ndbox<Fanout, sample_t>;
     inline static constexpr auto s_dimension = point_t::s_dimension;
     using value_type                         = typename sample_t::value_type;
-    inline static constexpr auto s_simension = sample_t::s_dimension;
     using boundary_t                         = ndboundary<point_t>;
     using depth_t                            = unsigned int;
-    inline static constexpr auto s_1d_fanout = std::size_t{ 2 };
-    inline static constexpr auto s_nd_fanout =
-        utility::cx_functions::pow(s_1d_fanout, s_dimension);
+    inline static constexpr auto s_fanout    = Fanout;
+    inline static constexpr auto s_subdivisions =
+        utility::cx_functions::pow(s_fanout, s_dimension);
+    inline static constexpr auto s_boundary_tol = value_type{ 1e-4 };
 
 public:
     ndbox(
@@ -212,7 +218,7 @@ public:
     [[nodiscard]]
     auto insert(sample_t const* const sp) noexcept -> bool
     {
-        if (!detail::in(sp->position(), m_boundary))
+        if (!detail::in(sp->position(), m_boundary, s_boundary_tol))
         {
             return false;
         }
@@ -271,7 +277,7 @@ public:
 #if DEBUG_NDTREE
             const bool flag =
                 std::ranges::any_of(contained_elements(), [this](auto const& e) {
-                    return !detail::in(e->position(), m_boundary);
+                    return !detail::in(e->position(), m_boundary, s_boundary_tol);
                 });
             if (flag)
             {
@@ -284,7 +290,7 @@ public:
 #endif
             const auto out_of_bounds_range =
                 std::ranges::partition(contained_elements(), [this](auto const* const p) {
-                    return detail::in(p->position(), m_boundary);
+                    return detail::in(p->position(), m_boundary, s_boundary_tol);
                 });
 #if DEBUG_NDTREE
             if (flag)
@@ -302,7 +308,7 @@ public:
                 {
                     for (auto const* const p : out_of_bounds_range)
                     {
-                        assert(!detail::in(p->position(), m_boundary));
+                        assert(!detail::in(p->position(), m_boundary, s_boundary_tol));
                         m_parent->relocate(p);
                     }
                 }
@@ -315,7 +321,7 @@ public:
 
     auto relocate(sample_t const* const sp) noexcept -> void
     {
-        if (!detail::in(sp->position(), m_boundary))
+        if (!detail::in(sp->position(), m_boundary, s_boundary_tol))
         {
             if (m_parent)
             {
@@ -483,6 +489,7 @@ private:
 
     auto fragment() noexcept -> void
     {
+        using size_type = decltype(s_dimension);
         if (m_fragmented)
         {
             return;
@@ -490,25 +497,54 @@ private:
         auto samples = std::move(contained_elements());
         m_elements   = std::vector<ndbox>();
         m_fragmented = true;
-        subboxes().reserve(s_nd_fanout);
-        static_assert(
-            s_1d_fanout == 2,
-            "The divisions are only binary with implementation! It could be generalzed "
-            "if needed tho..."
-        );
-        for (auto binary_div = decltype(s_nd_fanout){ 0 }; binary_div != s_nd_fanout;
-             ++binary_div)
+        subboxes().reserve(s_subdivisions);
+        if constexpr (s_fanout == 2)
         {
-            point_t min;
-            point_t max;
-            for (auto i = decltype(s_dimension){ 0 }; i != s_dimension; ++i)
+            static_assert(
+                s_fanout == 2,
+                "The divisions are only binary with implementation! It could be "
+                "generalzed "
+                "if needed tho..."
+            );
+            for (auto binary_div = decltype(s_subdivisions){ 0 };
+                 binary_div != s_subdivisions;
+                 ++binary_div)
             {
-                const auto top_half = (binary_div & (1 << i)) > 0;
-                min[i]              = top_half ? m_boundary.mid(i) : m_boundary.min(i);
-                max[i]              = top_half ? m_boundary.max(i) : m_boundary.mid(i);
+                point_t min;
+                point_t max;
+                for (auto i = decltype(s_dimension){ 0 }; i != s_dimension; ++i)
+                {
+                    const auto top_half = (binary_div & (1 << i)) > 0;
+                    min[i] = top_half ? m_boundary.mid(i) : m_boundary.min(i);
+                    max[i] = top_half ? m_boundary.max(i) : m_boundary.mid(i);
+                }
+                subboxes().push_back(box_t{
+                    boundary_t{ min, max }, m_capacity, m_depth + 1, m_max_depth, this });
             }
-            subboxes().push_back(box_t{
-                boundary_t{ min, max }, m_capacity, m_depth + 1, m_max_depth, this });
+        }
+        else
+        {
+            for (auto n = decltype(s_subdivisions){ 0 }; n != s_subdivisions; ++n)
+            {
+                point_t min;
+                point_t max;
+
+                auto dim_idx = static_cast<value_type>(n);
+
+                for (auto i = size_type{ 0 }; i != s_dimension; ++i)
+                {
+                    const auto j = static_cast<value_type>(
+                        static_cast<size_type>(dim_idx) % s_fanout
+                    );
+                    const auto delta = (m_boundary.max(i) - m_boundary.min(i)) /
+                                       static_cast<value_type>(s_fanout);
+                    min[i]  = m_boundary.min(i) + j * delta;
+                    max[i]  = m_boundary.min(i) + (j + value_type{ 1 }) * delta;
+                    dim_idx = std::floor(dim_idx / static_cast<value_type>(s_fanout));
+                }
+                subboxes().push_back(box_t{
+                    boundary_t{ min, max }, m_capacity, m_depth + 1, m_max_depth, this });
+            }
         }
         for (auto const* const s : samples)
         {
@@ -527,7 +563,8 @@ private:
     }
 
 private:
-    boundary_t                                                     m_boundary;
+    boundary_t m_boundary;
+
     std::variant<std::vector<sample_t const*>, std::vector<ndbox>> m_elements;
     std::optional<sample_t>                                        m_summary;
     ndbox*                                                         m_parent;
@@ -537,26 +574,25 @@ private:
     depth_t                                                        m_depth;
 };
 
-template <concepts::sample_concept Sample_Type>
+template <std::size_t Fanout, concepts::sample_concept Sample_Type>
     requires(
-        Sample_Type::position_t::s_dimension > 0 &&
+        Fanout > 1 && Sample_Type::position_t::s_dimension > 0 &&
         Sample_Type::position_t::s_dimension < NDTREE_MAX_DIMENSIONS
     )
 class ndtree
 {
 public:
-    using sample_t                           = Sample_Type;
-    using position_t                         = typename sample_t::position_t;
-    using value_type                         = typename sample_t::value_type;
-    using size_type                          = std::size_t;
-    inline static constexpr auto s_dimension = sample_t::s_dimension;
-    using box_t                              = ndbox<sample_t>;
-    using depth_t                            = typename box_t::depth_t;
-    using point_t                            = typename sample_t::position_t;
-    using boundary_t                         = ndboundary<point_t>;
-    template <typename T>
-    inline static constexpr auto s_1d_fanout = box_t::s_1d_fanout;
-    inline static constexpr auto s_nd_fanout = box_t::s_nd_fanout;
+    using sample_t                              = Sample_Type;
+    using position_t                            = typename sample_t::position_t;
+    using value_type                            = typename sample_t::value_type;
+    using size_type                             = std::size_t;
+    inline static constexpr auto s_dimension    = sample_t::s_dimension;
+    using box_t                                 = ndbox<Fanout, sample_t>;
+    using depth_t                               = typename box_t::depth_t;
+    using point_t                               = typename sample_t::position_t;
+    using boundary_t                            = ndboundary<point_t>;
+    inline static constexpr auto s_fanout       = box_t::s_fanout;
+    inline static constexpr auto s_subdivisions = box_t::s_subdivisions;
 
 public:
     ndtree(
@@ -578,8 +614,8 @@ public:
     {
         for (auto const& e : collection)
         {
-            [[maybe_unused]]
-            auto _ = insert(&e);
+            const auto inserted = insert(&e);
+            assert(inserted);
         }
     }
 
@@ -601,7 +637,7 @@ public:
 
     auto print_info(std::ostream& os = std::cout) const -> void
     {
-        os << "<ndtree <" << s_dimension << ">>\n";
+        os << "<ndtree <" << s_fanout << ", " << s_dimension << ">>\n";
         os << "Capacity: " << m_capacity << '\n';
         os << "Max depth: " << m_max_depth << '\n';
         os << "Elements: " << m_box.elements() << " out of "
@@ -610,7 +646,7 @@ public:
         {
             os << "Summary: " << m_box.summary().value().repr() << '\n';
         }
-        os << "<\\ndtree<" << s_dimension << ">>\n";
+        os << "<\\ndtree<" << s_fanout << ", " << s_dimension << ">>\n";
     }
 
     [[nodiscard]]
@@ -626,8 +662,9 @@ private:
     size_type           m_capacity;
 };
 
-template <concepts::sample_concept Sample_Type>
-auto operator<<(std::ostream& os, ndtree<Sample_Type> const& tree) -> std::ostream&
+template <std::size_t Fanout, concepts::sample_concept Sample_Type>
+auto operator<<(std::ostream& os, ndtree<Fanout, Sample_Type> const& tree)
+    -> std::ostream&
 {
     tree.print_info(os);
     tree.box().print_info(os);
