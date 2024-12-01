@@ -105,9 +105,17 @@ public:
         return m_max[idx];
     }
 
+    [[nodiscard]]
     auto mid(index_t const idx) const -> value_type
     {
         return std::midpoint(m_max[idx], m_min[idx]);
+    }
+
+    // TODO: Fix: More corners cut here...
+    [[nodiscard]]
+    auto space_diagonal() const noexcept -> auto
+    {
+        return m_max - m_min;
     }
 
     [[nodiscard]]
@@ -222,7 +230,7 @@ public:
         {
             return false;
         }
-        if (!m_fragmented)
+        if (!fragmented())
         {
             auto&& elements = contained_elements();
             if (elements.size() < m_capacity || m_depth == m_max_depth)
@@ -249,7 +257,7 @@ public:
 #endif
             }
         }
-        if (m_fragmented)
+        if (fragmented())
         {
             for (auto&& b : subboxes())
             {
@@ -265,7 +273,7 @@ public:
 
     auto reorganize() noexcept -> void
     {
-        if (m_fragmented)
+        if (fragmented())
         {
             for (auto&& b : subboxes())
             {
@@ -346,7 +354,7 @@ public:
 
     auto cache_summary() noexcept -> void
     {
-        if (m_fragmented)
+        if (fragmented())
         {
             for (auto&& b : subboxes())
             {
@@ -370,10 +378,23 @@ public:
     }
 
     [[nodiscard]]
+    inline auto fragmented() const noexcept -> bool
+
+    {
+        return m_fragmented;
+    }
+
+    [[nodiscard]]
     auto summary() const noexcept -> std::optional<sample_t> const&
 
     {
         return m_summary;
+    }
+
+    [[nodiscard]]
+    auto space_diagonal() const noexcept -> auto
+    {
+        return m_boundary.space_diagonal();
     }
 
     auto print_info(std::ostream& os) const -> void
@@ -431,18 +452,6 @@ public:
                    : std::ranges::size(contained_elements());
     }
 
-private:
-    // because you cannot portably have a macro expansion (assert) inside #if #endif
-    inline auto assert_fragmented() const noexcept -> void
-    {
-        assert(m_fragmented);
-    }
-
-    inline auto assert_not_fragmented() const noexcept -> void
-    {
-        assert(!m_fragmented);
-    }
-
 #if __GNUC__ >= 14
     [[nodiscard]]
     auto contained_elements(this auto&& self) noexcept -> auto&&
@@ -486,6 +495,18 @@ private:
         return std::get<1>(m_elements);
     }
 #endif
+
+private:
+    // because you cannot portably have a macro expansion (assert) inside #if #endif
+    inline auto assert_fragmented() const noexcept -> void
+    {
+        assert(fragmented());
+    }
+
+    inline auto assert_not_fragmented() const noexcept -> void
+    {
+        assert(!fragmented());
+    }
 
     auto fragment() noexcept -> void
     {
@@ -633,6 +654,13 @@ public:
     auto cache_summary() noexcept -> void
     {
         m_box.cache_summary();
+    }
+
+    [[nodiscard]]
+    auto size() const noexcept -> size_type
+
+    {
+        return std::ranges::size(m_data_view);
     }
 
     auto print_info(std::ostream& os = std::cout) const -> void

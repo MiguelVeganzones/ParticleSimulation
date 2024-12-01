@@ -3,14 +3,20 @@
 #include "concepts.hpp"
 #include "ndtree.hpp"
 #include "particle_concepts.hpp"
+#include "particle_interaction.hpp"
+#include "utils.hpp"
+#include "yoshida.hpp"
 #include <chrono>
+#include <iostream>
 
 namespace simulation::bh_appox
 {
 
+using namespace pm::interaction;
+
 template <
     pm::particle_concepts::Particle Particle_Type,
-    typename Solver_Type,
+    // typename Solver_Type,
     std::size_t Tree_Fanout = 2>
 class barnes_hut_approximation
 {
@@ -18,68 +24,167 @@ public:
     using particle_t                           = Particle_Type;
     inline static constexpr auto s_tree_fanout = Tree_Fanout;
     using tree_t                               = ndt::ndtree<s_tree_fanout, particle_t>;
-    using solver_t                             = Solver_Type;
-    using interaction_t                        = typename solver_t::interaction_t;
-    using depth_t                              = typename tree_t::depth_t;
-    using size_type                            = typename tree_t::size_type;
-    using boundary_t                           = typename tree_t::boundary_t;
-    using duration_t                           = std::chrono::seconds;
-    using value_type                           = typename particle_t::value_type;
-    using acceleration_t                       = typename particle_t::acceleration_t;
-    using position_t                           = typename particle_t::position_t;
-    using mass_t                               = typename particle_t::mass_t;
+    using box_t                                = typename tree_t::box_t;
+    using solver_t       = solvers::yoshida4_solver<barnes_hut_approximation, particle_t>;
+    using interaction_t  = gravitational_interaction_calculator<particle_t>;
+    using depth_t        = typename tree_t::depth_t;
+    using size_type      = typename tree_t::size_type;
+    using boundary_t     = typename tree_t::boundary_t;
+    using duration_t     = std::chrono::seconds;
+    using value_type     = typename particle_t::value_type;
+    using acceleration_t = typename particle_t::acceleration_t;
+    using position_t     = typename particle_t::position_t;
+    using velocity_t     = typename particle_t::velocity_t;
+    using mass_t         = typename particle_t::mass_t;
+    using owning_container_t                      = std::vector<particle_t>;
+    inline static constexpr auto s_working_copies = solver_t::s_working_copies;
+    inline static constexpr auto s_theta          = value_type{ 0.5 };
 
     // TODO: Improve interface, too many parameters, implement propper move ctor and move
     // them in.
     barnes_hut_approximation(
-        std::span<particle_t>                  particles,
+        std::vector<particle_t>                particles,
         utility::concepts::Duration auto const sim_duration,
         utility::concepts::Duration auto const sim_dt,
         depth_t const                          tree_max_depth,
         size_type const                        tree_box_capacity,
         std::optional<boundary_t>              tree_bounds = std::nullopt
     ) :
-        m_dt{ std::chrono::duration_cast<duration_t>(sim_dt) },
         m_simulation_duration{ std::chrono::duration_cast<duration_t>(sim_duration) },
-        m_particles{ particles },
-        m_ndtree(m_particles, tree_max_depth, tree_box_capacity, tree_bounds),
-        m_solver(m_particles, m_dt)
+        m_dt{ std::chrono::duration_cast<duration_t>(sim_dt) },
+        m_particles{ particles, particles, particles, particles, particles }, // TODO Fix
+        m_ndtrees{
+            tree_t(m_particles[0], tree_max_depth, tree_box_capacity, tree_bounds),
+            tree_t(m_particles[1], tree_max_depth, tree_box_capacity, tree_bounds),
+            tree_t(m_particles[2], tree_max_depth, tree_box_capacity, tree_bounds),
+            tree_t(m_particles[3], tree_max_depth, tree_box_capacity, tree_bounds)
+        },
+        m_simulation_size{ m_ndtrees[s_working_copies].size() },
+        m_solver(this, m_simulation_size, m_dt)
+    {
+    }
+
+    auto run() noexcept -> void
     {
         while (m_current_time < m_simulation_duration)
         {
             m_solver.run();
+            std::cout << "here\n";
         }
     }
 
-    auto get_acceleration(
-        std::size_t           idx,
-        std::span<mass_t>     mass,
-        std::span<position_t> pos
-    ) noexcept -> acceleration_t
+    auto get_acceleration(size_type copy_idx, std::size_t p_idx) noexcept
+        -> acceleration_t
     {
-        assert(std::ranges::size(mass) == std::ranges::size(pos));
-        acceleration_t acc{};
-        for (std::size_t i = 0; i != std::ranges::size(mass); ++i)
+        return get_box_contribution(
+            m_particles[copy_idx][p_idx], m_ndtrees[copy_idx].box()
+        );
+    }
+
+    [[nodiscard]]
+    auto get_box_contribution(particle_t const& p, box_t const& b) -> acceleration_t
+    {
+        if (!b.summary().has_value())
         {
-            if (i != idx) [[likely]]
-            {
-                acc = std::move(acc) +
-                      interaction_t::acceleration_contribution(pos[idx], pos[i], mass[i]);
-            }
+            return acceleration_t{};
         }
-#if DEBUG_PRINT_INTERACTION
-        std::cout << "Acc " << idx << ": " << acc << '\n';
-#endif
-        return acc;
+        const auto s = pm::utils::l2_norm(b.space_diagonal().value());
+        const auto d = pm::utils::l2_norm(
+            pm::utils::distance(p.position(), b.summary().value().position()).value()
+        );
+        if (s / d < s_theta)
+        {
+            return interaction_t::acceleration_contribution(p, b.summary().value());
+        }
+        else
+        {
+            acceleration_t acc{};
+            if (b.fragmented())
+            {
+                for (auto const& subbox : b.subboxes())
+                {
+                    acc = std::move(acc) + get_box_contribution(p, subbox);
+                }
+            }
+            else
+            {
+                for (auto const* const other : b.contained_elements())
+                {
+                    if (other->id() != p.id()) [[likely]]
+                    {
+                        acc = std::move(acc) +
+                              interaction_t::acceleration_contribution(p, *other);
+                    }
+                }
+            }
+            return acc;
+        }
+    }
+
+    [[nodiscard]]
+    inline auto position_read(std::size_t p_idx) const noexcept -> position_t const&
+
+    {
+        return m_particles[s_working_copies][p_idx].position();
+    }
+
+    inline auto position_write(std::size_t p_idx, position_t value) noexcept -> void
+    {
+        m_particles[s_working_copies][p_idx].position() = value;
+    }
+
+    [[nodiscard]]
+    inline auto position_buffer_read(std::size_t buffer_id, std::size_t p_idx)
+        const noexcept -> position_t const&
+    {
+        return m_particles[buffer_id][p_idx].position();
+    }
+
+    inline auto position_buffer_write(
+        std::size_t       buffer_id,
+        std::size_t       p_idx,
+        position_t const& value
+    ) noexcept -> void
+    {
+        m_particles[buffer_id][p_idx].position() = value;
+    }
+
+    [[nodiscard]]
+    inline auto velocity_read(std::size_t p_idx) const noexcept -> velocity_t const&
+    {
+        return m_particles[s_working_copies][p_idx].velocity();
+    }
+
+    inline auto velocity_write(std::size_t p_idx, velocity_t value) noexcept -> void
+    {
+        m_particles[s_working_copies][p_idx].velocity() = value;
+    }
+
+    [[nodiscard]]
+    inline auto velocity_buffer_read(std::size_t buffer_id, std::size_t p_idx)
+        const noexcept -> velocity_t const&
+    {
+        return m_particles[buffer_id][p_idx].velocity();
+    }
+
+    inline auto velocity_buffer_write(
+        std::size_t       buffer_id,
+        std::size_t       p_idx,
+        velocity_t const& value
+    ) noexcept -> void
+    {
+        m_particles[buffer_id][p_idx].velocity() = value;
     }
 
 private:
-    duration_t            m_current_time{};
-    duration_t            m_simulation_duration;
-    duration_t            m_dt;
-    std::span<particle_t> m_particles;
-    tree_t                m_ndtree;
-    solver_t              m_solver;
+    // TODO Reorder
+    duration_t                                           m_current_time{};
+    duration_t                                           m_simulation_duration;
+    duration_t                                           m_dt;
+    std::array<owning_container_t, s_working_copies + 1> m_particles;
+    std::array<tree_t, s_working_copies>                 m_ndtrees;
+    size_type                                            m_simulation_size;
+    solver_t                                             m_solver;
 };
 
 } // namespace simulation::bh_appox

@@ -1,3 +1,4 @@
+#include "barnes_hut_approximation.hpp"
 #ifdef USE_ROOT_PLOTTING
 #include "TApplication.h"
 #include "TCanvas.h"
@@ -79,7 +80,7 @@ auto generate_particle_set(std::size_t size)
     );
 }
 
-int ndtree_test()
+int barnes_hut_test()
 {
     using namespace pm;
     using F                 = double;
@@ -88,177 +89,21 @@ int ndtree_test()
     using high_frequency_tick_t =
         synchronization::tick_period<std::chrono::milliseconds, 400>;
 
-    const auto size      = 10;
-    auto       particles = generate_particle_set<N, F>(size);
+    const auto size         = 10;
+    auto       particles    = generate_particle_set<N, F>(size);
+    const auto duration     = std::chrono::seconds(10);
+    const auto max_depth    = 5;
+    const auto box_capacity = 3;
 
-    const auto                 depth        = 2;
-    const auto                 box_capacity = 3;
-    ndt::ndtree<3, particle_t> tree(std::span{ particles }, depth, box_capacity);
-
-    solvers::yoshida4_solver<particle_t> solver(
-        particles, high_frequency_tick_t::period_duration
-    );
-
-    std::cout << tree << '\n';
-    for (auto i = 0; i != 300000; ++i)
-    {
-        solver.run();
-        tree.reorganize();
-        tree.cache_summary();
-    }
-    std::cout << tree << '\n';
-    return EXIT_SUCCESS;
-}
-
-int particle_movement_visualization_debug()
-{
-    using namespace pm;
-    using F                 = double;
-    static constexpr auto N = 3;
-    static constexpr auto K = 3000000000000; // Iterations
-    using particle_t        = particle::ndparticle<N, F>;
-
-    using high_frequency_tick_t =
-        synchronization::tick_period<std::chrono::milliseconds, 100>;
-
-    const auto size      = 4;
-    auto       particles = generate_particle_set<N, F>(size);
-
-    std::cout << "<-------------- Simulation -------------->\n";
-
-    const auto initial_limtis = ndt::detail::compute_limits(particles);
-    std::cout << initial_limtis << '\n';
-
-    std::cout << "Particle Limits:\n";
-    utility::timing::stopwatch s{ "Simulation" };
-
-#if ENABLE_ROOT_PLOTTING
-    TApplication app = TApplication("Root app", 0, nullptr);
-#endif
-
-    root_plotting::time_plotter4 plotter;
-
-    /*
-    solvers::runge_kutta_solver<4, particle_t> solver(
-        particles, high_frequency_tick_t::period_duration
-    );
-    */
-    solvers::yoshida4_solver<particle_t> solver(
-        particles, high_frequency_tick_t::period_duration
-    );
-    /*
-    solvers::leapfrog_solver<2, particle_t> solver(
+    simulation::bh_appox::barnes_hut_approximation<particle_t> simulation(
         particles,
+        duration,
         high_frequency_tick_t::period_duration,
-        high_frequency_tick_t::period_duration
-    );
-    */
-    std::cout << "Here4:\n";
-
-    for (auto i = 0uz; i != K; ++i)
-    {
-        solver.run();
-        if (i % 10000 == 0)
-        {
-            std::cout << i << '\n';
-            const auto current_limtis = ndt::detail::compute_limits(particles);
-            std::cout << current_limtis << '\n';
-            plotter.append(
-                static_cast<float>(particles[0].position().value()[0]),
-                static_cast<float>(particles[1].position().value()[0]),
-                static_cast<float>(particles[2].position().value()[0]),
-                static_cast<float>(particles[3].position().value()[0])
-            );
-        }
-    }
-
-    for (auto const& p : particles | std::views::take(10))
-    {
-        std::cout << p << '\n';
-    }
-
-    const auto final_limtis = ndt::detail::compute_limits(particles);
-    std::cout << final_limtis << '\n';
-    std::cout << "<\\-------------- Simulation -------------->\n";
-
-#if ENABLE_ROOT_PLOTTING
-    app.Run();
-#endif
-
-    return EXIT_SUCCESS;
-}
-
-int particle_movement_visualization_test()
-{
-    using namespace pm;
-    using F                 = double;
-    static constexpr auto N = 3;
-    static constexpr auto K = 3000000000000; // Iterations
-    using particle_t        = particle::ndparticle<N, F>;
-
-    using low_frequency_tick_t = synchronization::tick_period<std::chrono::seconds, 1>;
-    using high_frequency_tick_t =
-        synchronization::tick_period<std::chrono::milliseconds, 20>;
-
-    const auto size      = 50;
-    auto       particles = generate_particle_set<N, F>(size);
-
-    std::cout << "<-------------- Simulation -------------->\n";
-
-    std::cout << "Particle Limits:\n";
-    const auto initial_limtis = ndt::detail::compute_limits(particles);
-    std::cout << initial_limtis << '\n';
-
-    utility::timing::stopwatch s{ "Simulation" };
-
-#if ENABLE_ROOT_PLOTTING
-    TApplication app = TApplication("Root app", 0, nullptr);
-#endif
-
-    root_plotting::scatter_plot_3D scatter_plot;
-
-    solvers::leapfrog_solver<13, particle_t> solver(
-        particles,
-        high_frequency_tick_t::period_duration,
-        low_frequency_tick_t::period_duration
-
+        max_depth,
+        box_capacity
     );
 
-    std::array<float, size> x;
-    std::array<float, size> y;
-    std::array<float, size> z;
-
-    for (auto i = 0uz; i != K; ++i)
-    {
-        solver.run();
-        if (i % 100 == 0)
-        {
-            std::cout << i << '\n';
-            const auto current_limtis = ndt::detail::compute_limits(particles);
-            std::cout << current_limtis << '\n';
-
-            for (int j = 0; j != size; ++j)
-            {
-                x[j] = static_cast<float>(particles[j].position()[0]);
-                y[j] = static_cast<float>(particles[j].position()[1]);
-                z[j] = static_cast<float>(particles[j].position()[2]);
-            }
-            scatter_plot.plot(size, &x[0], &y[0], &z[0]);
-        }
-    }
-
-    for (auto const& p : particles | std::views::take(10))
-    {
-        std::cout << p << '\n';
-    }
-
-    const auto final_limtis = ndt::detail::compute_limits(particles);
-    std::cout << final_limtis << '\n';
-    std::cout << "<\\-------------- Simulation -------------->\n";
-
-#if ENABLE_ROOT_PLOTTING
-    app.Run();
-#endif
+    simulation.run();
 
     return EXIT_SUCCESS;
 }
@@ -272,8 +117,6 @@ int main()
         utility::logging::severity_level::error, "Huge error or sth..."
     );
 
-    // particle_movement_visualization_debug();
-    particle_movement_visualization_test();
-    ndtree_test();
+    barnes_hut_test();
     return EXIT_SUCCESS;
 }
