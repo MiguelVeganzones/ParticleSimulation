@@ -1,4 +1,5 @@
 #include "barnes_hut_approximation.hpp"
+#include "brute_force.hpp"
 #ifdef USE_ROOT_PLOTTING
 #include "TApplication.h"
 #include "TCanvas.h"
@@ -86,24 +87,27 @@ int barnes_hut_test()
     using F                 = double;
     static constexpr auto N = 3;
     using particle_t        = particle::ndparticle<N, F>;
-    using high_frequency_tick_t =
-        synchronization::tick_period<std::chrono::milliseconds, 400>;
+    using tick_t            = synchronization::tick_period<std::chrono::seconds, 1>;
 
     const auto size         = 10;
     auto       particles    = generate_particle_set<N, F>(size);
-    const auto duration     = std::chrono::seconds(10);
+    const auto duration     = std::chrono::seconds(100);
     const auto max_depth    = 5;
     const auto box_capacity = 3;
 
-    simulation::bh_appox::barnes_hut_approximation<particle_t> simulation(
-        particles,
-        duration,
-        high_frequency_tick_t::period_duration,
-        max_depth,
-        box_capacity
+    simulation::bh_appox::barnes_hut_approximation<particle_t> simulation_a(
+        particles, duration, tick_t::period_duration, max_depth, box_capacity
     );
 
-    simulation.run();
+    std::cout << "A\n";
+    simulation_a.run();
+
+    simulation::bf::brute_force_computation<particle_t> simulation_b(
+        particles, duration, tick_t::period_duration
+    );
+
+    std::cout << "B\n";
+    simulation_b.run();
 
     return EXIT_SUCCESS;
 }

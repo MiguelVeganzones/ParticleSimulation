@@ -40,7 +40,7 @@ public:
     inline static constexpr auto s_working_copies = solver_t::s_working_copies;
     inline static constexpr auto s_theta          = value_type{ 0.5 };
 
-    // TODO: Improve interface, too many parameters, implement propper move ctor and move
+    // TODO: Improve interface, too many parameters, implement proper move ctor and move
     // them in.
     barnes_hut_approximation(
         std::vector<particle_t>                particles,
@@ -59,26 +59,37 @@ public:
             tree_t(m_particles[2], tree_max_depth, tree_box_capacity, tree_bounds),
             tree_t(m_particles[3], tree_max_depth, tree_box_capacity, tree_bounds)
         },
-        m_simulation_size{ m_ndtrees[s_working_copies].size() },
+        m_simulation_size{ std::ranges::size(m_particles[s_working_copies]) },
         m_solver(this, m_simulation_size, m_dt)
     {
     }
 
     auto run() noexcept -> void
     {
+        std::cout << m_ndtrees[0] << '\n';
         while (m_current_time < m_simulation_duration)
         {
+            for (auto& t : m_ndtrees)
+            {
+                t.reorganize();
+                t.cache_summary();
+            }
             m_solver.run();
-            std::cout << "here\n";
+            m_current_time += m_dt;
+            std::cout << m_current_time << '\n';
         }
     }
 
     auto get_acceleration(size_type copy_idx, std::size_t p_idx) noexcept
         -> acceleration_t
     {
-        return get_box_contribution(
-            m_particles[copy_idx][p_idx], m_ndtrees[copy_idx].box()
-        );
+        auto const acc =
+            get_box_contribution(m_particles[copy_idx][p_idx], m_ndtrees[copy_idx].box());
+        if (p_idx == 0)
+        {
+            std::cout << "Acc: " << acc << '\n';
+        }
+        return acc;
     }
 
     [[nodiscard]]
@@ -92,7 +103,7 @@ public:
         const auto d = pm::utils::l2_norm(
             pm::utils::distance(p.position(), b.summary().value().position()).value()
         );
-        if (s / d < s_theta)
+        if ((s / d) < s_theta)
         {
             return interaction_t::acceleration_contribution(p, b.summary().value());
         }
