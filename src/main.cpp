@@ -198,7 +198,7 @@ int particle_movement_visualization_test()
 
     using low_frequency_tick_t = synchronization::tick_period<std::chrono::seconds, 1>;
     using high_frequency_tick_t =
-        synchronization::tick_period<std::chrono::microseconds, 20>;
+        synchronization::tick_period<std::chrono::milliseconds, 20>;
 
     const auto size      = 50;
     auto       particles = generate_particle_set<N, F>(size);
@@ -273,7 +273,7 @@ int main()
     );
 
     // particle_movement_visualization_debug();
-    // particle_movement_visualization_test();
+    particle_movement_visualization_test();
     ndtree_test();
     return EXIT_SUCCESS;
 }

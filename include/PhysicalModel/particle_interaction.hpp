@@ -27,7 +27,7 @@ struct gravitational_interaction_calculator
 
     inline static constexpr auto epsilon = static_cast<value_type>(8e-1);
 
-    auto acceleration_contribution(
+    inline static auto acceleration_contribution(
         position_t const& pos1,
         position_t const& pos2,
         mass_t const&     mass2
@@ -45,14 +45,13 @@ struct gravitational_interaction_calculator
                                std::pow(d * d + epsilon * epsilon, value_type{ 1.5 }) };
     }
 
+    /*
     auto get_acceleration(
         std::size_t           idx,
         std::span<mass_t>     mass,
         std::span<position_t> pos
     ) noexcept
-        -> magnitudes::linear_acceleration<
-            Particle_Type::s_dimension,
-            typename Particle_Type::value_type>
+        -> acceleration_t
 
     {
         assert(std::ranges::size(mass) == std::ranges::size(pos));
@@ -71,5 +70,6 @@ struct gravitational_interaction_calculator
         return acc;
     }
 };
+*/
 
 } // namespace pm::interaction
