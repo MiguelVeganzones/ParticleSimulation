@@ -109,7 +109,9 @@ PLOTTING_INCL			=	-I./$(PLOTTING_DIR)
 SOLVERS_INCL			=	-I./$(SOLVERS_DIR)
 MAIN_SIMULATION_INCL		=	$(GENERAL_INCL) $(PHYSICAL_MODEL_INCL) $(NDTREE_INCL) $(TIMING_INCL) $(PLOTTING_INCL) $(SOLVERS_INCL)
 
+ifdef ENABLE_ROOT_PLOTTING
 PLOTTING_LIB			= `root-config --libs`
+endif
 ifdef ENABLE_BOOST_LOGGING
 CXXFLAGS			+= -DUSE_BOOST_LOGGING
 LOG_LIB				= -lboost_log -lboost_thread -lboost_system -lpthread
@@ -118,7 +120,9 @@ LOG_LIB =
 endif
 MAIN_SIMULATION_LIB		= $(LOG_LIB) $(PLOTTING_LIB)
 
+ifdef ENABLE_ROOT_PLOTTING
 ROOT_FLAGS			= `root-config --cflags` -Wno-cpp
+endif
 
 
 #=================================================================================================
@@ -137,6 +141,9 @@ ${OUT_DIR}/main.o: $(SRC_DIR)/*.cpp $(INCLUDE_DIR)/*/*.hpp
 
 #=============================================================
 $(PLOTTING_DIR)/$(OUT_DIR)/plotting.o: $(PLOTTING_DIR)/plotting.cpp $(PLOTTING_DIR)/plotting.hpp
+    ifdef ENABLE_ROOT_PLOTTING
+	@echo -e Root plotting must be enabled to build $@..."\n"
+    endif
 	@echo -e Building $@..."\n"
 	@mkdir -p $(PLOTTING_DIR)/${OUT_DIR}
 	$(CXX) $(ROOT_FLAGS) $(PLOTTING_INCL) $(PLOTTING_LIB) -c $(PLOTTING_DIR)/plotting.cpp -o $@
@@ -145,6 +152,9 @@ $(PLOTTING_DIR)/$(OUT_DIR)/plotting.o: $(PLOTTING_DIR)/plotting.cpp $(PLOTTING_D
 
 #=============================================================
 $(PLOTTING_DIR)/$(OUT_DIR)/time_plotter.o: $(PLOTTING_DIR)/time_plotter.cpp $(PLOTTING_DIR)/time_plotter.hpp
+    ifdef ENABLE_ROOT_PLOTTING
+	@echo -e Root plotting must be enabled to build $@..."\n"
+    endif
 	@echo -e Building $@..."\n"
 	@mkdir -p $(PLOTTING_DIR)/${OUT_DIR}
 	$(CXX) $(ROOT_FLAGS) $(PLOTTING_INCL) $(PLOTTING_LIB) -c $(PLOTTING_DIR)/time_plotter.cpp -o $@
@@ -153,6 +163,9 @@ $(PLOTTING_DIR)/$(OUT_DIR)/time_plotter.o: $(PLOTTING_DIR)/time_plotter.cpp $(PL
 
 #=============================================================
 $(PLOTTING_DIR)/$(OUT_DIR)/scatter_plot.o: $(PLOTTING_DIR)/scatter_plot.cpp $(PLOTTING_DIR)/scatter_plot.hpp
+    ifdef ENABLE_ROOT_PLOTTING
+	@echo -e Root plotting must be enabled to build $@..."\n"
+    endif
 	@echo -e Building $@..."\n"
 	@mkdir -p $(PLOTTING_DIR)/${OUT_DIR}
 	$(CXX) $(ROOT_FLAGS) $(PLOTTING_INCL) $(PLOTTING_LIB) -c $(PLOTTING_DIR)/scatter_plot.cpp -o $@

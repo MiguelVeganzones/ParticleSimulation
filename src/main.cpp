@@ -1,6 +1,8 @@
+#ifdef USE_ROOT_PLOTTING
 #include "TApplication.h"
 #include "TCanvas.h"
 #include "TGraph.h"
+#endif
 #include "factory.hpp"
 #include "leapfrog.hpp"
 #include "logging.hpp"
@@ -130,13 +132,11 @@ int particle_movement_visualization_debug()
     std::cout << "Particle Limits:\n";
     utility::timing::stopwatch s{ "Simulation" };
 
-    std::cout << "Here0:\n";
+#if ENABLE_ROOT_PLOTTING
     TApplication app = TApplication("Root app", 0, nullptr);
+#endif
 
-    std::cout << "Here2:\n";
     root_plotting::time_plotter4 plotter;
-
-    std::cout << "Here3:\n";
 
     /*
     solvers::runge_kutta_solver<4, particle_t> solver(
@@ -181,7 +181,9 @@ int particle_movement_visualization_debug()
     std::cout << final_limtis << '\n';
     std::cout << "<\\-------------- Simulation -------------->\n";
 
+#if ENABLE_ROOT_PLOTTING
     app.Run();
+#endif
 
     return EXIT_SUCCESS;
 }
@@ -209,7 +211,9 @@ int particle_movement_visualization_test()
 
     utility::timing::stopwatch s{ "Simulation" };
 
+#if ENABLE_ROOT_PLOTTING
     TApplication app = TApplication("Root app", 0, nullptr);
+#endif
 
     root_plotting::scatter_plot_3D scatter_plot;
 
@@ -252,7 +256,9 @@ int particle_movement_visualization_test()
     std::cout << final_limtis << '\n';
     std::cout << "<\\-------------- Simulation -------------->\n";
 
+#if ENABLE_ROOT_PLOTTING
     app.Run();
+#endif
 
     return EXIT_SUCCESS;
 }

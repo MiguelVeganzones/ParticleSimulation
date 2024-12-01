@@ -1,17 +1,22 @@
 #include "scatter_plot.hpp"
+
+#ifdef ENABLE_ROOT_PLOTTING
 #include "TGraph.h"
 #include <TCanvas.h>
 #include <TNtuple.h>
 #include <memory>
+#endif
 
 namespace root_plotting
 {
 
 scatter_plot_3D::scatter_plot_3D()
 {
+#if ENABLE_ROOT_PLOTTING
     c1  = std::make_unique<TCanvas>("canvas", "Graph Draw Options", 200, 10, 800, 600);
     tn1 = std::make_unique<TNtuple>("n", "n", "x:y:z:color");
     tn1->SetMarkerStyle(7);
+#endif
 }
 
 auto scatter_plot_3D::plot(
@@ -21,6 +26,7 @@ auto scatter_plot_3D::plot(
     float const* const z
 ) -> void
 {
+#if ENABLE_ROOT_PLOTTING
     tn1->Reset();
     for (int i = 0; i != n; ++i)
     {
@@ -29,6 +35,7 @@ auto scatter_plot_3D::plot(
     c1->cd();
     tn1->Draw("x:y:z:color");
     c1->Update();
+#endif
 }
 
 } // namespace root_plotting

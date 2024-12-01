@@ -1,6 +1,8 @@
 #include "plotting.hpp"
+#ifdef ENABLE_ROOT_PLOTTING
 #include "TGraph.h"
 #include <TCanvas.h>
+#endif
 
 namespace root_plotting
 {
@@ -14,6 +16,7 @@ auto plot(
     const float* const y4
 ) -> void
 {
+#ifdef ENABLE_ROOT_PLOTTING
     auto gr1 = new TGraph(n, x, y1);
     auto gr2 = new TGraph(n, x, y2);
     auto gr3 = new TGraph(n, x, y3);
@@ -29,6 +32,7 @@ auto plot(
     gr3->Draw("C+");
     gr4->SetLineColor(0);
     gr4->Draw("C.");
+#endif
 }
 
 auto plot(
@@ -39,6 +43,7 @@ auto plot(
     const float* const y3
 ) -> void
 {
+#ifdef ENABLE_ROOT_PLOTTING
     auto gr1 = new TGraph(n, x, y1);
     auto gr2 = new TGraph(n, x, y2);
     auto gr3 = new TGraph(n, x, y3);
@@ -55,11 +60,13 @@ auto plot(
     gr3->SetMarkerStyle(20);
     gr3->SetLineColor(1);
     gr3->Draw("CP");
+#endif
 }
 
 auto plot(int n, const float* const x, const float* const y1, const float* const y2)
     -> void
 {
+#ifdef ENABLE_ROOT_PLOTTING
     auto gr1 = new TGraph(n, x, y1);
     auto gr2 = new TGraph(n, x, y2);
 
@@ -74,12 +81,15 @@ auto plot(int n, const float* const x, const float* const y1, const float* const
     gr1->Draw("AC*");
     gr2->SetLineColor(2);
     gr2->Draw("CP");
+#endif
 }
 
 auto plot(int n, const float* const x, const float* const y) -> void
 {
+#ifdef ENABLE_ROOT_PLOTTING
     auto gr1 = new TGraph(n, x, y);
     gr1->Draw("AC*");
+#endif
 }
 
 } // namespace root_plotting

@@ -1,9 +1,11 @@
 #ifndef INCLUDED_TIME_PLOTTER
 #define INCLUDED_TIME_PLOTTER
 
+#ifdef ENABLE_ROOT_PLOTTING
 #include "TGraph.h"
 #include <TCanvas.h>
 #include <memory>
+#endif
 
 namespace root_plotting
 {
@@ -11,12 +13,14 @@ namespace root_plotting
 class time_plotter2
 {
 public:
+#ifdef ENABLE_ROOT_PLOTTING
     std::unique_ptr<TCanvas> c1;
     std::unique_ptr<TGraph>  gr1;
     std::unique_ptr<TGraph>  gr2;
     float                    min_y{};
     float                    max_y{};
     int                      n{};
+#endif
 
     explicit time_plotter2();
 
@@ -26,6 +30,7 @@ public:
 class time_plotter4
 {
 public:
+#ifdef ENABLE_ROOT_PLOTTING
     std::unique_ptr<TCanvas> c1;
     std::unique_ptr<TGraph>  gr1;
     std::unique_ptr<TGraph>  gr2;
@@ -34,6 +39,7 @@ public:
     float                    min_y{};
     float                    max_y{};
     int                      n{};
+#endif
 
     explicit time_plotter4();
 
