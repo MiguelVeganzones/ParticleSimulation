@@ -95,7 +95,7 @@ int barnes_hut_test()
     const auto max_depth    = 7;
     const auto box_capacity = 3;
 
-    simulation::bh_appox::barnes_hut_approximation<particle_t> simulation_a(
+    simulation::bh_approx::barnes_hut_approximation<particle_t> simulation_a(
         particles, duration, tick_t::period_duration, max_depth, box_capacity
     );
 

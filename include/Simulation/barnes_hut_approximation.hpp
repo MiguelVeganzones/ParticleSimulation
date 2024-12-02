@@ -7,11 +7,12 @@
 #include "utils.hpp"
 #include "yoshida.hpp"
 #include <chrono>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <ranges>
 #include <vector>
 
-namespace simulation::bh_appox
+namespace simulation::bh_approx
 {
 
 using namespace pm::interaction;
@@ -76,10 +77,8 @@ public:
             m_current_time += m_dt;
             std::cout << m_current_time << '\n';
 
-            // write out to csv
-            std::vector<std::vector<float>> cur_particles_fields = all_fields_read();
-            std::string base_file_path = "./data/bha";
-            write_to_csv(cur_particles_fields);
+            std::string base_file_path = "./data/test";
+            write_to_csv(base_file_path);
         }
         std::cout << count << '\n';
     }
@@ -200,56 +199,52 @@ public:
         m_particles[buffer_id][p_idx].velocity() = value;
     }
 
-    [[nodiscard]]
-    inline auto all_fields_read() const noexcept -> std::vector<std::vector<float>> const&
+    void helper_write_to_csv(
+        std::ranges::input_range auto&& particles,
+        std::string const&              filename
+    )
+        requires std::
+            is_same_v<std::ranges::range_value_t<decltype(particles)>, particle_t>
     {
-        // first list is associated with particles
-        // second list is fields of a particle
-        std::vector<std::vector<float>> return_vec;
-        auto all_particles = m_particles[s_working_copies];
-        for (int p_idx = 0; p_idx < m_simulation_size; ++p_idx) {
-            auto cur_p = all_particles[p_idx];
-            std::vector<float> particle_fields;
-
-            // CONVERT TO VEC FLOAT PROPERLY
-            particle_fields.push_back(cur_p.position());
-            particle_fields.push_back(cur_p.velocity());
-
-            return_vec.push_back(particle_fields);
-        }
-        return return_vec;
-    }
-
-    void helper_write_to_csv(const std::vector<float>& vec, const std::string& filename) {
         std::ofstream file(filename);
-        if (!file.is_open()) {
+        if (!file.is_open())
+        {
             std::cerr << "Failed to open file: " << filename << std::endl;
             return;
         }
 
-        for (size_t i = 0; i < vec.size(); ++i) {
-            file << vec[i];
-            if (i != vec.size() - 1) {
-                file << ",";
+        constexpr auto delimiter = ", ";
+        for (auto const& p : particles)
+        {
+            file << p.mass().magnitude() << delimiter;
+            for (auto v : p.velocity())
+            {
+                file << v << delimiter;
+            }
+            for (auto v : p.position())
+            {
+                file << v << delimiter;
             }
         }
-        file << "\n";
+        file << '\n';
 
         file.close();
-        if (!file) {
+        if (!file)
+        {
             std::cerr << "Error writing to file " << filename << std::endl;
-        } else {
+        }
+        else
+        {
             std::cout << "Data successfully saved to " << filename << std::endl;
         }
     }
 
-    void write_to_csv(const std::vector<std::vector<float>>& data, const std::string& baseFilename) {
-        for (size_t i = 0; i < data.size(); ++i) {
-            std::string filename = baseFilename + "_" + std::to_string(i + 1) + ".csv";
-            helper_write_to_csv(data[i], filename);
-        }
+    // This will need to go out of this class
+    void write_to_csv(const std::string& baseFilename)
+    {
+        std::string filename = baseFilename + ".csv";
+        helper_write_to_csv(m_particles[s_working_copies], filename);
     }
-
 
 
 private:
@@ -264,4 +259,4 @@ private:
     std::size_t                                          count = 0;
 };
 
-} // namespace simulation::bh_appox
+} // namespace simulation::bh_approx
