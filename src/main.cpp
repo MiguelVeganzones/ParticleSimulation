@@ -99,14 +99,14 @@ int barnes_hut_test()
         particles, duration, tick_t::period_duration, max_depth, box_capacity
     );
 
-    std::cout << "A\n";
+    std::cout << "Simulation A\n";
     simulation_a.run();
 
     simulation::bf::brute_force_computation<particle_t> simulation_b(
         particles, duration, tick_t::period_duration
     );
 
-    std::cout << "B\n";
+    std::cout << "Simulation B\n";
     simulation_b.run();
 
     return EXIT_SUCCESS;
