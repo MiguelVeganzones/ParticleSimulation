@@ -78,7 +78,7 @@ public:
 
             // write out to csv
             std::vector<std::vector<float>> cur_particles_fields = all_fields_read();
-            std::string base_file_path = "./data/bha"
+            std::string base_file_path = "./data/bha";
             write_to_csv(cur_particles_fields);
         }
         std::cout << count << '\n';
