@@ -28,7 +28,7 @@
 #include <iostream>
 #include <vector>
 
-constexpr auto universe_diameter = 50.f;
+constexpr auto universe_diameter = 200.f;
 
 template <std::floating_point F>
 auto generate_particle_pair()
@@ -89,10 +89,10 @@ int barnes_hut_test()
     using particle_t        = particle::ndparticle<N, F>;
     using tick_t            = synchronization::tick_period<std::chrono::seconds, 1>;
 
-    const auto size         = 10;
+    const auto size         = 10000;
     auto       particles    = generate_particle_set<N, F>(size);
     const auto duration     = std::chrono::seconds(100);
-    const auto max_depth    = 5;
+    const auto max_depth    = 7;
     const auto box_capacity = 3;
 
     simulation::bh_appox::barnes_hut_approximation<particle_t> simulation_a(

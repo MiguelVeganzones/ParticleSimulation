@@ -20,7 +20,7 @@ DEBUG_CXXFLAGS_GCC =	-O0 \
 			-Wpointer-arith \
 			-Wrestrict \
 			-Wshadow \
-		-Wswitch-default \
+			-Wswitch-default \
 			-Wswitch-enum \
 			-Wuninitialized \
 			-Wvla \
@@ -33,7 +33,13 @@ DEBUG_CXXFLAGS_GCC =	-O0 \
 			-ffinite-math-only \
 			-fmax-errors=5 \
 			-fsanitize=address \
+			-fsanitize=bounds \
+			-fsanitize=float-cast-overflow \
+			-fsanitize=float-divide-by-zero \
+			-fsanitize=integer-divide-by-zero \
 			-fsanitize=leak \
+			-fsanitize=null \
+			-fsanitize=signed-integer-overflow \
 			-fsanitize=undefined \
 			-ggdb3 \
 			-mavx \

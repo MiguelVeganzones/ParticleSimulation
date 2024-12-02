@@ -67,6 +67,7 @@ struct yoshida4_solver
         value_type max_acc{};
         for (std::size_t i = 1; i != s_order; ++i)
         {
+            system_->commit_buffer(i - 1);
             for (std::size_t p_idx = 0; p_idx != size_; ++p_idx)
             {
                 const auto a = system_->get_acceleration(i - 1, p_idx);

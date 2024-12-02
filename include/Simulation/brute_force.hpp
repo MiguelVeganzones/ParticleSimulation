@@ -53,6 +53,7 @@ public:
             m_current_time += m_dt;
             std::cout << m_current_time << '\n';
         }
+        std::cout << count << '\n';
     }
 
     auto get_acceleration(std::size_t copy_idx, std::size_t p_idx) noexcept
@@ -64,6 +65,7 @@ public:
         {
             if (other.id() != p.id()) [[likely]]
             {
+                ++count;
                 acc = std::move(acc) + interaction_t::acceleration_contribution(p, other);
             }
         }
@@ -72,6 +74,10 @@ public:
             std::cout << "Acc: " << acc << '\n';
         }
         return acc;
+    }
+
+    inline auto commit_buffer(std::size_t) noexcept -> void
+    {
     }
 
     [[nodiscard]]
@@ -137,6 +143,7 @@ private:
     std::array<owning_container_t, s_working_copies + 1> m_particles;
     std::size_t                                          m_simulation_size;
     solver_t                                             m_solver;
+    std::size_t                                          count = 0;
 };
 
 } // namespace simulation::bf

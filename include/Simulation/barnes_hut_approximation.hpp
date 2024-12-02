@@ -30,15 +30,15 @@ public:
     using depth_t        = typename tree_t::depth_t;
     using size_type      = typename tree_t::size_type;
     using boundary_t     = typename tree_t::boundary_t;
-    using duration_t     = std::chrono::seconds;
     using value_type     = typename particle_t::value_type;
     using acceleration_t = typename particle_t::acceleration_t;
     using position_t     = typename particle_t::position_t;
     using velocity_t     = typename particle_t::velocity_t;
     using mass_t         = typename particle_t::mass_t;
+    using duration_t     = std::chrono::duration<value_type>;
     using owning_container_t                      = std::vector<particle_t>;
     inline static constexpr auto s_working_copies = solver_t::s_working_copies;
-    inline static constexpr auto s_theta          = value_type{ 0.5 };
+    inline static constexpr auto s_theta          = value_type{ 0.4 };
 
     // TODO: Improve interface, too many parameters, implement proper move ctor and move
     // them in.
@@ -66,18 +66,15 @@ public:
 
     auto run() noexcept -> void
     {
+        m_ndtrees[0].cache_summary();
         std::cout << m_ndtrees[0] << '\n';
         while (m_current_time < m_simulation_duration)
         {
-            for (auto& t : m_ndtrees)
-            {
-                t.reorganize();
-                t.cache_summary();
-            }
             m_solver.run();
             m_current_time += m_dt;
             std::cout << m_current_time << '\n';
         }
+        std::cout << count << '\n';
     }
 
     auto get_acceleration(size_type copy_idx, std::size_t p_idx) noexcept
@@ -95,17 +92,19 @@ public:
     [[nodiscard]]
     auto get_box_contribution(particle_t const& p, box_t const& b) -> acceleration_t
     {
-        if (!b.summary().has_value())
+        if (!b.summary().has_value() || b.summary().value().id() == p.id())
         {
             return acceleration_t{};
         }
-        const auto s = pm::utils::l2_norm(b.space_diagonal().value());
-        const auto d = pm::utils::l2_norm(
-            pm::utils::distance(p.position(), b.summary().value().position()).value()
+        auto const summary = b.summary().value();
+        const auto s       = pm::utils::l2_norm(b.space_diagonal().value());
+        const auto d       = pm::utils::l2_norm(
+            pm::utils::distance(p.position(), summary.position()).value()
         );
         if ((s / d) < s_theta)
         {
-            return interaction_t::acceleration_contribution(p, b.summary().value());
+            ++count;
+            return interaction_t::acceleration_contribution(p, summary);
         }
         else
         {
@@ -123,6 +122,7 @@ public:
                 {
                     if (other->id() != p.id()) [[likely]]
                     {
+                        ++count;
                         acc = std::move(acc) +
                               interaction_t::acceleration_contribution(p, *other);
                     }
@@ -130,6 +130,12 @@ public:
             }
             return acc;
         }
+    }
+
+    inline auto commit_buffer(std::size_t working_copy_idx) noexcept -> void
+    {
+        m_ndtrees[working_copy_idx].reorganize();
+        m_ndtrees[working_copy_idx].cache_summary();
     }
 
     [[nodiscard]]
@@ -196,6 +202,7 @@ private:
     std::array<tree_t, s_working_copies>                 m_ndtrees;
     size_type                                            m_simulation_size;
     solver_t                                             m_solver;
+    std::size_t                                          count = 0;
 };
 
 } // namespace simulation::bh_appox
