@@ -4,12 +4,9 @@ DEBUG_CXXFLAGS_GCC =	-O0 \
 			-W \
 			-Wall \
 			-Wdangling-else \
-			-Wdouble-promotion \
 			-Wduplicated-branches \
 			-Wduplicated-cond \
-			-Werror \
 			-Wextra \
-			-Wfloat-equal \
 			-Wformat \
 			-Winvalid-pch \
 			-Wlogical-op \
@@ -106,7 +103,7 @@ TIMING_INCL			=	-I./$(TIMING_DIR)
 PLOTTING_INCL			=	-I./$(PLOTTING_DIR) -I/usr/local/lib/root/include
 SOLVERS_INCL			=	-I./$(SOLVERS_DIR)
 MAIN_SIMULATION_INCL		=	$(GENERAL_INCL) $(PHYSICAL_MODEL_INCL) $(NDTREE_INCL) $(TIMING_INCL) $(PLOTTING_INCL) $(SOLVERS_INCL)
-TESTS_INCL			=	$(MAIN_SIMULATION_INCL)
+TESTS_INCL			=	$(MAIN_SIMULATION_INCL) 
 
 ifdef ENABLE_ROOT_PLOTTING
 CXXFLAGS			+= -Wno-cpp

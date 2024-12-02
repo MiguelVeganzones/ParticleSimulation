@@ -4,25 +4,25 @@
 
 To run these tests you'll need to have Bazel and Google tests installed
 
-### Installing Bazel
 
-To install bazel in an ubuntu Linux OS you'll need to follow the next steps extracted from the [Bazel installation guide](https://bazel.build/install?hl=es-419)
-```
-sudo apt install apt-transport-https curl gnupg -y
-curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
-sudo mv bazel-archive-keyring.gpg /usr/share/keyrings
-echo "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
-```
-Then install it with sudo
-```
-sudo apt update && sudo apt install bazel
-```
 ### Installing gtests (googletest)
 
-Install it with sudo 
+Install it with sudo and get the directory where googletest is located
 ```
 sudo apt install googletest
+whereis googletest
 ```
+Build it as a shared library
+```
+cd /usr/src/googletest/googletest
+sudo cmake -DBUILD_SHARED_LIBS=ON .
+sudo make
+```
+Then you can copy the .so file to one of libraries that your linker searches on
+```
+sudo cp libgtest*.so /usr/lib
+```
+You might need to refresh the linker with `sudo ldconfig`
 
 ## How to run the tests
 
