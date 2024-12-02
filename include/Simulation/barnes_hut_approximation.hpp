@@ -52,6 +52,7 @@ public:
     ) :
         m_simulation_duration{ std::chrono::duration_cast<duration_t>(sim_duration) },
         m_dt{ std::chrono::duration_cast<duration_t>(sim_dt) },
+        // TODO: Hardcoded solver running_copies = 4
         m_particles{ particles, particles, particles, particles, particles }, // TODO Fix
         m_ndtrees{
             tree_t(m_particles[0], tree_max_depth, tree_box_capacity, tree_bounds),
