@@ -19,7 +19,7 @@ DEBUG_CXXFLAGS_GCC =	-O0 \
 			-Wpointer-arith \
 			-Wrestrict \
 			-Wshadow \
-		-Wswitch-default \
+			-Wswitch-default \
 			-Wswitch-enum \
 			-Wuninitialized \
 			-Wvla \
@@ -76,8 +76,6 @@ FULL_RELEASE_CXXFLAGS = -fdiagnostics-color=always \
 			-std=c++23
 			#-fno-exceptions
 
-LDFLAGS = -lgtest -lgtest_main -lpthread
-
 RELEASE ?= 0
 ifeq (${RELEASE}, 1)
     CXXFLAGS = ${RELEASE_CXXFLAGS}
@@ -98,8 +96,7 @@ CONTAINERS_DIR		    =	$(INCLUDE_DIR)/Containers
 TIMING_DIR		    =	$(INCLUDE_DIR)/Timing
 PHYSICAL_MODEL_DIR	    =	$(INCLUDE_DIR)/PhysicalModel
 SOLVERS_DIR		    =	$(INCLUDE_DIR)/Solvers
-TEST_DIR 			= tests
-TEST_OUT_DIR 		= bin/tests
+TEST_DIR 		    =	tests
 
 UTILITY_INCL			=
 GENERAL_INCL			=	-I./$(UTILITY_DIR) $(UTILITY_INCL)
@@ -109,8 +106,10 @@ TIMING_INCL			=	-I./$(TIMING_DIR)
 PLOTTING_INCL			=	-I./$(PLOTTING_DIR) -I/usr/local/lib/root/include
 SOLVERS_INCL			=	-I./$(SOLVERS_DIR)
 MAIN_SIMULATION_INCL		=	$(GENERAL_INCL) $(PHYSICAL_MODEL_INCL) $(NDTREE_INCL) $(TIMING_INCL) $(PLOTTING_INCL) $(SOLVERS_INCL)
+TESTS_INCL			=	$(MAIN_SIMULATION_INCL)
 
 ifdef ENABLE_ROOT_PLOTTING
+CXXFLAGS			+= -Wno-cpp
 PLOTTING_LIB			= `root-config --libs`
 endif
 ifdef ENABLE_BOOST_LOGGING
@@ -120,11 +119,11 @@ else
 LOG_LIB =
 endif
 MAIN_SIMULATION_LIB		= $(LOG_LIB) $(PLOTTING_LIB)
+TESTS_LIB = -lgtest -lgtest_main -lpthread
 
 ifdef ENABLE_ROOT_PLOTTING
 ROOT_FLAGS			= `root-config --cflags` -Wno-cpp
 endif
-
 
 #=================================================================================================
 all: main plotting test
@@ -136,7 +135,7 @@ main: $(PLOTTING_DIR)/$(OUT_DIR)/plotting.o $(PLOTTING_DIR)/$(OUT_DIR)/time_plot
 ${OUT_DIR}/main.o: $(SRC_DIR)/*.cpp $(INCLUDE_DIR)/*/*.hpp
 	@echo -e Building $@..."\n"
 	@mkdir -p ${OUT_DIR}
-	$(CXX) $(CXXFLAGS) -Wno-cpp $(MAIN_SIMULATION_INCL) $(MAIN_SIMULATION_LIB) $(PLOTTING_DIR)/$(OUT_DIR)/*.o $(SRC_DIR)/main.cpp -o $@
+	$(CXX) $(CXXFLAGS) $(MAIN_SIMULATION_INCL) $(MAIN_SIMULATION_LIB) $(PLOTTING_DIR)/$(OUT_DIR)/*.o $(SRC_DIR)/main.cpp -o $@
 	@echo -e Built $@ successfully."\n"
 #=============================================================
 
@@ -173,8 +172,12 @@ $(PLOTTING_DIR)/$(OUT_DIR)/scatter_plot.o: $(PLOTTING_DIR)/scatter_plot.cpp $(PL
 	@echo -e Built $@ successfully."\n"
 #=============================================================
 
-test: ${TEST_OUT_DIR}/main.o
+#=============================================================
+tests: ${TEST_DIR}/$(OUT_DIR)/tests.o
 
-${TEST_OUT_DIR}/main.o: $(TEST_DIR)/test.cpp $(INCLUDE_DIR)/*/*.hpp
-	@mkdir -p $(TEST_OUT_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+${TEST_DIR}/$(OUT_DIR)/tests.o: $(TEST_DIR)/tests.cpp $(INCLUDE_DIR)/*/*.hpp
+	@echo -e Building $@..."\n"
+	@mkdir -p $(TEST_DIR)/$(OUT_DIR)
+	$(CXX) $(CXXFLAGS) $(TESTS_INCL) $(TESTS_LIB) -o $(TEST_DIR)/tests.cpp -o $@
+	@echo -e Built $@ successfully."\n"
+#=============================================================
