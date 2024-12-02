@@ -3,7 +3,6 @@ CXX = g++
 DEBUG_CXXFLAGS_GCC =	-O0 \
 			-W \
 			-Wall \
-			-Wconversion \
 			-Wdangling-else \
 			-Wdouble-promotion \
 			-Wduplicated-branches \
@@ -50,7 +49,6 @@ RELEASE_CXXFLAGS =	-fdiagnostics-color=always \
 			-Wextra \
 			-Wshadow \
 			-ffinite-math-only \
-			-Wconversion \
 			-Wuninitialized \
 			-Wmisleading-indentation \
 			-Werror \
@@ -69,7 +67,6 @@ FULL_RELEASE_CXXFLAGS = -fdiagnostics-color=always \
 			-Wall \
 			-Wextra \
 			-Wshadow \
-			-Wconversion \
 			-Wmisleading-indentation \
 			-Werror \
 			-fstrength-reduce \
@@ -78,6 +75,8 @@ FULL_RELEASE_CXXFLAGS = -fdiagnostics-color=always \
 			-fconcepts-diagnostics-depth=3 \
 			-std=c++23
 			#-fno-exceptions
+
+LDFLAGS = -lgtest -lgtest_main -lpthread
 
 RELEASE ?= 0
 ifeq (${RELEASE}, 1)
@@ -99,13 +98,15 @@ CONTAINERS_DIR		    =	$(INCLUDE_DIR)/Containers
 TIMING_DIR		    =	$(INCLUDE_DIR)/Timing
 PHYSICAL_MODEL_DIR	    =	$(INCLUDE_DIR)/PhysicalModel
 SOLVERS_DIR		    =	$(INCLUDE_DIR)/Solvers
+TEST_DIR 			= tests
+TEST_OUT_DIR 		= bin/tests
 
 UTILITY_INCL			=
 GENERAL_INCL			=	-I./$(UTILITY_DIR) $(UTILITY_INCL)
 PHYSICAL_MODEL_INCL		=	-I./$(PHYSICAL_MODEL_DIR)
 NDTREE_INCL			=	-I./$(CONTAINERS_DIR)
 TIMING_INCL			=	-I./$(TIMING_DIR)
-PLOTTING_INCL			=	-I./$(PLOTTING_DIR)
+PLOTTING_INCL			=	-I./$(PLOTTING_DIR) -I/usr/local/lib/root/include
 SOLVERS_INCL			=	-I./$(SOLVERS_DIR)
 MAIN_SIMULATION_INCL		=	$(GENERAL_INCL) $(PHYSICAL_MODEL_INCL) $(NDTREE_INCL) $(TIMING_INCL) $(PLOTTING_INCL) $(SOLVERS_INCL)
 
@@ -126,7 +127,7 @@ endif
 
 
 #=================================================================================================
-all: main plotting
+all: main plotting test
 #=============================================================
 
 #=============================================================
@@ -171,3 +172,9 @@ $(PLOTTING_DIR)/$(OUT_DIR)/scatter_plot.o: $(PLOTTING_DIR)/scatter_plot.cpp $(PL
 	$(CXX) $(ROOT_FLAGS) $(PLOTTING_INCL) $(PLOTTING_LIB) -c $(PLOTTING_DIR)/scatter_plot.cpp -o $@
 	@echo -e Built $@ successfully."\n"
 #=============================================================
+
+test: ${TEST_OUT_DIR}/main.o
+
+${TEST_OUT_DIR}/main.o: $(TEST_DIR)/test.cpp $(INCLUDE_DIR)/*/*.hpp
+	@mkdir -p $(TEST_OUT_DIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@

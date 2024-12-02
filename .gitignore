@@ -12,6 +12,7 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+/bazel-*
 
 # VS Code files for those working on multiple tools
 .vscode/*
