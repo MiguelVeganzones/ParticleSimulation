@@ -177,9 +177,15 @@ auto merge(std::ranges::input_range auto&& particles) noexcept
     using runtime_1d_unit_t = typename particle_t::runtime_1d_unit_t;
     using runtime_nd_unit_t = typename particle_t::runtime_nd_unit_t;
 
-    if (std::ranges::begin(particles) == std::ranges::end(particles))
+    const auto size =
+        std::distance(std::ranges::begin(particles), std::ranges::end(particles));
+    if (size == 0)
     {
         return std::nullopt;
+    }
+    else if (size == 1)
+    {
+        return *particles.begin();
     }
     const auto total_mass = mass_t(std::ranges::fold_left(
         particles,

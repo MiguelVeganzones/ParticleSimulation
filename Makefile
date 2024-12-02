@@ -29,7 +29,13 @@ DEBUG_CXXFLAGS_GCC =	-O0 \
 			-ffinite-math-only \
 			-fmax-errors=5 \
 			-fsanitize=address \
+			-fsanitize=bounds \
+			-fsanitize=float-cast-overflow \
+			-fsanitize=float-divide-by-zero \
+			-fsanitize=integer-divide-by-zero \
 			-fsanitize=leak \
+			-fsanitize=null \
+			-fsanitize=signed-integer-overflow \
 			-fsanitize=undefined \
 			-ggdb3 \
 			-mavx \
@@ -94,6 +100,7 @@ TIMING_DIR		    =	$(INCLUDE_DIR)/Timing
 PHYSICAL_MODEL_DIR	    =	$(INCLUDE_DIR)/PhysicalModel
 SOLVERS_DIR		    =	$(INCLUDE_DIR)/Solvers
 TEST_DIR 		    =	tests
+SIMULATION_DIR		    =	$(INCLUDE_DIR)/Simulation
 
 UTILITY_INCL			=
 GENERAL_INCL			=	-I./$(UTILITY_DIR) $(UTILITY_INCL)
@@ -102,8 +109,8 @@ NDTREE_INCL			=	-I./$(CONTAINERS_DIR)
 TIMING_INCL			=	-I./$(TIMING_DIR)
 PLOTTING_INCL			=	-I./$(PLOTTING_DIR) -I/usr/local/lib/root/include
 SOLVERS_INCL			=	-I./$(SOLVERS_DIR)
-MAIN_SIMULATION_INCL		=	$(GENERAL_INCL) $(PHYSICAL_MODEL_INCL) $(NDTREE_INCL) $(TIMING_INCL) $(PLOTTING_INCL) $(SOLVERS_INCL)
-TESTS_INCL			=	$(MAIN_SIMULATION_INCL) 
+SIMULATION_INCL			=	-I./$(SIMULATION_DIR)
+MAIN_SIMULATION_INCL		=	$(GENERAL_INCL) $(PHYSICAL_MODEL_INCL) $(NDTREE_INCL) $(TIMING_INCL) $(PLOTTING_INCL) $(SOLVERS_INCL) $(SIMULATION_INCL)
 
 ifdef ENABLE_ROOT_PLOTTING
 CXXFLAGS			+= -Wno-cpp
