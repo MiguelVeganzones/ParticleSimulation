@@ -1,6 +1,7 @@
 #pragma once
 
 #include "concepts.hpp"
+#include "csv_logger.hpp"
 #include "ndtree.hpp"
 #include "particle_concepts.hpp"
 #include "particle_interaction.hpp"
@@ -8,7 +9,7 @@
 #include "yoshida.hpp"
 #include <chrono>
 #include <iostream>
-#include <fstream>
+#include <sstream>
 #include <vector>
 
 namespace simulation::bh_appox
@@ -76,11 +77,9 @@ public:
             m_solver.run();
             m_current_time += m_dt;
             std::cout << m_current_time << '\n';
-
-            // write out to csv
-            std::vector<std::vector<float>> cur_particles_fields = all_fields_read();
-            std::string base_file_path = "./data/bha";
-            write_to_csv(cur_particles_fields);
+            std::ostringstream filename;
+            filename << "execution_data_" << m_current_time;
+            logger::csv::write_to_csv(m_particles[s_working_copies], filename.str());
         }
         std::cout << count << '\n';
     }
@@ -200,58 +199,6 @@ public:
     {
         m_particles[buffer_id][p_idx].velocity() = value;
     }
-
-    [[nodiscard]]
-    inline auto all_fields_read() const noexcept -> std::vector<std::vector<float>> const&
-    {
-        // first list is associated with particles
-        // second list is fields of a particle
-        std::vector<std::vector<float>> return_vec;
-        auto all_particles = m_particles[s_working_copies];
-        for (int p_idx = 0; p_idx < m_simulation_size; ++p_idx) {
-            auto cur_p = all_particles[p_idx];
-            std::vector<float> particle_fields;
-
-            // CONVERT TO VEC FLOAT PROPERLY
-            particle_fields.push_back(cur_p.position());
-            particle_fields.push_back(cur_p.velocity());
-
-            return_vec.push_back(particle_fields);
-        }
-        return return_vec;
-    }
-
-    void helper_write_to_csv(const std::vector<float>& vec, const std::string& filename) {
-        std::ofstream file(filename);
-        if (!file.is_open()) {
-            std::cerr << "Failed to open file: " << filename << std::endl;
-            return;
-        }
-
-        for (size_t i = 0; i < vec.size(); ++i) {
-            file << vec[i];
-            if (i != vec.size() - 1) {
-                file << ",";
-            }
-        }
-        file << "\n";
-
-        file.close();
-        if (!file) {
-            std::cerr << "Error writing to file " << filename << std::endl;
-        } else {
-            std::cout << "Data successfully saved to " << filename << std::endl;
-        }
-    }
-
-    void write_to_csv(const std::vector<std::vector<float>>& data, const std::string& baseFilename) {
-        for (size_t i = 0; i < data.size(); ++i) {
-            std::string filename = baseFilename + "_" + std::to_string(i + 1) + ".csv";
-            helper_write_to_csv(data[i], filename);
-        }
-    }
-
-
 
 private:
     // TODO Reorder
