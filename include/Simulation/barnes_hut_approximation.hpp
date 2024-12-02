@@ -193,6 +193,23 @@ public:
         m_particles[buffer_id][p_idx].velocity() = value;
     }
 
+     [[nodiscard]]
+    inline auto all_fields_read() const noexcept -> std::vector<vector<float>> const&
+    {
+        vector<vector<float>> return_vec;
+        vector<float> positions_vec;
+        vector<float> velocities_vec;
+        auto all_particles = m_particles[s_working_copies];
+        for (int p_idx = 0; p_idx < m_simulation_size; ++p_idx) {
+            auto cur_p = all_particles[p_idx];
+            positions_vec.push_back(cur_p.position());
+            velocities_vec.push_back(cur_p.velocity());
+        }
+        return_vec.push_back(positions_vec);
+        return_vec.push_back(velocities_vec);
+        return return_vec;
+    }
+
 private:
     // TODO Reorder
     duration_t                                           m_current_time{};
