@@ -65,6 +65,15 @@ RELEASE_CXXFLAGS =	-fdiagnostics-color=always \
 			-mavx \
 			-march=native \
 			-fstrength-reduce \
+			-fsanitize=address \
+			-fsanitize=bounds \
+			-fsanitize=float-cast-overflow \
+			-fsanitize=float-divide-by-zero \
+			-fsanitize=integer-divide-by-zero \
+			-fsanitize=leak \
+			-fsanitize=null \
+			-fsanitize=signed-integer-overflow \
+			-fsanitize=undefined \
 			-fbounds-check \
 			-fconcepts-diagnostics-depth=3 \
 			-std=c++23
@@ -85,19 +94,21 @@ FULL_RELEASE_CXXFLAGS = -fdiagnostics-color=always \
 			-mavx \
 			-march=native \
 			-fconcepts-diagnostics-depth=3 \
+			-fno-math-errno \
+			-fno-trapping-math \
 			-std=c++23
 			#-fno-exceptions
 
-RELEASE ?= 0
-ifeq (${RELEASE}, 1)
+OPTIMIZATION_LEVEL ?= 0
+ifeq (${OPTIMIZATION_LEVEL}, 1)
     CXXFLAGS = ${RELEASE_CXXFLAGS}
-	OUT_DIR = bin/release
-else ifeq (${RELEASE}, 2)
+    OUT_DIR = bin/release
+else ifeq (${OPTIMIZATION_LEVEL}, 2)
     CXXFLAGS = ${FULL_RELEASE_CXXFLAGS}
-	OUT_DIR = bin/full_release
+    OUT_DIR = bin/full_release
 else
     CXXFLAGS = ${DEBUG_CXXFLAGS_GCC}
-	OUT_DIR = bin/debug
+    OUT_DIR = bin/debug
 endif
 
 SRC_DIR			    =	src
@@ -122,28 +133,34 @@ SIMULATION_INCL			=	-I./$(SIMULATION_DIR)
 SIMULATION_LOGGERS_INCL		=	-I./$(SIMULATION_LOGGERS_DIR)
 MAIN_SIMULATION_INCL		=	$(GENERAL_INCL) $(PHYSICAL_MODEL_INCL) $(NDTREE_INCL) $(TIMING_INCL) $(PLOTTING_INCL) $(SOLVERS_INCL) $(SIMULATION_INCL) $(SIMULATION_LOGGERS_INCL)
 
-ifdef ENABLE_UNIT_SYSTEM
+ENABLE_UNIT_SYSTEM ?= 0
+ifeq (${ENABLE_UNIT_SYSTEM}, 1)
 CXXFLAGS			+= -DUSE_UNIT_SYSTEM
 endif
-ifdef ENABLE_ROOT_PLOTTING
-CXXFLAGS			+= -Wno-cpp
+ENABLE_ROOT_PLOTTING ?= 0
+ifeq (${ENABLE_ROOT_PLOTTING}, 1)
+CXXFLAGS			+= -Wno-cpp -DUSE_ROOT_PLOTTNG
 PLOTTING_LIB			= `root-config --libs`
+ROOT_FLAGS			= `root-config --cflags` -Wno-cpp
 endif
-ifdef ENABLE_BOOST_LOGGING
+ENABLE_BOOST_LOGGING ?= 0
+ifeq (${ENABLE_BOOST_LOGGING}, 1)
 CXXFLAGS			+= -DUSE_BOOST_LOGGING
 LOG_LIB				= -lboost_log -lboost_thread -lboost_system -lpthread
 else
 LOG_LIB =
 endif
+ENABLE_FFAST_MATH ?= 0
+ifeq (${ENABLE_FFAST_MATH}, 1)
+CXXFLAGS			+= -ffast-math
+endif
+
 MAIN_SIMULATION_LIB		= $(LOG_LIB) $(PLOTTING_LIB)
 
-ifdef ENABLE_ROOT_PLOTTING
-ROOT_FLAGS			= `root-config --cflags` -Wno-cpp
-endif
 
 
 #=================================================================================================
-all: main plotting
+all: main tests
 #=============================================================
 
 #=============================================================

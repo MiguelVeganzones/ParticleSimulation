@@ -39,22 +39,44 @@ Instructions to get the project up and running on your local machine.
 ### Building the Project
 
 This project can be compiled using the provided Makefile.
-Execute `make main [OPTIONS]` to build the project.
+Execute `make main [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` to build the project.
+Execute `make tests [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` to build the tests
+project. Requires GTest.
+Similarly, `make [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` will build both.
+
+#### Optimization Level
+
+The project supports three levels of optimization, which is controlled through
+the optional build flag `OPTIMIZATION_LEVEL`. Where x is one of {0, 1, 2}.
+0: Debug mode. Enables all the supported compiler checks and sanitizers. It is
+the default mode. Should not be used for heavy simulations due to performance
+issues.
+1: Release mode: Enables compiler optimization. Sanitizers are still
+enabled.
+2: Full release mode: Enable full compiler optimization and disables all sanitizers. Enables some floating point math (generally safe) optimizations.
 
 #### Build Options
-
-The `[OPTIONS]` argument to the `make` command are used to enable parts of the project that might require dependencies.
+The optional build flags `OPTIONS` are used to enable parts of the project that might require dependencies or might not make sense always.
 The supported arguments are
-- ENABLE_UNIT_SYSTEM: Enables a basic unit system that provides type checking of
-  compile time units and formatting.
-- ENABLE_ROOT_PLOTTING: Enables the root plotting backend. Default is not plotting. Requires the root library properly configured (root header files and libraries must be in the include and lib search path).
-- ENABLE_BOOST_LOGGING: Enables boost log as the backend for logging. Default backend is iostream. Requires Boost properly configured (boost header files and libraries must be in the include and lib search path)
+- ENABLE_UNIT_SYSTEM=1: Enables a basic unit system that provides type checking of
+  compile time units and formatting. Defaults to 0.
+- ENABLE_ROOT_PLOTTING=1: Enables the root plotting backend. Default is not plotting. Requires the root library properly configured (root header files and libraries must be in the include and lib search path). Defaults to 0.
+- ENABLE_BOOST_LOGGING=1: Enables boost log as the backend for logging. Default backend is iostream. Requires Boost properly configured (boost header files and libraries must be in the include and lib search path). Defaults to 0.
+- ENABLE_FFAST_MATH: Adds -ffast-math to compiler flags. Use carefully. Defaults
+  to 0.
 
+#### Example
+Using all flags can be done with:
+`make main OPTIMIZATION_LEVEL=2 ENABLE_UNIT_SYSTEM=1 ENABLE_BOOST_LOGGING=1 ENABLE_ROOT_PLOTTING=1 ENABLE_FFAST_MATH=1`
+This is meant to be an example rather than a sensible way of executing the code.
+Leaving out any flag or setting equal to 0 (or any other number) disables the
+respective conditional compilation.
 
 ## Usage
-- How to run the simulation.
-- Explanation of command-line arguments (if any).
-- Example usage scenarios.
+The code can be compiled by running:
+`make main [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]`
+This will generate the executable './bin/[bin,release,full_release]/main.o',
+which can be directly executed (by running './bin/[bin,release,full_release]/main.o').
 
 ## Configuration
 - Details about configuration files (if applicable).
