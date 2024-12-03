@@ -35,8 +35,19 @@ Instructions to get the project up and running on your local machine.
 - Instructions for installing dependencies.
 
 ### Building the Project
-- How to compile the project using CMake or any other build system.
-- Example commands to run in the terminal.
+
+This project can be compiled using the provided Makefile.
+Execute `make main [OPTIONS]` to build the project.
+
+#### Build Options
+
+The `[OPTIONS]` argument to the `make` command are used to enable parts of the project that might require dependencies.
+The supported arguments are
+- ENABLE_UNIT_SYSTEM: Enables a basic unit system that provides type checking of
+  compile time units and formatting.
+- ENABLE_ROOT_PLOTTING: Enables the root plotting backend. Default is not plotting. Requires the root library properly configured (root header files and libraries must be in the include and lib search path).
+- ENABLE_BOOST_LOGGING: Enables boost log as the backend for logging. Default backend is iostream. Requires Boost properly configured (boost header files and libraries must be in the include and lib search path)
+
 
 ## Usage
 - How to run the simulation.
