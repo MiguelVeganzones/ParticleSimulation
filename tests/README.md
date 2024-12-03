@@ -28,6 +28,5 @@ You might need to refresh the linker with `sudo ldconfig`
 
 After installing bazel and google tests, to run the tests in the tests folder just run
 ``` 
-bazel test --cxxopt=-std=c++14 --test_output=all //tests:test
+make tests
 ```
-To run it with a verbose error just run the `--sandbox_debug` flag in the previous command
