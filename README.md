@@ -16,9 +16,19 @@
 10. [Acknowledgments](#acknowledgments)
 
 ## Introduction
-The Barnes-Hut simulation is an approximation algorithm created by Josh Barnes and Piet Hut in 1986 intended for the simulation of large clusters of particles, such as galaxies or solar systems. To avoid re-computing gravitational forces, the algorithm uses a tree structure to group nearby particles and thus also force effects. This tree structure reduces the complexity of the N-body problem from O(N^2) to O(NlogN).
+The Barnes-Hut simulation is an approximation algorithm for the n-body problem intended for the simulation of large clusters of particles, such as galaxies.
+This algorithm uses a nd-tree to cluster particles spatially.
+This allows treating local clusters as a single particle when computing their gravitational interaction with another particle that is far away enough.
+This approximation reduces the complexity of the N-body problem from O(N^2) to O(NlogN) where N is the amount of particles in the system.
+This approximation is necessary to scale n-body simulations to large particle
+systems.
 
-Generally, the Barnes-Hut simulation holds importance in its clustering abilities and reduced complexity. Fields such as astrophysics and engineering use these ideas for the handling of a large number of particles or bodies, as they scale well with large values of N. Without this scalability, simulations and clustering algorithms would require far too large of computational resources.
+The precision of force calculations can be arbitrarily high (compared to the
+brute force computation) through a configuration parameter (theta).
+This software is not well tested enough yet, but sensible values of theta
+approximate the force up to a 99.9%.
+This may be good enough for short-running simulations, but due to the chaotic
+nature of the n-body problem it is not suit for long-running simulations.
 
 ## Features
 - Description of the main features of the simulation.
@@ -26,15 +36,19 @@ Generally, the Barnes-Hut simulation holds importance in its clustering abilitie
 - Visualization options (if any).
 
 ## Getting Started
-Instructions to get the project up and running on your local machine.
+Clone the project with `git clone https://gitlab.lrz.de/00000000014BECEA/barnes-hut-galaxy-simulation.git` \
+Build with make: `make main`\
+Execute as: './bin/debug/main.o'
 
 ### Prerequisites
-- List any software, libraries, or tools needed (e.g., C++ compiler, CMake).
-- Mention the supported operating systems.
+This project uses C++23 features and thus, a modern compiler is needed.
+Currently only gcc-13 and gcc-14 are supported.\
+Make is needed as part of the build chain too, not any specific version.\
+ROOT (CERN) ("Root" from now on) is an optional dependency for real-time plotting. Root plotting functionality are conditionally compiled.\
+Boost is an optional dependency for logging. Boost logging is conditionally compiled.\
 
 ### Installation
-- Steps to clone the repository.
-- Instructions for installing dependencies.
+Clone the project with `git clone https://gitlab.lrz.de/00000000014BECEA/barnes-hut-galaxy-simulation.git` \
 
 ### Building the Project
 
@@ -43,25 +57,7 @@ Execute `make main [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` to build the project.\
 Execute `make tests [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` to build the tests
 project. Requires GTest.\
 Similarly, `make [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` will build both.
-
-#### Optimization Level
-
-The project supports three levels of optimization, which is controlled through
-the optional build flag `OPTIMIZATION_LEVEL`. Where x is one of {0, 1, 2}.
-- 0: Debug mode. Enables all the supported compiler checks and sanitizers. It is
-the default mode. Should not be used for heavy simulations due to performance
-issues.
-- 1: Release mode: Enables compiler optimization. Sanitizers are still
-enabled. Should be the preferred execution mode in general.
-- 2: Full release mode: Enable full compiler optimization and disables all sanitizers. Enables some floating point math (generally safe) optimizations. Execution mode for larger simulations.
-
-#### Build Options
-The optional build flags `OPTIONS` are used to enable parts of the project that might require dependencies or might not make sense always.
-The supported arguments are
-- ENABLE_UNIT_SYSTEM={0,1}: Disables/Enables a basic unit system that provides type checking of compile time units and formatting. Defaults to 0.
-- ENABLE_ROOT_PLOTTING={0,1}: Disables/Enables the root plotting backend. Default is not plotting. Enabling this option requires the root library properly configured (root header files and libraries must be in the include and lib search path). Defaults to 0.
-- ENABLE_BOOST_LOGGING={0,1}: Disables/Enables boost log as the backend for logging. Default backend is iostream. Enabling this option requires Boost properly configured (boost header files and libraries must be in the include and lib search path). Defaults to 0.
-- ENABLE_FFAST_MATH={0,1}: Disables/Enables -ffast-math compiler flags. Use carefully. Defaults to 0.
+Refer to [Configuration](#Configuration) for further details.
 
 #### Example
 Using all flags can be done with:\
@@ -76,16 +72,32 @@ The code can be compiled by running:
 This will generate the executable './bin/[bin,release,full_release]/main.o', which can be directly executed (by running './bin/[bin,release,full_release]/main.o').
 
 ## Configuration
-- Details about configuration files (if applicable).
-- Explanation of the parameters that can be set.
+#### Optimization Level
+
+The project supports three levels of optimization, which is controlled through
+the optional build flag `OPTIMIZATION_LEVEL`. Where x is one of {0, 1, 2}.
+- 0: Debug mode. Enables all the supported compiler checks and sanitizers. It is
+the default mode. Should not be used for heavy simulations due to performance
+issues.
+- 1: Release mode: Enables compiler optimization. Sanitizers are still
+enabled. Should be the preferred execution mode in general.
+- 2: Full release mode: Enable full compiler optimization and disables all sanitizers. Enables some floating point math (generally safe) optimizations. Execution mode for larger simulations.
+
+#### Build Options
+The optional build flags `OPTIONS` are used to enable parts of the project that might require dependencies or might not make sense always.
+The supported arguments are
+- `ENABLE_UNIT_SYSTEM={0,1}`: Disables/Enables a basic unit system that provides type checking of compile time units and formatting. Defaults to 0.
+- `ENABLE_ROOT_PLOTTING={0,1}`: Disables/Enables the root plotting backend. Default is not plotting. Enabling this option requires the root library properly configured (root header files and libraries must be in the include and lib search path). Defaults to 0.
+- `ENABLE_BOOST_LOGGING={0,1}`: Disables/Enables boost log as the backend for logging. Default backend is iostream. Enabling this option requires Boost properly configured (boost header files and libraries must be in the include and lib search path). Defaults to 0.
+- `ENABLE_FFAST_MATH={0,1}`: Disables/Enables -ffast-math compiler flags. Use carefully. Defaults to 0.
+
 
 ## Testing
-- How to run the tests included with the project.
-- Instructions for running unit tests or integration tests.
+Compile: `make tests [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` \
+Execute: './tests/bin/{debug,release,full_release}/tests.o'
 
 ## Performance
-- Overview of expected performance metrics.
-- Benchmarks or comparisons to other implementations (if available).
+ToDo
 
 ## Contributing
 - Guidelines for contributing to the project.
