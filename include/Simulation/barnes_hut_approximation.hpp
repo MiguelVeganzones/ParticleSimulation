@@ -1,6 +1,7 @@
 #pragma once
 
 #include "concepts.hpp"
+#include "csv_logger.hpp"
 #include "ndtree.hpp"
 #include "particle_concepts.hpp"
 #include "particle_interaction.hpp"
@@ -9,7 +10,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
-#include <ranges>
+#include <sstream>
 #include <vector>
 
 namespace simulation::bh_approx
@@ -55,6 +56,7 @@ public:
     ) :
         m_simulation_duration{ std::chrono::duration_cast<duration_t>(sim_duration) },
         m_dt{ std::chrono::duration_cast<duration_t>(sim_dt) },
+        // TODO: Hardcoded solver running_copies = 4
         m_particles{ particles, particles, particles, particles, particles }, // TODO Fix
         m_ndtrees{
             tree_t(m_particles[0], tree_max_depth, tree_box_capacity, tree_bounds),
@@ -76,9 +78,9 @@ public:
             m_solver.run();
             m_current_time += m_dt;
             std::cout << m_current_time << '\n';
-
-            std::string base_file_path = "./data/test";
-            write_to_csv(base_file_path);
+            std::ostringstream filename;
+            filename << "execution_data_" << m_current_time;
+            logger::csv::write_to_csv(m_particles[s_working_copies], filename.str());
         }
         std::cout << count << '\n';
     }
@@ -198,54 +200,6 @@ public:
     {
         m_particles[buffer_id][p_idx].velocity() = value;
     }
-
-    void helper_write_to_csv(
-        std::ranges::input_range auto&& particles,
-        std::string const&              filename
-    )
-        requires std::
-            is_same_v<std::ranges::range_value_t<decltype(particles)>, particle_t>
-    {
-        std::ofstream file(filename);
-        if (!file.is_open())
-        {
-            std::cerr << "Failed to open file: " << filename << std::endl;
-            return;
-        }
-
-        constexpr auto delimiter = ", ";
-        for (auto const& p : particles)
-        {
-            file << p.mass().magnitude() << delimiter;
-            for (auto v : p.velocity())
-            {
-                file << v << delimiter;
-            }
-            for (auto v : p.position())
-            {
-                file << v << delimiter;
-            }
-        }
-        file << '\n';
-
-        file.close();
-        if (!file)
-        {
-            std::cerr << "Error writing to file " << filename << std::endl;
-        }
-        else
-        {
-            std::cout << "Data successfully saved to " << filename << std::endl;
-        }
-    }
-
-    // This will need to go out of this class
-    void write_to_csv(const std::string& baseFilename)
-    {
-        std::string filename = baseFilename + ".csv";
-        helper_write_to_csv(m_particles[s_working_copies], filename);
-    }
-
 
 private:
     // TODO Reorder

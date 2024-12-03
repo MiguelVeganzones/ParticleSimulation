@@ -14,6 +14,9 @@ bld/
 [Ll]ogs/
 /bazel-*
 
+# Runtime results
+[Dd]ata/output/*
+
 # VS Code files for those working on multiple tools
 .vscode/*
 !.vscode/settings.json

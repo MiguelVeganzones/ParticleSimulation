@@ -1,7 +1,7 @@
 #ifndef INCLUDED_SCATTER_PLOTTER
 #define INCLUDED_SCATTER_PLOTTER
 
-#ifdef ENABLE_ROOT_PLOTTING
+#ifdef USE_ROOT_PLOTTING
 #include "TGraph.h"
 #include <TCanvas.h>
 #include <TNtuple.h>
@@ -13,7 +13,7 @@ namespace root_plotting
 class scatter_plot_3D
 {
 public:
-#ifdef ENABLE_ROOT_PLOTTING
+#ifdef USE_ROOT_PLOTTING
     std::unique_ptr<TCanvas> c1;
     std::unique_ptr<TNtuple> tn1;
 #endif

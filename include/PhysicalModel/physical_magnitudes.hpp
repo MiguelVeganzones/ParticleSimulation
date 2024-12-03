@@ -377,29 +377,9 @@ auto operator<<(
         > const pm
 ) noexcept -> std::ostream&
 {
-#if USE_UNIT_SYSTEM
-    constexpr auto unit_name = [](units::Units unit) noexcept -> std::string_view {
-        switch (unit)
-        {
-        case units::Units::s: return "s";
-        case units::Units::m: return "m";
-        case units::Units::m_s: return "m/s";
-        case units::Units::m_s2: return "m/s^2";
-        case units::Units::rad: return "rad";
-        case units::Units::rad_s: return "rad/s";
-        case units::Units::rad_s2: return "rad/s^2";
-        case units::Units::kg: return "kg";
-        case units::Units::newton: return "N";
-        case units::Units::joule: return "J";
-        case units::Units::_runtime_unit_: return "?";
-        default: return "UNKNOWN";
-        }
-    };
-    constexpr auto unit = unit_name(U);
-#endif
     os << pm.value();
 #if USE_UNIT_SYSTEM
-    os << '[' << unit << ']';
+    os << '[' << pm::units::repr<U>() << ']';
 #endif
 
     return os;

@@ -1,6 +1,6 @@
 #include "time_plotter.hpp"
 
-#if ENABLE_ROOT_PLOTTING
+#if USE_ROOT_PLOTTING
 #include "TGraph.h"
 #include <TCanvas.h>
 #include <algorithm>
@@ -15,7 +15,7 @@ namespace root_plotting
 
 time_plotter2::time_plotter2()
 {
-#if ENABLE_ROOT_PLOTTING
+#if USE_ROOT_PLOTTING
     c1  = std::make_unique<TCanvas>("canvas", "Graph Draw Options", 200, 10, 800, 600);
     gr1 = std::make_unique<TGraph>();
     gr2 = std::make_unique<TGraph>();
@@ -30,7 +30,7 @@ time_plotter2::time_plotter2()
 
 auto time_plotter2::append(const float y1, const float y2) -> void
 {
-#if ENABLE_ROOT_PLOTTING
+#if USE_ROOT_PLOTTING
     if (!std::isfinite(y1) || !std::isfinite(y2))
     {
         std::cout << "Invalid point: x=" << y1 << ", y=" << y2 << std::endl;
@@ -57,7 +57,7 @@ auto time_plotter2::append(const float y1, const float y2) -> void
 
 time_plotter4::time_plotter4()
 {
-#if ENABLE_ROOT_PLOTTING
+#if USE_ROOT_PLOTTING
     c1  = std::make_unique<TCanvas>("canvas", "Graph Draw Options", 200, 10, 800, 600);
     gr1 = std::make_unique<TGraph>();
     gr2 = std::make_unique<TGraph>();
@@ -81,7 +81,7 @@ time_plotter4::time_plotter4()
 auto time_plotter4::append(const float y1, const float y2, const float y3, const float y4)
     -> void
 {
-#if ENABLE_ROOT_PLOTTING
+#if USE_ROOT_PLOTTING
     if (!std::isfinite(y1) || !std::isfinite(y2))
     {
         std::cout << "Invalid point: x=" << y1 << ", y=" << y2 << std::endl;
