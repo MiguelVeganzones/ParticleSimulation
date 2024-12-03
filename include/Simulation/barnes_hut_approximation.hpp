@@ -80,7 +80,6 @@ public:
     {
 // Plotting is this ugly as on now unfortunately
 #ifdef USE_ROOT_PLOTTING
-        TApplication                   app = TApplication("Root app", 0, nullptr);
         root_plotting::scatter_plot_3D scatter_plot;
 
         std::vector<float> x(m_simulation_size);
@@ -98,7 +97,7 @@ public:
             std::cout << m_current_time << '\n';
             std::ostringstream filename;
             filename << "execution_data_" << m_current_time;
-            if (utility::random::srandom::randfloat<float>() < 0.1f)
+            if (utility::random::srandom::randfloat<float>() < 0.01f)
             {
                 logger::csv::write_to_csv(m_particles[s_working_copies], filename.str());
             }
@@ -121,9 +120,6 @@ public:
 #endif
         }
         std::cout << count << '\n';
-#ifdef USE_ROOT_PLOTTING
-        app.Run();
-#endif
     }
 
     auto get_acceleration(size_type copy_idx, std::size_t p_idx) noexcept
@@ -131,10 +127,6 @@ public:
     {
         auto const acc =
             get_box_contribution(m_particles[copy_idx][p_idx], m_ndtrees[copy_idx].box());
-        if (p_idx == 0)
-        {
-            std::cout << "Acc: " << acc << '\n';
-        }
         return acc;
     }
 

@@ -20,7 +20,7 @@
 #include <iostream>
 #include <vector>
 
-constexpr auto universe_diameter = 200.f;
+constexpr auto universe_diameter = 20.f;
 
 template <std::floating_point F>
 auto generate_particle_pair()
@@ -81,9 +81,9 @@ int barnes_hut_test()
     using particle_t        = particle::ndparticle<N, F>;
     using tick_t            = synchronization::tick_period<std::chrono::seconds, 1>;
 
-    const auto size         = 1000;
+    const auto size         = 200;
     auto       particles    = generate_particle_set<N, F>(size);
-    const auto duration     = std::chrono::seconds(100);
+    const auto duration     = std::chrono::seconds(1000);
     const auto max_depth    = 7;
     const auto box_capacity = 3;
 
@@ -106,6 +106,9 @@ int barnes_hut_test()
 
 int main()
 {
+#ifdef USE_ROOT_PLOTTING
+    TApplication app = TApplication("Root app", 0, nullptr);
+#endif
     utility::logging::default_source::log(
         utility::logging::severity_level::info, "Inside main function."
     );
@@ -114,5 +117,10 @@ int main()
     );
 
     barnes_hut_test();
+
+#ifdef USE_ROOT_PLOTTING
+    app.Run();
+#endif
+
     return EXIT_SUCCESS;
 }

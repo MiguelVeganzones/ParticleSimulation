@@ -47,12 +47,33 @@ public:
 
     auto run() noexcept -> void
     {
+// Plotting is this ugly yet again unfortunately
+#ifdef USE_ROOT_PLOTTING
+        root_plotting::scatter_plot_3D scatter_plot;
+
+        std::vector<float> x(m_simulation_size);
+        std::vector<float> y(m_simulation_size);
+        std::vector<float> z(m_simulation_size);
+        std::size_t        iteration{};
+#endif
         while (m_current_time < m_simulation_duration)
         {
             m_solver.run();
             m_current_time += m_dt;
             std::cout << m_current_time << '\n';
         }
+#ifdef USE_ROOT_PLOTTING
+        if (iteration++ % 2 == 0)
+        {
+            for (auto j = decltype(m_simulation_size){}; j != m_simulation_size; ++j)
+            {
+                x[j] = static_cast<float>(m_particles[s_working_copies][j].position()[0]);
+                y[j] = static_cast<float>(m_particles[s_working_copies][j].position()[1]);
+                z[j] = static_cast<float>(m_particles[s_working_copies][j].position()[2]);
+            }
+            scatter_plot.plot(static_cast<int>(m_simulation_size), &x[0], &y[0], &z[0]);
+        }
+#endif
         std::cout << count << '\n';
     }
 
@@ -68,10 +89,6 @@ public:
                 ++count;
                 acc = std::move(acc) + interaction_t::acceleration_contribution(p, other);
             }
-        }
-        if (p_idx == 0)
-        {
-            std::cout << "Acc: " << acc << '\n';
         }
         return acc;
     }
