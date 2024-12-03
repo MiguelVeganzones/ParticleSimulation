@@ -1,3 +1,5 @@
+#undef USE_BOOST_LOGGING
+#undef USE_ROOT_PLOTTING
 #include "barnes_hut_approximation.hpp"
 #include "brute_force.hpp"
 #include "concepts.hpp"
