@@ -3,10 +3,14 @@ CXX = g++
 DEBUG_CXXFLAGS_GCC =	-O0 \
 			-W \
 			-Wall \
+			-Wconversion \
 			-Wdangling-else \
+			-Wdouble-promotion \
 			-Wduplicated-branches \
 			-Wduplicated-cond \
+			-Werror \
 			-Wextra \
+			-Wfloat-equal \
 			-Wformat \
 			-Winvalid-pch \
 			-Wlogical-op \
@@ -53,6 +57,7 @@ RELEASE_CXXFLAGS =	-fdiagnostics-color=always \
 			-Wextra \
 			-Wshadow \
 			-ffinite-math-only \
+			-Wconversion \
 			-Wuninitialized \
 			-Wmisleading-indentation \
 			-Werror \
@@ -81,6 +86,7 @@ FULL_RELEASE_CXXFLAGS = -fdiagnostics-color=always \
 			-Wall \
 			-Wextra \
 			-Wshadow \
+			-Wconversion \
 			-Wmisleading-indentation \
 			-Werror \
 			-fstrength-reduce \
@@ -206,9 +212,9 @@ $(PLOTTING_DIR)/$(OUT_DIR)/scatter_plot.o: $(PLOTTING_DIR)/scatter_plot.cpp $(PL
 #=============================================================
 tests: ${TEST_DIR}/$(OUT_DIR)/tests.o
 
-${TEST_DIR}/$(OUT_DIR)/tests.o: $(TEST_DIR)/tests.cpp $(INCLUDE_DIR)/*/*.hpp
+${TEST_DIR}/$(OUT_DIR)/tests.o: $(TEST_DIR)/*tests.cpp $(INCLUDE_DIR)/*/*.hpp
 	@echo -e Building $@..."\n"
 	@mkdir -p $(TEST_DIR)/$(OUT_DIR)
-	$(CXX) $(CXXFLAGS) $(TESTS_INCL) $(TESTS_LIB) $(TEST_DIR)/tests.cpp -o $@
+	$(CXX) $(CXXFLAGS) $(TESTS_INCL) $(TESTS_LIB) $(TEST_DIR)/*tests.cpp -o $@
 	@echo -e Built $@ successfully."\n"
 #=============================================================
