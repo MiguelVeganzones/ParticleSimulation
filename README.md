@@ -16,7 +16,9 @@
 10. [Acknowledgments](#acknowledgments)
 
 ## Introduction
-A brief description of the Barnes-Hut simulation, its purpose, and its significance in computational astrophysics or other relevant fields.
+The Barnes-Hut simulation is an approximation algorithm created by Josh Barnes and Piet Hut in 1986 intended for the simulation of large clusters of particles, such as galaxies or solar systems. To avoid re-computing gravitational forces, the algorithm uses a tree structure to group nearby particles and thus also force effects. This tree structure reduces the complexity of the N-body problem from O(N^2) to O(NlogN).
+
+Generally, the Barnes-Hut simulation holds importance in its clustering abilities and reduced complexity. Fields such as astrophysics and engineering use these ideas for the handling of a large number of particles or bodies, as they scale well with large values of N. Without this scalability, simulations and clustering algorithms would require far too large of computational resources.
 
 ## Features
 - Description of the main features of the simulation.
