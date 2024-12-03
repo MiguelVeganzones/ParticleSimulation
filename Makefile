@@ -43,6 +43,7 @@ DEBUG_CXXFLAGS_GCC =	-O0 \
 			-fsanitize=undefined \
 			-ggdb3 \
 			-mavx \
+			-march=native \
 			-pedantic \
 			-std=c++23
 
@@ -62,6 +63,7 @@ RELEASE_CXXFLAGS =	-fdiagnostics-color=always \
 			-Werror \
 			-pedantic \
 			-mavx \
+			-march=native \
 			-fstrength-reduce \
 			-fbounds-check \
 			-fconcepts-diagnostics-depth=3 \
@@ -81,6 +83,7 @@ FULL_RELEASE_CXXFLAGS = -fdiagnostics-color=always \
 			-fstrength-reduce \
 			-pedantic \
 			-mavx \
+			-march=native \
 			-fconcepts-diagnostics-depth=3 \
 			-std=c++23
 			#-fno-exceptions
@@ -119,6 +122,9 @@ SIMULATION_INCL			=	-I./$(SIMULATION_DIR)
 SIMULATION_LOGGERS_INCL		=	-I./$(SIMULATION_LOGGERS_DIR)
 MAIN_SIMULATION_INCL		=	$(GENERAL_INCL) $(PHYSICAL_MODEL_INCL) $(NDTREE_INCL) $(TIMING_INCL) $(PLOTTING_INCL) $(SOLVERS_INCL) $(SIMULATION_INCL) $(SIMULATION_LOGGERS_INCL)
 
+ifdef ENABLE_UNIT_SYSTEM
+CXXFLAGS			+= -DUSE_UNIT_SYSTEM
+endif
 ifdef ENABLE_ROOT_PLOTTING
 CXXFLAGS			+= -Wno-cpp
 PLOTTING_LIB			= `root-config --libs`
