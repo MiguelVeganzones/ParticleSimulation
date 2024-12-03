@@ -25,7 +25,7 @@ template <typename M>
 concept Magnitude = requires(M m) {
     M::_disambiguator_physical_magnitude_;
     M::s_dimension;
-#if USE_UNIT_SYSTEM
+#ifdef USE_UNIT_SYSTEM
     M::s_units;
 #endif
     typename M::value_type;

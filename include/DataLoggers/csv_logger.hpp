@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <ranges>
-#if USE_UNIT_SYSTEM
+#ifdef USE_UNIT_SYSTEM
 #include "unit_system.hpp"
 #endif
 
@@ -32,14 +32,14 @@ auto helper_write_to_csv(
     // TODO: refotmat propperly
     file << "ID" << delimiter;
     file << "Mass"
-#if USE_UNIT_SYSTEM
+#ifdef USE_UNIT_SYSTEM
          << " [" << pm::units::repr<sample_t::mass_t::s_units>() << ']'
 #endif
          << delimiter;
     for (auto i = decltype(dimension){ 0 }; i != dimension; ++i)
     {
         file << "pos_" << i
-#if USE_UNIT_SYSTEM
+#ifdef USE_UNIT_SYSTEM
              << " [" << pm::units::repr<sample_t::position_t::s_units>() << ']'
 #endif
              << delimiter;
@@ -47,7 +47,7 @@ auto helper_write_to_csv(
     for (auto i = decltype(dimension){ 0 }; i != dimension; ++i)
     {
         file << "vel_" << i
-#if USE_UNIT_SYSTEM
+#ifdef USE_UNIT_SYSTEM
              << " [" << pm::units::repr<sample_t::velocity_t::s_units>() << ']'
 #endif
              << delimiter;

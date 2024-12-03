@@ -9,7 +9,7 @@
 #include <ranges>
 #include <type_traits>
 
-#if USE_UNIT_SYSTEM
+#ifdef USE_UNIT_SYSTEM
 #include <initializer_list>
 #include <string_view>
 #endif
@@ -20,7 +20,7 @@ namespace pm::magnitudes
 template <
     std::size_t         N,
     std::floating_point F
-#if USE_UNIT_SYSTEM
+#ifdef USE_UNIT_SYSTEM
     ,
     units::Units U
 #endif
@@ -32,11 +32,11 @@ public:
     using container_t                        = physical_vector<N, F>;
     using value_type                         = typename container_t::value_type;
     inline static constexpr auto s_dimension = container_t::s_dimension;
-#if USE_UNIT_SYSTEM
+#ifdef USE_UNIT_SYSTEM
     inline static constexpr auto s_units = U;
 #endif
 
-#if USE_UNIT_SYSTEM
+#ifdef USE_UNIT_SYSTEM
     constexpr physical_magnitude() noexcept                          = default;
     constexpr physical_magnitude(physical_magnitude const&) noexcept = default;
     constexpr physical_magnitude(physical_magnitude&&) noexcept      = default;
@@ -221,7 +221,7 @@ public:
 template <std::size_t N, std::floating_point F, auto U>
 struct physical_magnitude_type_factory
 {
-#if USE_UNIT_SYSTEM
+#ifdef USE_UNIT_SYSTEM
     using type = physical_magnitude<N, F, U>;
 #else
     using type = physical_magnitude<N, F>;
@@ -360,7 +360,7 @@ auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(au
 template <
     std::size_t         N,
     std::floating_point F
-#if USE_UNIT_SYSTEM
+#ifdef USE_UNIT_SYSTEM
     ,
     units::Units U
 #endif
@@ -370,7 +370,7 @@ auto operator<<(
     physical_magnitude<
         N,
         F
-#if USE_UNIT_SYSTEM
+#ifdef USE_UNIT_SYSTEM
         ,
         U
 #endif
@@ -378,7 +378,7 @@ auto operator<<(
 ) noexcept -> std::ostream&
 {
     os << pm.value();
-#if USE_UNIT_SYSTEM
+#ifdef USE_UNIT_SYSTEM
     os << '[' << pm::units::repr<U>() << ']';
 #endif
 

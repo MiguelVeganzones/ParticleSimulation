@@ -1,10 +1,5 @@
 #include "barnes_hut_approximation.hpp"
 #include "brute_force.hpp"
-#ifdef USE_ROOT_PLOTTING
-#include "TApplication.h"
-#include "TCanvas.h"
-#include "TGraph.h"
-#endif
 #include "factory.hpp"
 #include "leapfrog.hpp"
 #include "logging.hpp"
@@ -14,12 +9,9 @@
 #include "plotting.hpp"
 #include "random_distributions.hpp"
 #include "runge_kutta.hpp"
-#include "scatter_plot.hpp"
 #include "stopwatch.hpp"
 #include "synthetic_clock.hpp"
-#include "time_plotter.hpp"
 #include "utils.hpp"
-#include "yoshida.hpp"
 #include <array>
 #include <chrono>
 #include <cmath>
@@ -89,7 +81,7 @@ int barnes_hut_test()
     using particle_t        = particle::ndparticle<N, F>;
     using tick_t            = synchronization::tick_period<std::chrono::seconds, 1>;
 
-    const auto size         = 10000;
+    const auto size         = 1000;
     auto       particles    = generate_particle_set<N, F>(size);
     const auto duration     = std::chrono::seconds(100);
     const auto max_depth    = 7;

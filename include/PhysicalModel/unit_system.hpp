@@ -25,7 +25,7 @@ template <Units U>
 [[nodiscard]]
 inline constexpr auto repr() noexcept -> std::string_view
 {
-#if USE_UNIT_SYSTEM
+#ifdef USE_UNIT_SYSTEM
     constexpr auto unit_name = [](units::Units unit) noexcept -> std::string_view {
         switch (unit)
         {

@@ -12,7 +12,7 @@ namespace root_plotting
 
 scatter_plot_3D::scatter_plot_3D()
 {
-#if USE_ROOT_PLOTTING
+#ifdef USE_ROOT_PLOTTING
     c1  = std::make_unique<TCanvas>("canvas", "Graph Draw Options", 200, 10, 800, 600);
     tn1 = std::make_unique<TNtuple>("n", "n", "x:y:z:color");
     tn1->SetMarkerStyle(7);
@@ -26,7 +26,7 @@ auto scatter_plot_3D::plot(
     float const* const z
 ) -> void
 {
-#if USE_ROOT_PLOTTING
+#ifdef USE_ROOT_PLOTTING
     tn1->Reset();
     for (int i = 0; i != n; ++i)
     {

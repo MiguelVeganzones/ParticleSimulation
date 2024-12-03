@@ -139,9 +139,10 @@ CXXFLAGS			+= -DUSE_UNIT_SYSTEM
 endif
 ENABLE_ROOT_PLOTTING ?= 0
 ifeq (${ENABLE_ROOT_PLOTTING}, 1)
-CXXFLAGS			+= -Wno-cpp -DUSE_ROOT_PLOTTNG
+IMPL_ROOT_FLAG			= USE_ROOT_PLOTTING
+CXXFLAGS			+= -Wno-cpp -D$(IMPL_ROOT_FLAG)
 PLOTTING_LIB			= `root-config --libs`
-ROOT_FLAGS			= `root-config --cflags` -Wno-cpp
+ROOT_FLAGS			= `root-config --cflags` -Wno-cpp -D$(IMPL_ROOT_FLAG)
 endif
 ENABLE_BOOST_LOGGING ?= 0
 ifeq (${ENABLE_BOOST_LOGGING}, 1)

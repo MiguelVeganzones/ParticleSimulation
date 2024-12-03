@@ -140,7 +140,7 @@ class default_source
 public:
     inline static auto log(severity_level sev, std::string_view message) -> void
     {
-#if USE_BOOST_LOGGING
+#ifdef USE_BOOST_LOGGING
         if (!initialized)
         {
             init();
@@ -153,7 +153,7 @@ public:
 #endif
     }
 
-#if USE_BOOST_LOGGING
+#ifdef USE_BOOST_LOGGING
 private:
     inline static bool initialized = false;
 #else

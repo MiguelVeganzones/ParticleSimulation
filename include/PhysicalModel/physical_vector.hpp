@@ -31,7 +31,7 @@ struct physical_vector
         assert(idx < utility::casts::safe_cast<decltype(idx)>(s_dimension));
     }
 
-#if USE_UNIT_SYSTEM
+#ifdef USE_UNIT_SYSTEM
     constexpr physical_vector() noexcept                       = default;
     constexpr physical_vector(physical_vector const&) noexcept = default;
     constexpr physical_vector(physical_vector&&) noexcept      = default;
