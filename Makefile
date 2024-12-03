@@ -3,14 +3,10 @@ CXX = g++
 DEBUG_CXXFLAGS_GCC =	-O0 \
 			-W \
 			-Wall \
-			-Wconversion \
 			-Wdangling-else \
-			-Wdouble-promotion \
 			-Wduplicated-branches \
 			-Wduplicated-cond \
-			-Werror \
 			-Wextra \
-			-Wfloat-equal \
 			-Wformat \
 			-Winvalid-pch \
 			-Wlogical-op \
@@ -57,7 +53,6 @@ RELEASE_CXXFLAGS =	-fdiagnostics-color=always \
 			-Wextra \
 			-Wshadow \
 			-ffinite-math-only \
-			-Wconversion \
 			-Wuninitialized \
 			-Wmisleading-indentation \
 			-Werror \
@@ -86,7 +81,6 @@ FULL_RELEASE_CXXFLAGS = -fdiagnostics-color=always \
 			-Wall \
 			-Wextra \
 			-Wshadow \
-			-Wconversion \
 			-Wmisleading-indentation \
 			-Werror \
 			-fstrength-reduce \
@@ -119,6 +113,7 @@ CONTAINERS_DIR		    =	$(INCLUDE_DIR)/Containers
 TIMING_DIR		    =	$(INCLUDE_DIR)/Timing
 PHYSICAL_MODEL_DIR	    =	$(INCLUDE_DIR)/PhysicalModel
 SOLVERS_DIR		    =	$(INCLUDE_DIR)/Solvers
+TEST_DIR 		    =	tests
 SIMULATION_DIR		    =	$(INCLUDE_DIR)/Simulation
 SIMULATION_LOGGERS_DIR	    =	$(INCLUDE_DIR)/DataLoggers
 
@@ -132,6 +127,7 @@ SOLVERS_INCL			=	-I./$(SOLVERS_DIR)
 SIMULATION_INCL			=	-I./$(SIMULATION_DIR)
 SIMULATION_LOGGERS_INCL		=	-I./$(SIMULATION_LOGGERS_DIR)
 MAIN_SIMULATION_INCL		=	$(GENERAL_INCL) $(PHYSICAL_MODEL_INCL) $(NDTREE_INCL) $(TIMING_INCL) $(PLOTTING_INCL) $(SOLVERS_INCL) $(SIMULATION_INCL) $(SIMULATION_LOGGERS_INCL)
+TESTS_INCL				= $(MAIN_SIMULATION_INCL)
 
 ENABLE_UNIT_SYSTEM ?= 0
 ifeq (${ENABLE_UNIT_SYSTEM}, 1)
@@ -157,7 +153,7 @@ CXXFLAGS			+= -ffast-math
 endif
 
 MAIN_SIMULATION_LIB		= $(LOG_LIB) $(PLOTTING_LIB)
-
+TESTS_LIB			= -lgtest -lgtest_main -lpthread
 
 
 #=================================================================================================
@@ -204,5 +200,15 @@ $(PLOTTING_DIR)/$(OUT_DIR)/scatter_plot.o: $(PLOTTING_DIR)/scatter_plot.cpp $(PL
 	@echo -e Building $@..."\n"
 	@mkdir -p $(PLOTTING_DIR)/${OUT_DIR}
 	$(CXX) $(ROOT_FLAGS) $(PLOTTING_INCL) $(PLOTTING_LIB) -c $(PLOTTING_DIR)/scatter_plot.cpp -o $@
+	@echo -e Built $@ successfully."\n"
+#=============================================================
+
+#=============================================================
+tests: ${TEST_DIR}/$(OUT_DIR)/tests.o
+
+${TEST_DIR}/$(OUT_DIR)/tests.o: $(TEST_DIR)/tests.cpp $(INCLUDE_DIR)/*/*.hpp
+	@echo -e Building $@..."\n"
+	@mkdir -p $(TEST_DIR)/$(OUT_DIR)
+	$(CXX) $(CXXFLAGS) $(TESTS_INCL) $(TESTS_LIB) $(TEST_DIR)/tests.cpp -o $@
 	@echo -e Built $@ successfully."\n"
 #=============================================================

@@ -12,6 +12,7 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+/bazel-*
 
 # Runtime results
 [Dd]ata/output/*

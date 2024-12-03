@@ -9,7 +9,9 @@
 #include "utils.hpp"
 #include "yoshida.hpp"
 #include <chrono>
+#include <fstream>
 #include <iostream>
+#include <ranges>
 #include <sstream>
 #include <vector>
 #ifdef USE_ROOT_PLOTTING
@@ -20,7 +22,7 @@
 #endif
 #include "random.hpp" // ToDo Remove
 
-namespace simulation::bh_appox
+namespace simulation::bh_approx
 {
 
 using namespace pm::interaction;
@@ -51,8 +53,8 @@ public:
     inline static constexpr auto s_working_copies = solver_t::s_working_copies;
     inline static constexpr auto s_theta          = value_type{ 0.4 };
 
-    // TODO: Improve interface, too many parameters, implement proper move ctor and move
-    // them in.
+    // TODO: Improve interface, too many parameters, implement proper move ctor and
+    // move them in.
     barnes_hut_approximation(
         std::vector<particle_t>                particles,
         utility::concepts::Duration auto const sim_duration,
@@ -246,4 +248,4 @@ private:
     std::size_t                                          count = 0;
 };
 
-} // namespace simulation::bh_appox
+} // namespace simulation::bh_approx
