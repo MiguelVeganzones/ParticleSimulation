@@ -23,7 +23,10 @@
 #include <iostream>
 #endif
 
-#define NDTREE_MAX_DIMENSIONS 64 // Because of how boundary subdivisions are computed
+// I think this is actually not needed anymore but do not use this recreational code for
+// such a high dimensional space
+#define NDTREE_MAX_DIMENSIONS                                                            \
+    64 // Because of how binary boundary subdivisions are computed
 
 namespace ndt
 {

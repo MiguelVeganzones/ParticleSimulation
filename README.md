@@ -3,17 +3,25 @@
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Features](#features)
+    - [NDTree](#ndtree)
+    - [Numerical solvers](#numerical-solvers)
+    - [Particle System](#particle-system)
+    - [Plotting](#plotting)
+    - [Random Distributions](#random-distributions)
 3. [Getting Started](#getting-started)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
     - [Building the Project](#building-the-project)
 4. [Usage](#usage)
 5. [Configuration](#configuration)
+    - [Optimization Level](#optimization-level)
+    - [Build Options](#build-options)
 6. [Testing](#testing)
 7. [Performance](#performance)
-8. [Contributing](#contributing)
-9. [License](#license)
-10. [Acknowledgments](#acknowledgments)
+8. [Documentation](#documentation)
+9. [Contributing](#contributing)
+10. [License](#license)
+11. [Acknowledgments](#acknowledgments)
 
 ## Introduction
 The Barnes-Hut simulation is an approximation algorithm for the n-body problem intended for the simulation of large clusters of particles, such as galaxies.
@@ -31,9 +39,41 @@ This may be good enough for short-running simulations, but due to the chaotic
 nature of the n-body problem it is not suit for long-running simulations.
 
 ## Features
-- Description of the main features of the simulation.
-- Any specific algorithms or optimizations used.
-- Visualization options (if any).
+The main building blocks of this project are described below.
+
+### NDTree
+The ndtree data structure is a templated tree-like non-owning spatial view into a set of particles. This data structure enables the Barnes Hut approximation. Some of its
+features are:
+ - Supports n-dimensional sample types.
+ - Concept based interface
+ - Supports an arbitrary (enough) number of subdivisions per dimension.
+ - Limits can be either dynamically computed or established on construction, but
+   they do not update.
+ - It does NOT support (yet) parallel construction or recaching.
+ - It does not support (yet) recollection of empty boxes.
+
+### Numerical solvers
+Numerical integrators serve as the engine for the simulations. Experimental, not
+too tested versions of the following solvers are provided:
+ - RK4: Standard Runge Kutta 4th order integrator.
+ - Yoshida 4th order symplectic integrator.
+ - Leapfrog: Baseline of the leapfrog family symplectic integrators.
+ - ODEX2: Under development....
+
+### Particle System
+This project implements an expressive particle type system that supports
+conditional compilation of a basic unit system.
+This allows for a high level implementation of the simulations without a big
+penalty in performance or space.
+
+### Plotting
+Simple APIs into root plotting utilities have been implemented, but they are
+still in development.
+
+### Random Distributions
+A simple random distribution and random number library is packaged in this
+project to support the creation of large scale particle systems through density
+fields.
 
 ## Getting Started
 Clone the project with `git clone https://gitlab.lrz.de/00000000014BECEA/barnes-hut-galaxy-simulation.git` \
@@ -107,6 +147,7 @@ ToDo
 
 - [Numerical simulations of gravitational dynamics](docs/numerical_simulation_of_gravitational_dynamics.pdf)
 - [Optimal doftening for gravitational computations.pdf](docs/optimal_doftening_for_gravitational_computations.pdf)
+[Construction of higher order symplectic integrators](docs/construction_of_higher_order_symplectic_integrators.pdf)
 
 ## License
 This project is licensed under the [GNU General Public License](./LICENSE).
