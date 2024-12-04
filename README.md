@@ -78,7 +78,7 @@ fields.
 ## Getting Started
 Clone the project with `git clone https://gitlab.lrz.de/00000000014BECEA/barnes-hut-galaxy-simulation.git` \
 Build with make: `make main`\
-Execute as: './bin/debug/main.o'
+Execute as: `./bin/debug/main.o`
 
 ### Prerequisites
 This project uses C++23 features and thus, a modern compiler is needed.
@@ -147,7 +147,7 @@ ToDo
 
 - [Numerical simulations of gravitational dynamics](docs/numerical_simulation_of_gravitational_dynamics.pdf)
 - [Optimal doftening for gravitational computations.pdf](docs/optimal_doftening_for_gravitational_computations.pdf)
-[Construction of higher order symplectic integrators](docs/construction_of_higher_order_symplectic_integrators.pdf)
+- [Construction of higher order symplectic integrators](docs/construction_of_higher_order_symplectic_integrators.pdf)
 
 ## License
 This project is licensed under the [GNU General Public License](./LICENSE).
