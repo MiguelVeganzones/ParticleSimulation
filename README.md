@@ -76,7 +76,7 @@ project to support the creation of large scale particle systems through density
 fields.
 
 ## Getting Started
-Clone the project with `git clone https://gitlab.lrz.de/00000000014BECEA/barnes-hut-galaxy-simulation.git` \
+Clone the project with `git clone https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation.git` \
 Build with make: `make main`\
 Execute as: `./bin/debug/main.o`
 
