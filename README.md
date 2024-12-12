@@ -88,7 +88,7 @@ ROOT (CERN) ("Root" from now on) is an optional dependency for real-time plottin
 Boost is an optional dependency for logging. Boost logging is conditionally compiled.\
 
 ### Installation
-Clone the project with `git clone https://gitlab.lrz.de/00000000014BECEA/barnes-hut-galaxy-simulation.git` \
+Clone the project with `git clone https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation.git` \
 
 ### Building the Project
 
