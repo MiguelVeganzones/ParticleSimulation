@@ -145,9 +145,12 @@ ToDo
 
 ## Documentation
 
-- [Numerical simulations of gravitational dynamics](docs/numerical_simulation_of_gravitational_dynamics.pdf)
-- [Optimal doftening for gravitational computations.pdf](docs/optimal_doftening_for_gravitational_computations.pdf)
-- [Construction of higher order symplectic integrators](docs/construction_of_higher_order_symplectic_integrators.pdf)
+- [Numerical simulations of gravitational dynamics](http://eugvas.net/teaching/nbody2016/lectures.pdf)
+- [Optimal Softening for Gravitational Force Calculations in N-body Dynamics](https://doi.org/10.3847/1538-4357/abe94d)
+- [Construction of higher order symplectic integrators](https://www.sciencedirect.com/science/article/abs/pii/0375960190900923)
+- [Solving Ordinary Differential Equations I Nonstiff Problems](https://link.springer.com/book/10.1007/978-3-540-78862-1)
+- [Optimal Smoothing for N -Body Codes](https://arxiv.org/abs/astro-ph/9511146v2)
+- [Numerical Integration Methods for Orbital Motion](https://link.springer.com/article/10.1007/BF00049361)
 
 ## License
 This project is licensed under the [GNU General Public License](./LICENSE).
