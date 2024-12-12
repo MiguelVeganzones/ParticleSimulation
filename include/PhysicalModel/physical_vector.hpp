@@ -222,7 +222,7 @@ auto operator_impl(T1&& pva, T2&& pvb, auto&& binary_op) noexcept -> decltype(au
         {
             return v[idx];
         }
-        if constexpr (std::ranges::range<v_t>)
+        else if constexpr (std::ranges::range<v_t>)
         {
             return v[idx];
         }

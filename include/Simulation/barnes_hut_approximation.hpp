@@ -133,7 +133,7 @@ public:
     }
 
     [[nodiscard]]
-    auto get_box_contribution(particle_t const& p, box_t const& b) -> acceleration_t
+    auto get_box_contribution(particle_t const& p, box_t const& b) const -> acceleration_t
     {
         if (!b.summary().has_value() || b.summary().value().id() == p.id())
         {
@@ -245,7 +245,7 @@ private:
     std::array<tree_t, s_working_copies>                 m_ndtrees;
     size_type                                            m_simulation_size;
     solver_t                                             m_solver;
-    std::size_t                                          count = 0;
+    mutable std::size_t                                  count = 0;
 };
 
 } // namespace simulation::bh_approx

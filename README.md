@@ -109,7 +109,7 @@ Leaving out any flag or setting equal to 0 (or any other number) disables the re
 ## Usage
 The code can be compiled by running:
 `make main [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` \
-This will generate the executable './bin/[bin,release,full_release]/main.o', which can be directly executed (by running './bin/[bin,release,full_release]/main.o').
+This will generate the executable `./bin/[bin,release,full_release]/main.o`, which can be directly executed (by running `./bin/[bin,release,full_release]/main.o`).
 
 ## Configuration
 #### Optimization Level
@@ -134,7 +134,7 @@ The supported arguments are
 
 ## Testing
 Compile: `make tests [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` \
-Execute: './tests/bin/{debug,release,full_release}/tests.o'
+Execute: `./tests/bin/{debug,release,full_release}/tests.o`
 
 ## Performance
 ToDo
