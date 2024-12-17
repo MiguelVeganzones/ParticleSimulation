@@ -1,6 +1,7 @@
 #pragma once
 
 #include "concepts.hpp"
+#include "magnitude_definitions.hpp"
 #include "particle_concepts.hpp"
 #include "physical_magnitudes.hpp"
 #include <optional>
