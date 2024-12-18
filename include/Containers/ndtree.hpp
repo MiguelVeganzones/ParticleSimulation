@@ -70,7 +70,7 @@ public:
     using index_t                            = std::remove_const_t<decltype(s_dimension)>;
 
 public:
-    constexpr ndboundary() noexcept = default;
+    constexpr ndboundary() noexcept = delete;
 
     constexpr ndboundary(point_t const& p1, point_t const& p2) noexcept
     {
