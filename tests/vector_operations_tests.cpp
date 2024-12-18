@@ -9,21 +9,24 @@
 TEST(VectorBasicsTest, VectorFundamentals)
 {
     using F                 = float;
-    static constexpr auto N = 3;
+    static constexpr auto N = 150;
+    using vector_t          = pm::magnitudes::physical_vector<N, F>;
 
-    using vector_t = pm::magnitudes::physical_vector<N, F>;
-
-    constexpr std::array<F, N> data = { F{ -3 }, F{ 3 }, F{ 4 } };
-    vector_t                   v;
-
-    for (std::size_t i = 0; i != N; ++i)
+    for (std::size_t j = 0; j != 250; ++j)
     {
-        v[i] = data[i];
-    }
+        std::array<F, N> data{};
 
-    for (std::size_t i = 0; i != N; ++i)
-    {
-        EXPECT_EQ(v[i], data[i]);
+        vector_t v;
+        for (std::size_t i = 0; i != N; ++i)
+        {
+            data[i] = utility::random::srandom::randfloat<F>();
+            v[i]    = data[i];
+        }
+
+        for (std::size_t i = 0; i != N; ++i)
+        {
+            EXPECT_EQ(v[i], data[i]);
+        }
     }
 }
 

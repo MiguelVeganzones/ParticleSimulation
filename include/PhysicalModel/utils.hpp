@@ -1,6 +1,5 @@
 #pragma once
 
-#include "particle.hpp"
 #include "particle_concepts.hpp"
 #include "physical_magnitudes.hpp"
 #include <algorithm>
