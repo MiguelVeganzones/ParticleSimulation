@@ -61,7 +61,6 @@ public:
         {
             m_solver.run();
             m_current_time += m_dt;
-            std::cout << m_current_time << '\n';
         }
 #ifdef USE_ROOT_PLOTTING
         if (iteration++ % 2 == 0)
@@ -75,7 +74,6 @@ public:
             scatter_plot.plot(static_cast<int>(m_simulation_size), &x[0], &y[0], &z[0]);
         }
 #endif
-        std::cout << count << '\n';
     }
 
     auto get_acceleration(std::size_t copy_idx, std::size_t p_idx) noexcept
@@ -87,7 +85,7 @@ public:
         {
             if (other.id() != p.id()) [[likely]]
             {
-                ++count;
+                ++m_f_eval_count;
                 acc = std::move(acc) + interaction_t::acceleration_contribution(p, other);
             }
         }
@@ -153,6 +151,12 @@ public:
         m_particles[buffer_id][p_idx].velocity() = value;
     }
 
+    [[nodiscard]]
+    inline auto f_eval_count() const noexcept -> std::size_t
+    {
+        return m_f_eval_count;
+    }
+
 private:
     // TODO Reorder
     duration_t                                           m_current_time{};
@@ -161,7 +165,7 @@ private:
     std::array<owning_container_t, s_working_copies + 1> m_particles;
     std::size_t                                          m_simulation_size;
     solver_t                                             m_solver;
-    std::size_t                                          count = 0;
+    std::size_t                                          m_f_eval_count = 0;
 };
 
 } // namespace simulation::bf

@@ -11,7 +11,7 @@
 #include <iostream>
 #include <vector>
 
-constexpr auto universe_diameter = 20.0;
+constexpr auto universe_radius = 20.0;
 
 template <std::floating_point F>
 auto generate_particle_pair()
@@ -19,13 +19,13 @@ auto generate_particle_pair()
     const F m = 1e8;
     return std::array{ pm::particle::ndparticle<1, F>(
                            pm::magnitudes::mass<F>{ m },
-                           pm::magnitudes::position<1, F>{ -universe_diameter },
+                           pm::magnitudes::position<1, F>{ -universe_radius },
                            pm::magnitudes::linear_velocity<1, F>{ 0 },
                            pm::magnitudes::linear_acceleration<1, F>{ 0 }
                        ),
                        pm::particle::ndparticle<1, F>(
                            pm::magnitudes::mass<F>{ m },
-                           pm::magnitudes::position<1, F>{ universe_diameter },
+                           pm::magnitudes::position<1, F>{ universe_radius },
                            pm::magnitudes::linear_velocity<1, F>{ 0 },
                            pm::magnitudes::linear_acceleration<1, F>{ 0 }
                        ) };
@@ -48,13 +48,13 @@ auto generate_particle_set(std::size_t size)
     auto position_generator = []() mutable -> F {
         using distribution_a_t = random_distribution<F, DistributionCategory::Uniform>;
         using param_type_a     = typename distribution_a_t::param_type;
-        const param_type_a      params_a(-universe_diameter, universe_diameter);
+        const param_type_a      params_a(-universe_radius, universe_radius);
         static distribution_a_t d_a(params_a);
         using distribution_b_t = random_distribution<F, DistributionCategory::Gamma>;
         using param_type_b     = typename distribution_b_t::param_type;
         const param_type_b      params_b(F{ 1 }, F{ 1 });
         static distribution_b_t d_b(params_b);
-        return d_a(); // + universe_diameter;
+        return d_a(); // + universe_radius;
     };
 
     auto velocity_generator = []() -> F { return F{ 0 }; };

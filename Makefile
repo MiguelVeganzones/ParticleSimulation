@@ -212,7 +212,7 @@ $(PLOTTING_DIR)/$(OUT_DIR)/scatter_plot.o: $(PLOTTING_DIR)/scatter_plot.cpp $(PL
 #=============================================================
 tests: ${TEST_DIR}/$(OUT_DIR)/tests.o
 
-${TEST_DIR}/$(OUT_DIR)/tests.o: $(TEST_DIR)/*tests.cpp $(INCLUDE_DIR)/*/*.hpp
+${TEST_DIR}/$(OUT_DIR)/tests.o: $(TEST_DIR)/*.cpp $(INCLUDE_DIR)/*/*.hpp
 	@echo -e Building $@..."\n"
 	@mkdir -p $(TEST_DIR)/$(OUT_DIR)
 	$(CXX) $(CXXFLAGS) $(TESTS_INCL) $(TESTS_LIB) $(TEST_DIR)/*tests.cpp -o $@

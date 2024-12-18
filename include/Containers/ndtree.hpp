@@ -1,7 +1,5 @@
 #pragma once
 
-#define DEBUG_NDTREE 1
-
 #include "constexpr_functions.hpp"
 #include "error_handling.hpp"
 #include "logging.hpp"

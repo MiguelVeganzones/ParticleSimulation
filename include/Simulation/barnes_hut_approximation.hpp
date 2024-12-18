@@ -90,19 +90,18 @@ public:
         std::size_t        iteration{};
 #endif
         m_ndtrees[0].cache_summary();
-        std::cout << m_ndtrees[0] << '\n';
         while (m_current_time < m_simulation_duration)
         {
-            utility::timing::stopwatch s{ "Iteration" };
             m_solver.run();
             m_current_time += m_dt;
-            std::cout << m_current_time << '\n';
             std::ostringstream filename;
             filename << "execution_data_" << m_current_time;
+#ifdef LOG_TO_CSV
             if (utility::random::srandom::randfloat<float>() < 0.01f)
             {
                 logger::csv::write_to_csv(m_particles[s_working_copies], filename.str());
             }
+#endif
 #ifdef USE_ROOT_PLOTTING
             if (iteration++ % 2 == 0)
             {
@@ -121,7 +120,6 @@ public:
             }
 #endif
         }
-        std::cout << count << '\n';
     }
 
     auto get_acceleration(size_type copy_idx, std::size_t p_idx) noexcept
@@ -146,7 +144,7 @@ public:
         );
         if ((s / d) < s_theta)
         {
-            ++count;
+            ++m_f_eval_count;
             return interaction_t::acceleration_contribution(p, summary);
         }
         else
@@ -165,7 +163,7 @@ public:
                 {
                     if (other->id() != p.id()) [[likely]]
                     {
-                        ++count;
+                        ++m_f_eval_count;
                         acc = std::move(acc) +
                               interaction_t::acceleration_contribution(p, *other);
                     }
@@ -236,6 +234,12 @@ public:
         m_particles[buffer_id][p_idx].velocity() = value;
     }
 
+    [[nodiscard]]
+    inline auto f_eval_count() const noexcept -> std::size_t
+    {
+        return m_f_eval_count;
+    }
+
 private:
     // TODO Reorder
     duration_t                                           m_current_time{};
@@ -245,7 +249,7 @@ private:
     std::array<tree_t, s_working_copies>                 m_ndtrees;
     size_type                                            m_simulation_size;
     solver_t                                             m_solver;
-    mutable std::size_t                                  count = 0;
+    mutable std::size_t                                  m_f_eval_count = 0;
 };
 
 } // namespace simulation::bh_approx
