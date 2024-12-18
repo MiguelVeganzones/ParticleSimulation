@@ -1,26 +1,17 @@
 #include "barnes_hut_approximation.hpp"
 #include "brute_force.hpp"
 #include "factory.hpp"
-#include "leapfrog.hpp"
 #include "logging.hpp"
-#include "ndtree.hpp"
 #include "particle.hpp"
-#include "physical_magnitudes.hpp"
-#include "plotting.hpp"
 #include "random_distributions.hpp"
-#include "runge_kutta.hpp"
-#include "stopwatch.hpp"
 #include "synthetic_clock.hpp"
-#include "utils.hpp"
 #include <array>
-#include <chrono>
-#include <cmath>
+#include <concepts>
 #include <cstdlib>
-#include <ctime>
 #include <iostream>
 #include <vector>
 
-constexpr auto universe_diameter = 20.f;
+constexpr auto universe_diameter = 20.0;
 
 template <std::floating_point F>
 auto generate_particle_pair()
@@ -49,7 +40,7 @@ auto generate_particle_set(std::size_t size)
     auto mass_generator = []() mutable -> F {
         using distribution_t = random_distribution<F, DistributionCategory::Exponential>;
         using param_type     = typename distribution_t::param_type;
-        param_type            params(F{ 0.001f });
+        const param_type      params(0.001);
         static distribution_t d(params);
         return d() * F{ 100 };
     };
@@ -57,11 +48,11 @@ auto generate_particle_set(std::size_t size)
     auto position_generator = []() mutable -> F {
         using distribution_a_t = random_distribution<F, DistributionCategory::Uniform>;
         using param_type_a     = typename distribution_a_t::param_type;
-        param_type_a            params_a(F{ -universe_diameter }, F{ universe_diameter });
+        const param_type_a      params_a(-universe_diameter, universe_diameter);
         static distribution_a_t d_a(params_a);
         using distribution_b_t = random_distribution<F, DistributionCategory::Gamma>;
         using param_type_b     = typename distribution_b_t::param_type;
-        param_type_b            params_b(F{ 1 }, F{ 1 });
+        const param_type_b      params_b(F{ 1 }, F{ 1 });
         static distribution_b_t d_b(params_b);
         return d_a(); // + universe_diameter;
     };
