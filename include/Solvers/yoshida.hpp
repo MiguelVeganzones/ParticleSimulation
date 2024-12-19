@@ -49,8 +49,6 @@ struct yoshida4_solver
     {
     }
 
-    // Some corners have been cut in this implementation...
-    // TODO Fix, API too transparent and ugly
     auto run() -> void
     {
         const auto dt = dt_.count();

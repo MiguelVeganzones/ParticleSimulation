@@ -77,9 +77,10 @@ int barnes_hut_test()
     const auto duration     = std::chrono::seconds(1000);
     const auto max_depth    = 7;
     const auto box_capacity = 3;
+    const auto theta        = F{ 0.4 };
 
     simulation::bh_approx::barnes_hut_approximation<particle_t> simulation_a(
-        particles, duration, tick_t::period_duration, max_depth, box_capacity
+        particles, duration, tick_t::period_duration, theta, max_depth, box_capacity
     );
 
     std::cout << "Simulation A\n";

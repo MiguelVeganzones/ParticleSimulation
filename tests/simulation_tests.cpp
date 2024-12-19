@@ -20,16 +20,23 @@ TEST(SimulationTest, TreeAndBruteForceComparison)
     static constexpr auto N = 3;
     using particle_t        = particle::ndparticle<N, F>;
 
-    const auto size = 300;
+#ifdef NDEBUG
+    const auto size     = 150;
+    const auto duration = std::chrono::seconds(150);
+    using tick_t        = synchronization::tick_period<std::chrono::seconds, 1>;
+#else
+    const auto size     = 300;
+    const auto duration = std::chrono::seconds(1000);
+    using tick_t        = synchronization::tick_period<std::chrono::milliseconds, 200>;
+#endif
     auto particles = particle_factory::generate_particle_set<N, F>(size, universe_radius);
 
-    using tick_t            = synchronization::tick_period<std::chrono::seconds, 1>;
-    const auto duration     = std::chrono::seconds(150);
     const auto max_depth    = 7;
     const auto box_capacity = 3;
+    const auto theta        = F{ 0.4 };
 
     simulation::bh_approx::barnes_hut_approximation<particle_t> barnes_simulation_engine(
-        particles, duration, tick_t::period_duration, max_depth, box_capacity
+        particles, duration, tick_t::period_duration, theta, max_depth, box_capacity
     );
     simulation::bf::brute_force_computation<particle_t> brute_force_simulation_engine(
         particles, duration, tick_t::period_duration

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "compile_time_utility.hpp"
 #include "concepts.hpp"
 #include "particle_concepts.hpp"
 #include "particle_interaction.hpp"
@@ -30,18 +31,18 @@ public:
     using owning_container_t                      = std::vector<particle_t>;
     inline static constexpr auto s_working_copies = solver_t::s_working_copies;
 
-    // TODO: Improve interface, too many parameters, implement proper move ctor and move
-    // them in.
     brute_force_computation(
         std::vector<particle_t>                particles,
         utility::concepts::Duration auto const sim_duration,
         utility::concepts::Duration auto const sim_dt
     ) :
-        m_simulation_duration{ std::chrono::duration_cast<duration_t>(sim_duration) },
-        m_dt{ std::chrono::duration_cast<duration_t>(sim_dt) },
-        m_particles{ particles, particles, particles, particles, particles }, // TODO Fix
+        m_particles{
+            utility::compile_time_utility::array_factory<s_working_copies + 1>(particles)
+        },
+        m_solver(this, m_simulation_size, m_dt),
         m_simulation_size{ particles.size() },
-        m_solver(this, m_simulation_size, m_dt)
+        m_simulation_duration{ std::chrono::duration_cast<duration_t>(sim_duration) },
+        m_dt{ std::chrono::duration_cast<duration_t>(sim_dt) }
     {
     }
 
@@ -76,7 +77,7 @@ public:
 #endif
     }
 
-    auto get_acceleration(std::size_t copy_idx, std::size_t p_idx) noexcept
+    auto get_acceleration(std::size_t copy_idx, std::size_t p_idx) const noexcept
         -> acceleration_t
     {
         acceleration_t acc{};
@@ -158,14 +159,13 @@ public:
     }
 
 private:
-    // TODO Reorder
+    std::array<owning_container_t, s_working_copies + 1> m_particles;
+    solver_t                                             m_solver;
+    std::size_t                                          m_simulation_size;
+    mutable std::size_t                                  m_f_eval_count = 0;
     duration_t                                           m_current_time{};
     duration_t                                           m_simulation_duration;
     duration_t                                           m_dt;
-    std::array<owning_container_t, s_working_copies + 1> m_particles;
-    std::size_t                                          m_simulation_size;
-    solver_t                                             m_solver;
-    std::size_t                                          m_f_eval_count = 0;
 };
 
 } // namespace simulation::bf

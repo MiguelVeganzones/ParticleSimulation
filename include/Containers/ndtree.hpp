@@ -112,9 +112,8 @@ public:
         return std::midpoint(m_max[idx], m_min[idx]);
     }
 
-    // TODO: Fix: More corners cut here...
     [[nodiscard]]
-    auto space_diagonal() const noexcept -> auto
+    auto diagonal_length() const noexcept -> auto
     {
         return m_max - m_min;
     }
@@ -393,9 +392,9 @@ public:
     }
 
     [[nodiscard]]
-    auto space_diagonal() const noexcept -> auto
+    auto diagonal_length() const noexcept -> auto
     {
-        return m_boundary.space_diagonal();
+        return m_boundary.diagonal_length();
     }
 
     auto print_info(std::ostream& os) const -> void

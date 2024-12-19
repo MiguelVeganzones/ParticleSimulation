@@ -1,7 +1,9 @@
 #pragma once
 
+#include "compile_time_utility.hpp"
 #include "concepts.hpp"
 #include "csv_logger.hpp"
+#include "generics.hpp"
 #include "ndtree.hpp"
 #include "particle_concepts.hpp"
 #include "particle_interaction.hpp"
@@ -20,7 +22,6 @@
 #include "TGraph.h"
 #include "scatter_plot.hpp"
 #endif
-#include "random.hpp" // ToDo Remove
 
 namespace simulation::bh_approx
 {
@@ -51,30 +52,34 @@ public:
     using duration_t     = std::chrono::duration<value_type>;
     using owning_container_t                      = std::vector<particle_t>;
     inline static constexpr auto s_working_copies = solver_t::s_working_copies;
-    inline static constexpr auto s_theta          = value_type{ 0.4 };
+    inline static constexpr auto s_theta_range =
+        utility::generics::interval{ value_type{ 0 }, value_type{ 1 } };
 
-    // TODO: Improve interface, too many parameters, implement proper move ctor and
-    // move them in.
     barnes_hut_approximation(
         std::vector<particle_t>                particles,
         utility::concepts::Duration auto const sim_duration,
         utility::concepts::Duration auto const sim_dt,
+        value_type                             theta,
         depth_t const                          tree_max_depth,
         size_type const                        tree_box_capacity,
         std::optional<boundary_t>              tree_bounds = std::nullopt
     ) :
+        m_particles{
+            utility::compile_time_utility::array_factory<s_working_copies + 1>(particles)
+        },
+        m_ndtrees{ utility::compile_time_utility::array_factory<s_working_copies>(
+            [this, tree_max_depth, tree_box_capacity, tree_bounds](std::size_t I
+            ) -> tree_t {
+                return tree_t(
+                    m_particles[I], tree_max_depth, tree_box_capacity, tree_bounds
+                );
+            }
+        ) },
+        m_solver(this, m_simulation_size, m_dt),
+        m_simulation_size{ std::ranges::size(m_particles[s_working_copies]) },
         m_simulation_duration{ std::chrono::duration_cast<duration_t>(sim_duration) },
         m_dt{ std::chrono::duration_cast<duration_t>(sim_dt) },
-        // TODO: Hardcoded solver running_copies = 4
-        m_particles{ particles, particles, particles, particles, particles }, // TODO Fix
-        m_ndtrees{
-            tree_t(m_particles[0], tree_max_depth, tree_box_capacity, tree_bounds),
-            tree_t(m_particles[1], tree_max_depth, tree_box_capacity, tree_bounds),
-            tree_t(m_particles[2], tree_max_depth, tree_box_capacity, tree_bounds),
-            tree_t(m_particles[3], tree_max_depth, tree_box_capacity, tree_bounds)
-        },
-        m_simulation_size{ std::ranges::size(m_particles[s_working_copies]) },
-        m_solver(this, m_simulation_size, m_dt)
+        m_theta{ theta, s_theta_range }
     {
     }
 
@@ -138,11 +143,11 @@ public:
             return acceleration_t{};
         }
         auto const summary = b.summary().value();
-        const auto s       = pm::utils::l2_norm(b.space_diagonal().value());
+        const auto s       = pm::utils::l2_norm(b.diagonal_length().value());
         const auto d       = pm::utils::l2_norm(
             pm::utils::distance(p.position(), summary.position()).value()
         );
-        if ((s / d) < s_theta)
+        if ((s / d) < m_theta.get())
         {
             ++m_f_eval_count;
             return interaction_t::acceleration_contribution(p, summary);
@@ -241,15 +246,15 @@ public:
     }
 
 private:
-    // TODO Reorder
+    std::array<owning_container_t, s_working_copies + 1> m_particles;
+    std::array<tree_t, s_working_copies>                 m_ndtrees;
+    solver_t                                             m_solver;
+    size_type                                            m_simulation_size;
+    mutable std::size_t                                  m_f_eval_count = 0;
     duration_t                                           m_current_time{};
     duration_t                                           m_simulation_duration;
     duration_t                                           m_dt;
-    std::array<owning_container_t, s_working_copies + 1> m_particles;
-    std::array<tree_t, s_working_copies>                 m_ndtrees;
-    size_type                                            m_simulation_size;
-    solver_t                                             m_solver;
-    mutable std::size_t                                  m_f_eval_count = 0;
+    utility::generics::ranged_value<value_type>          m_theta;
 };
 
 } // namespace simulation::bh_approx
