@@ -249,7 +249,7 @@ template <std::floating_point F>
 using mass = physical_magnitude_t<1, F, units::Units::kg>;
 template <std::size_t N, std::floating_point F>
 using force = physical_magnitude_t<N, F, units::Units::newton>;
-template <std::size_t N, std::floating_point F>
+template <std::floating_point F>
 using energy = physical_magnitude_t<1, F, units::Units::joule>;
 template <std::size_t N, std::floating_point F>
 using runtime_unit = physical_magnitude_t<N, F, units::Units::_runtime_unit_>;

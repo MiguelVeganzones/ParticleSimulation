@@ -36,13 +36,13 @@ public:
         utility::concepts::Duration auto const sim_duration,
         utility::concepts::Duration auto const sim_dt
     ) :
+        m_simulation_duration{ std::chrono::duration_cast<duration_t>(sim_duration) },
+        m_dt{ std::chrono::duration_cast<duration_t>(sim_dt) },
         m_particles{
             utility::compile_time_utility::array_factory<s_working_copies + 1>(particles)
         },
-        m_solver(this, m_simulation_size, m_dt),
-        m_simulation_size{ particles.size() },
-        m_simulation_duration{ std::chrono::duration_cast<duration_t>(sim_duration) },
-        m_dt{ std::chrono::duration_cast<duration_t>(sim_dt) }
+        m_simulation_size{ std::ranges::size(m_particles[0]) },
+        m_solver(this, m_simulation_size, m_dt)
     {
     }
 
@@ -159,13 +159,13 @@ public:
     }
 
 private:
-    std::array<owning_container_t, s_working_copies + 1> m_particles;
-    solver_t                                             m_solver;
-    std::size_t                                          m_simulation_size;
-    mutable std::size_t                                  m_f_eval_count = 0;
     duration_t                                           m_current_time{};
     duration_t                                           m_simulation_duration;
     duration_t                                           m_dt;
+    std::array<owning_container_t, s_working_copies + 1> m_particles;
+    std::size_t                                          m_simulation_size;
+    solver_t                                             m_solver;
+    mutable std::size_t                                  m_f_eval_count = 0;
 };
 
 } // namespace simulation::bf

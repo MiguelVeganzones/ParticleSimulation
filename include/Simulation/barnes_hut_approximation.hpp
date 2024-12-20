@@ -3,6 +3,7 @@
 #include "compile_time_utility.hpp"
 #include "concepts.hpp"
 #include "csv_logger.hpp"
+#include "energy.hpp"
 #include "generics.hpp"
 #include "ndtree.hpp"
 #include "particle_concepts.hpp"
@@ -64,6 +65,8 @@ public:
         size_type const                        tree_box_capacity,
         std::optional<boundary_t>              tree_bounds = std::nullopt
     ) :
+        m_simulation_duration{ std::chrono::duration_cast<duration_t>(sim_duration) },
+        m_dt{ std::chrono::duration_cast<duration_t>(sim_dt) },
         m_particles{
             utility::compile_time_utility::array_factory<s_working_copies + 1>(particles)
         },
@@ -75,10 +78,8 @@ public:
                 );
             }
         ) },
+        m_simulation_size{ std::ranges::size(current_system_state()) },
         m_solver(this, m_simulation_size, m_dt),
-        m_simulation_size{ std::ranges::size(m_particles[s_working_copies]) },
-        m_simulation_duration{ std::chrono::duration_cast<duration_t>(sim_duration) },
-        m_dt{ std::chrono::duration_cast<duration_t>(sim_dt) },
         m_theta{ theta, s_theta_range }
     {
     }
@@ -99,9 +100,14 @@ public:
         {
             m_solver.run();
             m_current_time += m_dt;
+            std::cout << pm::energy::compute_kinetic_energy(current_system_state()) +
+                             pm::energy::compute_gravitational_potential_energy(
+                                 current_system_state()
+                             )
+                      << std::endl;
+#ifdef LOG_TO_CSV
             std::ostringstream filename;
             filename << "execution_data_" << m_current_time;
-#ifdef LOG_TO_CSV
             if (utility::random::srandom::randfloat<float>() < 0.01f)
             {
                 logger::csv::write_to_csv(m_particles[s_working_copies], filename.str());
@@ -178,6 +184,18 @@ public:
         }
     }
 
+    [[nodiscard]]
+    inline auto current_system_state() const noexcept -> auto const&
+    {
+        return m_particles[s_working_copies];
+    }
+
+    [[nodiscard]]
+    inline auto current_system_state() noexcept -> auto&
+    {
+        return m_particles[s_working_copies];
+    }
+
     inline auto commit_buffer(std::size_t working_copy_idx) noexcept -> void
     {
         m_ndtrees[working_copy_idx].reorganize();
@@ -188,12 +206,12 @@ public:
     inline auto position_read(std::size_t p_idx) const noexcept -> position_t const&
 
     {
-        return m_particles[s_working_copies][p_idx].position();
+        return current_system_state()[p_idx].position();
     }
 
     inline auto position_write(std::size_t p_idx, position_t value) noexcept -> void
     {
-        m_particles[s_working_copies][p_idx].position() = value;
+        current_system_state()[p_idx].position() = value;
     }
 
     [[nodiscard]]
@@ -215,12 +233,12 @@ public:
     [[nodiscard]]
     inline auto velocity_read(std::size_t p_idx) const noexcept -> velocity_t const&
     {
-        return m_particles[s_working_copies][p_idx].velocity();
+        return current_system_state()[p_idx].velocity();
     }
 
     inline auto velocity_write(std::size_t p_idx, velocity_t value) noexcept -> void
     {
-        m_particles[s_working_copies][p_idx].velocity() = value;
+        current_system_state()[p_idx].velocity() = value;
     }
 
     [[nodiscard]]
@@ -246,14 +264,14 @@ public:
     }
 
 private:
-    std::array<owning_container_t, s_working_copies + 1> m_particles;
-    std::array<tree_t, s_working_copies>                 m_ndtrees;
-    solver_t                                             m_solver;
-    size_type                                            m_simulation_size;
-    mutable std::size_t                                  m_f_eval_count = 0;
     duration_t                                           m_current_time{};
     duration_t                                           m_simulation_duration;
     duration_t                                           m_dt;
+    std::array<owning_container_t, s_working_copies + 1> m_particles;
+    std::array<tree_t, s_working_copies>                 m_ndtrees;
+    size_type                                            m_simulation_size;
+    solver_t                                             m_solver;
+    mutable std::size_t                                  m_f_eval_count = 0;
     utility::generics::ranged_value<value_type>          m_theta;
 };
 

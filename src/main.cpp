@@ -11,7 +11,7 @@
 #include <iostream>
 #include <vector>
 
-constexpr auto universe_radius = 20.0;
+constexpr auto universe_radius = 10.0;
 
 template <std::floating_point F>
 auto generate_particle_pair()
@@ -70,11 +70,11 @@ int barnes_hut_test()
     using F                 = double;
     static constexpr auto N = 3;
     using particle_t        = particle::ndparticle<N, F>;
-    using tick_t            = synchronization::tick_period<std::chrono::seconds, 1>;
+    using tick_t = synchronization::tick_period<std::chrono::milliseconds, 100>;
 
-    const auto size         = 200;
+    const auto size         = 20;
     auto       particles    = generate_particle_set<N, F>(size);
-    const auto duration     = std::chrono::seconds(1000);
+    const auto duration     = std::chrono::seconds(100000);
     const auto max_depth    = 7;
     const auto box_capacity = 3;
     const auto theta        = F{ 0.4 };
