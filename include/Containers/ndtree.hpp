@@ -347,7 +347,7 @@ public:
         }
         else
         {
-            const auto inserted = insert(sp);
+            [[maybe_unused]] const auto inserted = insert(sp);
             assert(inserted);
         }
     }
@@ -635,7 +635,7 @@ public:
     {
         for (auto const& e : collection)
         {
-            const auto inserted = insert(&e);
+            [[maybe_unused]] const auto inserted = insert(&e);
             assert(inserted);
         }
     }

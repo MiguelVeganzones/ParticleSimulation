@@ -28,7 +28,9 @@ time_plotter2::time_plotter2()
 #endif
 };
 
-auto time_plotter2::append(const float y1, const float y2) -> void
+auto time_plotter2::append(
+   [[maybe_unused]] const float y1, 
+   [[maybe_unused]] const float y2) -> void
 {
 #ifdef USE_ROOT_PLOTTING
     if (!std::isfinite(y1) || !std::isfinite(y2))
@@ -78,7 +80,11 @@ time_plotter4::time_plotter4()
 #endif
 };
 
-auto time_plotter4::append(const float y1, const float y2, const float y3, const float y4)
+auto time_plotter4::append(
+   [[maybe_unused]] const float y1, 
+   [[maybe_unused]] const float y2, 
+   [[maybe_unused]] const float y3, 
+   [[maybe_unused]] const float y4)
     -> void
 {
 #ifdef USE_ROOT_PLOTTING

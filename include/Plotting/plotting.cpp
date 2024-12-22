@@ -8,12 +8,12 @@ namespace root_plotting
 {
 
 auto plot(
-    int                n,
-    const float* const x,
-    const float* const y1,
-    const float* const y2,
-    const float* const y3,
-    const float* const y4
+   [[maybe_unused]] int                n,
+   [[maybe_unused]] const float* const x,
+   [[maybe_unused]] const float* const y1,
+   [[maybe_unused]] const float* const y2,
+   [[maybe_unused]] const float* const y3,
+   [[maybe_unused]] const float* const y4
 ) -> void
 {
 #ifdef USE_ROOT_PLOTTING
@@ -22,7 +22,7 @@ auto plot(
     auto gr3 = new TGraph(n, x, y3);
     auto gr4 = new TGraph(n, x, y4);
 
-    TCanvas* canvas = new TCanvas("canvas", "Graph Draw Options", 200, 10, 600, 400);
+    [[maybe_unused]] TCanvas* canvas = new TCanvas("canvas", "Graph Draw Options", 200, 10, 600, 400);
 
     gr1->SetLineColor(4);
     gr1->Draw("AC*");
@@ -36,11 +36,11 @@ auto plot(
 }
 
 auto plot(
-    int                n,
-    const float* const x,
-    const float* const y1,
-    const float* const y2,
-    const float* const y3
+   [[maybe_unused]] int                n,
+   [[maybe_unused]] const float* const x,
+   [[maybe_unused]] const float* const y1,
+   [[maybe_unused]] const float* const y2,
+   [[maybe_unused]] const float* const y3
 ) -> void
 {
 #ifdef USE_ROOT_PLOTTING
@@ -48,7 +48,7 @@ auto plot(
     auto gr2 = new TGraph(n, x, y2);
     auto gr3 = new TGraph(n, x, y3);
 
-    TCanvas* canvas = new TCanvas("canvas", "Graph Draw Options", 200, 10, 600, 400);
+    [[maybe_unused]] TCanvas* canvas = new TCanvas("canvas", "Graph Draw Options", 200, 10, 600, 400);
 
     gr1->SetLineColor(4);
     gr1->Draw("AC*");
@@ -63,7 +63,12 @@ auto plot(
 #endif
 }
 
-auto plot(int n, const float* const x, const float* const y1, const float* const y2)
+auto plot(
+   [[maybe_unused]] int n,
+   [[maybe_unused]] const float* const x,
+   [[maybe_unused]] const float* const y1,
+   [[maybe_unused]] const float* const y2
+)
     -> void
 {
 #ifdef USE_ROOT_PLOTTING
@@ -75,7 +80,7 @@ auto plot(int n, const float* const x, const float* const y1, const float* const
     gr1->SetMaximum(std::max(*std::max_element(y1, y1 + n), *std::max_element(y2, y2 + n))
     );
 
-    TCanvas* canvas = new TCanvas("canvas", "Graph Draw Options", 200, 10, 600, 400);
+    [[maybe_unused]] TCanvas* canvas = new TCanvas("canvas", "Graph Draw Options", 200, 10, 600, 400);
 
     gr1->SetLineColor(4);
     gr1->Draw("AC*");
@@ -84,7 +89,11 @@ auto plot(int n, const float* const x, const float* const y1, const float* const
 #endif
 }
 
-auto plot(int n, const float* const x, const float* const y) -> void
+auto plot(
+[[maybe_unused]]   int n, 
+[[maybe_unused]]   const float* const x, 
+[[maybe_unused]]   const float* const y
+) -> void
 {
 #ifdef USE_ROOT_PLOTTING
     auto gr1 = new TGraph(n, x, y);

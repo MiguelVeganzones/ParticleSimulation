@@ -39,7 +39,8 @@ auto generate_particle_set(std::size_t size)
 
     auto mass_generator = []() mutable -> F {
         using distribution_t = random_distribution<F, DistributionCategory::Exponential>;
-        using param_type     = typename distribution_t::param_type;
+        using param_type     = 
+        typename distribution_t::param_type;
         const param_type      params(0.001);
         static distribution_t d(params);
         return d() * F{ 100 };
@@ -72,7 +73,7 @@ int barnes_hut_test()
     using particle_t        = particle::ndparticle<N, F>;
     using tick_t = synchronization::tick_period<std::chrono::milliseconds, 100>;
 
-    const auto size         = 20;
+    const auto size         = 200;
     auto       particles    = generate_particle_set<N, F>(size);
     const auto duration     = std::chrono::seconds(100000);
     const auto max_depth    = 7;
