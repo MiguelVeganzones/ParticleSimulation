@@ -1,0 +1,59 @@
+# Build results
+build/
+[Dd]ebug/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+/bazel-*
+
+# Runtime results
+[Dd]ata/output/*
+
+# VS Code files for those working on multiple tools
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Core latex/pdflatex auxiliary files:
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+.*.lb
+
+*.pdf
+*.run.xml
+*.bcf
+*.fdb_latexmk
+*.synctex.gz
+*.xdv
+*.png
+*.json
+
+# Swap files
+*.swp
+
+#out files
+*.o
+
+# Dotfiles
+.*
