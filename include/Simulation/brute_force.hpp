@@ -14,14 +14,17 @@ namespace simulation::bf
 
 using namespace pm::interaction;
 
-template <pm::particle_concepts::Particle Particle_Type>
-// typename Solver_Type
+template <
+    pm::particle_concepts::Particle  Particle_Type,
+    pm::interaction::InteractionType Interaction_Type
+    // typename Solver_Type
+    >
 class brute_force_computation
 {
 public:
     using particle_t     = Particle_Type;
     using solver_t       = solvers::yoshida4_solver<brute_force_computation, particle_t>;
-    using interaction_t  = gravitational_interaction_calculator<particle_t>;
+    using interaction_t  = particle_interaction_t<particle_t, Interaction_Type>;
     using duration_t     = std::chrono::seconds;
     using value_type     = typename particle_t::value_type;
     using acceleration_t = typename particle_t::acceleration_t;

@@ -17,11 +17,12 @@ constexpr auto universe_radius = 100;
 TEST(PhysicalInteraction, GravitationalInteraction)
 {
     using namespace pm;
-    using F                 = double;
-    static constexpr auto N = 10;
-    using particle_t        = particle::ndparticle<N, F>;
-    using acceleration_t    = typename particle_t::acceleration_t;
-    constexpr auto size     = 50uz;
+    using F                    = double;
+    static constexpr auto N    = 10;
+    using particle_t           = particle::ndparticle<N, F>;
+    using acceleration_t       = typename particle_t::acceleration_t;
+    constexpr auto size        = 50uz;
+    constexpr auto interaction = pm::interaction::InteractionType::Gravitational;
 
     for (std::size_t k = 0; k != 100; ++k)
     {
@@ -39,8 +40,9 @@ TEST(PhysicalInteraction, GravitationalInteraction)
                 const auto a        = i == j ? acceleration_t{}
                                              : physical_constants<F>::G * p2.mass().magnitude() *
                                             distance / (d * d * d);
-                const auto a_hat    = interaction::gravitational_interaction_calculator<
-                       particle_t>::acceleration_contribution(particles[i], particles[j])
+                const auto a_hat =
+                    interaction::particle_interaction_t<particle_t, interaction>::
+                        acceleration_contribution(particles[i], particles[j])
 
                     ;
                 for (std::size_t dim = 0; dim != N; ++dim)

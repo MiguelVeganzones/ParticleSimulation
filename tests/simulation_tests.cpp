@@ -16,9 +16,10 @@ constexpr auto universe_radius = 100;
 TEST(SimulationTest, TreeAndBruteForceComparison)
 {
     using namespace pm;
-    using F                 = double;
-    static constexpr auto N = 3;
-    using particle_t        = particle::ndparticle<N, F>;
+    using F                    = double;
+    static constexpr auto N    = 3;
+    using particle_t           = particle::ndparticle<N, F>;
+    constexpr auto interaction = pm::interaction::InteractionType::Gravitational;
 
 #ifdef NDEBUG
     const auto size     = 150;
@@ -35,12 +36,12 @@ TEST(SimulationTest, TreeAndBruteForceComparison)
     const auto box_capacity = 3;
     const auto theta        = F{ 0.4 };
 
-    simulation::bh_approx::barnes_hut_approximation<particle_t> barnes_simulation_engine(
-        particles, duration, tick_t::period_duration, theta, max_depth, box_capacity
-    );
-    simulation::bf::brute_force_computation<particle_t> brute_force_simulation_engine(
-        particles, duration, tick_t::period_duration
-    );
+    simulation::bh_approx::barnes_hut_approximation<particle_t, interaction>
+        barnes_simulation_engine(
+            particles, duration, tick_t::period_duration, theta, max_depth, box_capacity
+        );
+    simulation::bf::brute_force_computation<particle_t, interaction>
+        brute_force_simulation_engine(particles, duration, tick_t::period_duration);
 
     barnes_simulation_engine.run();
     brute_force_simulation_engine.run();

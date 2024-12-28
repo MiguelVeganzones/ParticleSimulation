@@ -8,6 +8,7 @@
 #include "ndtree.hpp"
 #include "particle_concepts.hpp"
 #include "particle_interaction.hpp"
+#include "random.hpp"
 #include "stopwatch.hpp"
 #include "utils.hpp"
 #include "yoshida.hpp"
@@ -30,7 +31,8 @@ namespace simulation::bh_approx
 using namespace pm::interaction;
 
 template <
-    pm::particle_concepts::Particle Particle_Type,
+    pm::particle_concepts::Particle  Particle_Type,
+    pm::interaction::InteractionType Interaction_Type,
     // typename Solver_Type,
     std::size_t Tree_Fanout = 2>
 class barnes_hut_approximation
@@ -41,7 +43,7 @@ public:
     using tree_t                               = ndt::ndtree<s_tree_fanout, particle_t>;
     using box_t                                = typename tree_t::box_t;
     using solver_t       = solvers::yoshida4_solver<barnes_hut_approximation, particle_t>;
-    using interaction_t  = gravitational_interaction_calculator<particle_t>;
+    using interaction_t  = particle_interaction_t<particle_t, Interaction_Type>;
     using depth_t        = typename tree_t::depth_t;
     using size_type      = typename tree_t::size_type;
     using boundary_t     = typename tree_t::boundary_t;
@@ -100,11 +102,15 @@ public:
         {
             m_solver.run();
             m_current_time += m_dt;
-            std::cout << pm::energy::compute_kinetic_energy(current_system_state()) +
-                             pm::energy::compute_gravitational_potential_energy(
-                                 current_system_state()
-                             )
-                      << std::endl;
+            if (utility::random::srandom::randfloat<float>() < 0.02f)
+            {
+                std::cout << "Current time: " << m_current_time << '\n';
+                std::cout << pm::energy::compute_kinetic_energy(current_system_state()) +
+                                 pm::energy::compute_gravitational_potential_energy(
+                                     current_system_state()
+                                 )
+                          << std::endl;
+            }
 #ifdef LOG_TO_CSV
             std::ostringstream filename;
             filename << "execution_data_" << m_current_time;

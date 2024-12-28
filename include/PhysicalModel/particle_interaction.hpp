@@ -4,8 +4,6 @@
 #include "physical_constants.hpp"
 #include "physical_magnitudes.hpp"
 #include "utils.hpp"
-#include <algorithm>
-#include <ranges>
 
 #ifndef DEBUG_PRINT_INTERACTION
 #define DEBUG_PRINT_INTERACTION (false)
@@ -16,14 +14,21 @@ namespace pm::interaction
 
 using namespace particle_concepts;
 
-template <Particle Particle_Type>
-struct gravitational_interaction_calculator
+enum class InteractionType
 {
-    using particle_t     = Particle_Type;
-    using value_type     = typename particle_t::value_type;
-    using acceleration_t = typename particle_t::acceleration_t;
-    using position_t     = typename particle_t::position_t;
-    using mass_t         = typename particle_t::mass_t;
+    Gravitational,
+    Electrostatic
+};
+
+template <Particle Particle_Type>
+struct gravitational_interaction
+{
+    inline static constexpr auto s_interaction_type = InteractionType::Gravitational;
+    using particle_t                                = Particle_Type;
+    using value_type                                = typename particle_t::value_type;
+    using acceleration_t                            = typename particle_t::acceleration_t;
+    using position_t                                = typename particle_t::position_t;
+    using mass_t                                    = typename particle_t::mass_t;
 
     inline static constexpr auto epsilon = static_cast<value_type>(8e-1);
 
@@ -34,15 +39,40 @@ struct gravitational_interaction_calculator
     {
         const auto distance = utils::distance(a.position(), b.position());
         const auto d        = utils::l2_norm(distance.value());
-#if DEBUG_PRINT_INTERACTION
-        std::cout << "Mj: " << mass2.magnitude() << '\n';
-        std::cout << "D: " << distance << '\n';
-        std::cout << "d3: " << d * d * d << '\n';
-#endif
         return acceleration_t{ pm::physical_constants<value_type>::G *
                                b.mass().magnitude() * distance /
                                std::pow(d * d + epsilon * epsilon, value_type{ 1.5 }) };
     }
 };
+
+namespace detail
+{
+
+template <Particle Particle_Type, InteractionType Interaction>
+struct interaction;
+
+template <Particle Particle_Type>
+struct interaction<Particle_Type, InteractionType::Gravitational>
+{
+    using type = gravitational_interaction<Particle_Type>;
+    static_assert(pm::particle_concepts::Interaction<type>);
+};
+
+/*
+template <Particle Particle_Type>
+struct interaction<Particle_Type, InteractionType::Electrostatic>
+{
+    using type = electrostatic_interaction<Particle_Type>;
+    static_assert(pm::particle_concepts::Interaction<type>);
+};
+*/
+
+template <Particle Particle_Type, InteractionType Interaction>
+using interaction_t = typename interaction<Particle_Type, Interaction>::type;
+
+} // namespace detail
+
+template <Particle Particle_Type, InteractionType Interaction>
+using particle_interaction_t = detail::interaction_t<Particle_Type, Interaction>;
 
 } // namespace pm::interaction

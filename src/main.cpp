@@ -3,6 +3,7 @@
 #include "factory.hpp"
 #include "logging.hpp"
 #include "particle.hpp"
+#include "particle_interaction.hpp"
 #include "random_distributions.hpp"
 #include "synthetic_clock.hpp"
 #include <array>
@@ -39,8 +40,7 @@ auto generate_particle_set(std::size_t size)
 
     auto mass_generator = []() mutable -> F {
         using distribution_t = random_distribution<F, DistributionCategory::Exponential>;
-        using param_type     = 
-        typename distribution_t::param_type;
+        using param_type     = typename distribution_t::param_type;
         const param_type      params(0.001);
         static distribution_t d(params);
         return d() * F{ 100 };
@@ -68,26 +68,27 @@ auto generate_particle_set(std::size_t size)
 int barnes_hut_test()
 {
     using namespace pm;
-    using F                 = double;
-    static constexpr auto N = 3;
-    using particle_t        = particle::ndparticle<N, F>;
-    using tick_t = synchronization::tick_period<std::chrono::milliseconds, 100>;
+    using F                    = double;
+    static constexpr auto N    = 3;
+    using particle_t           = particle::ndparticle<N, F>;
+    constexpr auto interaction = pm::interaction::InteractionType::Gravitational;
 
-    const auto size         = 200;
-    auto       particles    = generate_particle_set<N, F>(size);
-    const auto duration     = std::chrono::seconds(100000);
-    const auto max_depth    = 7;
+    const auto size      = 200;
+    auto       particles = generate_particle_set<N, F>(size);
+    const auto duration  = std::chrono::seconds(100000);
+    using tick_t         = synchronization::tick_period<std::chrono::milliseconds, 100>;
+    const auto max_depth = 7;
     const auto box_capacity = 3;
     const auto theta        = F{ 0.4 };
 
-    simulation::bh_approx::barnes_hut_approximation<particle_t> simulation_a(
+    simulation::bh_approx::barnes_hut_approximation<particle_t, interaction> simulation_a(
         particles, duration, tick_t::period_duration, theta, max_depth, box_capacity
     );
 
     std::cout << "Simulation A\n";
     simulation_a.run();
 
-    simulation::bf::brute_force_computation<particle_t> simulation_b(
+    simulation::bf::brute_force_computation<particle_t, interaction> simulation_b(
         particles, duration, tick_t::period_duration
     );
 
