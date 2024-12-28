@@ -32,6 +32,7 @@ public:
     inline static constexpr auto s_dimension = N;
     using position_t        = magnitudes::position<s_dimension, value_type>;
     using mass_t            = magnitudes::mass<value_type>;
+    using charge_t          = magnitudes::charge<value_type>;
     using velocity_t        = magnitudes::linear_velocity<s_dimension, value_type>;
     using acceleration_t    = magnitudes::linear_acceleration<s_dimension, value_type>;
     using runtime_1d_unit_t = magnitudes::runtime_unit<1, value_type>;
@@ -44,12 +45,14 @@ public:
         mass_t       m,
         position_t   pos,
         velocity_t   vel,
-        ParticleType type = ParticleType::real
+        ParticleType type   = ParticleType::real,
+        charge_t     charge = charge_t{}
     ) :
         m_id{ type == ParticleType::real ? ID++ : fictitious_particle_id },
         m_mass{ std::move(m) },
         m_position{ std::move(pos) },
-        m_velocity{ std::move(vel) }
+        m_velocity{ std::move(vel) },
+        m_charge{ std::move(charge) }
     {
     }
 
@@ -57,7 +60,8 @@ public:
         m_id{ fictitious_particle_id },
         m_mass{},
         m_position{},
-        m_velocity{}
+        m_velocity{},
+        m_charge{}
     {
     }
 
@@ -139,6 +143,12 @@ public:
     }
 
     [[nodiscard]]
+    constexpr auto charge() const noexcept -> charge_t const&
+    {
+        return m_charge;
+    }
+
+    [[nodiscard]]
     constexpr auto properties() const noexcept -> decltype(auto)
     {
         return std::tie(m_mass, m_velocity);
@@ -163,11 +173,12 @@ private:
     mass_t     m_mass;
     position_t m_position;
     velocity_t m_velocity;
+    charge_t   m_charge;
 };
 
 [[nodiscard]]
-auto merge(std::ranges::input_range auto&& particles) noexcept
-    -> std::optional<std::ranges::range_value_t<decltype(particles)>>
+auto merge(std::ranges::input_range auto&& particles
+) noexcept -> std::optional<std::ranges::range_value_t<decltype(particles)>>
     requires particle_concepts::Particle<std::ranges::range_value_t<decltype(particles)>>
 {
     using particle_t        = std::ranges::range_value_t<decltype(particles)>;

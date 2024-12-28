@@ -40,10 +40,10 @@ public:
     constexpr physical_magnitude() noexcept                          = default;
     constexpr physical_magnitude(physical_magnitude const&) noexcept = default;
     constexpr physical_magnitude(physical_magnitude&&) noexcept      = default;
-    constexpr auto operator=(physical_magnitude const&) noexcept
-        -> physical_magnitude& = default;
-    constexpr auto operator=(physical_magnitude&&) noexcept
-        -> physical_magnitude&     = default;
+    constexpr auto operator=(physical_magnitude const&) noexcept -> physical_magnitude& =
+                                                                        default;
+    constexpr auto operator=(physical_magnitude&&) noexcept -> physical_magnitude& =
+                                                                   default;
     ~physical_magnitude() noexcept = default;
 
     physical_magnitude(std::initializer_list<value_type> init) noexcept :
@@ -87,10 +87,14 @@ public:
 
     template <typename Self>
     [[nodiscard]]
-    auto magnitude(this Self&& self) noexcept
-        -> auto&& requires(N == 1) { return std::forward<Self>(self).value_[0]; }
+    auto magnitude(this Self&& self) noexcept -> auto&&
+        requires(N == 1)
+    {
+        return std::forward<Self>(self).value_[0];
+    }
 
-    [[nodiscard]] auto operator[](this auto&& self, std::integral auto idx) -> auto&&
+    [[nodiscard]]
+    auto operator[](this auto&& self, std::integral auto idx) -> auto&&
     {
         return std::forward<decltype(self)>(self).value_[idx];
     }
@@ -115,9 +119,14 @@ public:
     }
 
     [[nodiscard]]
-    auto magnitude() noexcept -> value_type& requires(N == 1) { return value_[0]; }
+    auto magnitude() noexcept -> value_type&
+        requires(N == 1)
+    {
+        return value_[0];
+    }
 
-    [[nodiscard]] auto operator[](std::integral auto idx) const -> value_type
+    [[nodiscard]]
+    auto operator[](std::integral auto idx) const -> value_type
     {
         return value_[idx];
     }
@@ -253,6 +262,8 @@ template <std::size_t N, std::floating_point F>
 using energy = physical_magnitude_t<1, F, units::Units::joule>;
 template <std::size_t N, std::floating_point F>
 using runtime_unit = physical_magnitude_t<N, F, units::Units::_runtime_unit_>;
+template <std::floating_point F>
+using charge = physical_magnitude_t<1, F, units::Units::coulomb>;
 
 auto operator+(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
     requires particle_concepts::Magnitude<std::remove_reference_t<decltype(pma)>> ||
@@ -311,7 +322,8 @@ auto min(Magnitude_Type const& pma, Magnitude_Type const& pmb) noexcept -> declt
 }
 
 template <typename T1, typename T2>
-    requires(particle_concepts::Magnitude<std::remove_reference_t<T1>> || particle_concepts::Magnitude<std::remove_reference_t<T2>>)
+    requires(particle_concepts::Magnitude<std::remove_reference_t<T1>> ||
+             particle_concepts::Magnitude<std::remove_reference_t<T2>>)
 [[nodiscard]]
 auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(auto)
 {

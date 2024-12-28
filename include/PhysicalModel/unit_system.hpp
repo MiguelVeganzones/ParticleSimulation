@@ -19,6 +19,7 @@ enum struct Units
     newton,
     joule,
     _runtime_unit_,
+    coulomb,
 };
 
 template <Units U>

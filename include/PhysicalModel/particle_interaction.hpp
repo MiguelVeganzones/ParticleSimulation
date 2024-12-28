@@ -1,5 +1,6 @@
 #pragma once
 
+#include "interaction_type.hpp"
 #include "particle_concepts.hpp"
 #include "physical_constants.hpp"
 #include "physical_magnitudes.hpp"
@@ -29,9 +30,11 @@ struct gravitational_interaction_calculator
 
     inline static auto acceleration_contribution(
         particle_t const& a,
-        particle_t const& b
+        particle_t const& b,
+        InteractionType   interaction_type = InteractionType::Gravitational
     ) noexcept -> acceleration_t
     {
+
         const auto distance = utils::distance(a.position(), b.position());
         const auto d        = utils::l2_norm(distance.value());
 #if DEBUG_PRINT_INTERACTION
@@ -39,10 +42,32 @@ struct gravitational_interaction_calculator
         std::cout << "D: " << distance << '\n';
         std::cout << "d3: " << d * d * d << '\n';
 #endif
-        return acceleration_t{ pm::physical_constants<value_type>::G *
-                               b.mass().magnitude() * distance /
-                               std::pow(d * d + epsilon * epsilon, value_type{ 1.5 }) };
-    }
+        acceleration_t acceleration_magnitude;
+        switch (interaction_type)
+        {
+        case InteractionType::Gravitational:
+            {
+                auto constant          = pm::physical_constants<value_type>::G;
+                acceleration_magnitude = acceleration_t{
+                    (constant * b.mass().magnitude() * distance) /
+                    std::pow(d * d + epsilon * epsilon, value_type{ 1.5 })
+                };
+                break;
+            }
+        case InteractionType::Electrostatic:
+            {
+                auto constant          = pm::physical_constants<value_type>::K;
+                acceleration_magnitude = acceleration_t{
+                    (constant * b.charge().magnitude() * a.charge().magnitude() * distance
+                    ) /
+                    a.mass().magnitude() /
+                    std::pow(d * d + epsilon * epsilon, value_type{ 1.5 })
+                };
+                break;
+            }
+        default: return acceleration_t{};
+        };
+        return acceleration_magnitude;
+    };
 };
-
 } // namespace pm::interaction
