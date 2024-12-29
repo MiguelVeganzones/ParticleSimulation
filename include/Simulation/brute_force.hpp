@@ -1,5 +1,6 @@
 #pragma once
 
+#include "compile_time_utility.hpp"
 #include "concepts.hpp"
 #include "particle_concepts.hpp"
 #include "particle_interaction.hpp"
@@ -13,25 +14,27 @@ namespace simulation::bf
 
 using namespace pm::interaction;
 
-template <pm::particle_concepts::Particle Particle_Type>
-// typename Solver_Type
+template <
+    pm::particle_concepts::Particle  Particle_Type,
+    pm::interaction::InteractionType Interaction_Type
+    // typename Solver_Type
+    >
 class brute_force_computation
 {
 public:
-    using particle_t     = Particle_Type;
-    using solver_t       = solvers::yoshida4_solver<brute_force_computation, particle_t>;
-    using interaction_t  = gravitational_interaction_calculator<particle_t>;
-    using duration_t     = std::chrono::seconds;
-    using value_type     = typename particle_t::value_type;
-    using acceleration_t = typename particle_t::acceleration_t;
-    using position_t     = typename particle_t::position_t;
-    using velocity_t     = typename particle_t::velocity_t;
-    using mass_t         = typename particle_t::mass_t;
+    using particle_t    = Particle_Type;
+    using solver_t      = solvers::yoshida4_solver<brute_force_computation, particle_t>;
+    using interaction_t = particle_interaction_t<particle_t, Interaction_Type>;
+    static_assert(pm::particle_concepts::Interaction<interaction_t>);
+    using duration_t                              = std::chrono::seconds;
+    using value_type                              = typename particle_t::value_type;
+    using acceleration_t                          = typename particle_t::acceleration_t;
+    using position_t                              = typename particle_t::position_t;
+    using velocity_t                              = typename particle_t::velocity_t;
+    using mass_t                                  = typename particle_t::mass_t;
     using owning_container_t                      = std::vector<particle_t>;
     inline static constexpr auto s_working_copies = solver_t::s_working_copies;
 
-    // TODO: Improve interface, too many parameters, implement proper move ctor and move
-    // them in.
     brute_force_computation(
         std::vector<particle_t>                particles,
         utility::concepts::Duration auto const sim_duration,
@@ -39,8 +42,10 @@ public:
     ) :
         m_simulation_duration{ std::chrono::duration_cast<duration_t>(sim_duration) },
         m_dt{ std::chrono::duration_cast<duration_t>(sim_dt) },
-        m_particles{ particles, particles, particles, particles, particles }, // TODO Fix
-        m_simulation_size{ particles.size() },
+        m_particles{
+            utility::compile_time_utility::array_factory<s_working_copies + 1>(particles)
+        },
+        m_simulation_size{ std::ranges::size(m_particles[0]) },
         m_solver(this, m_simulation_size, m_dt)
     {
     }
@@ -61,7 +66,6 @@ public:
         {
             m_solver.run();
             m_current_time += m_dt;
-            std::cout << m_current_time << '\n';
         }
 #ifdef USE_ROOT_PLOTTING
         if (iteration++ % 2 == 0)
@@ -75,10 +79,9 @@ public:
             scatter_plot.plot(static_cast<int>(m_simulation_size), &x[0], &y[0], &z[0]);
         }
 #endif
-        std::cout << count << '\n';
     }
 
-    auto get_acceleration(std::size_t copy_idx, std::size_t p_idx) noexcept
+    auto get_acceleration(std::size_t copy_idx, std::size_t p_idx) const noexcept
         -> acceleration_t
     {
         acceleration_t acc{};
@@ -87,7 +90,7 @@ public:
         {
             if (other.id() != p.id()) [[likely]]
             {
-                ++count;
+                ++m_f_eval_count;
                 acc = std::move(acc) + interaction_t::acceleration_contribution(p, other);
             }
         }
@@ -153,15 +156,20 @@ public:
         m_particles[buffer_id][p_idx].velocity() = value;
     }
 
+    [[nodiscard]]
+    inline auto f_eval_count() const noexcept -> std::size_t
+    {
+        return m_f_eval_count;
+    }
+
 private:
-    // TODO Reorder
     duration_t                                           m_current_time{};
     duration_t                                           m_simulation_duration;
     duration_t                                           m_dt;
     std::array<owning_container_t, s_working_copies + 1> m_particles;
     std::size_t                                          m_simulation_size;
     solver_t                                             m_solver;
-    std::size_t                                          count = 0;
+    mutable std::size_t                                  m_f_eval_count = 0;
 };
 
 } // namespace simulation::bf

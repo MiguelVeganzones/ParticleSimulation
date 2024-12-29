@@ -1,7 +1,5 @@
 #pragma once
 
-#define DEBUG_NDTREE 1
-
 #include "constexpr_functions.hpp"
 #include "error_handling.hpp"
 #include "logging.hpp"
@@ -70,7 +68,7 @@ public:
     using index_t                            = std::remove_const_t<decltype(s_dimension)>;
 
 public:
-    constexpr ndboundary() noexcept = default;
+    constexpr ndboundary() noexcept = delete;
 
     constexpr ndboundary(point_t const& p1, point_t const& p2) noexcept
     {
@@ -114,9 +112,8 @@ public:
         return std::midpoint(m_max[idx], m_min[idx]);
     }
 
-    // TODO: Fix: More corners cut here...
     [[nodiscard]]
-    auto space_diagonal() const noexcept -> auto
+    auto diagonal_length() const noexcept -> auto
     {
         return m_max - m_min;
     }
@@ -350,7 +347,7 @@ public:
         }
         else
         {
-            const auto inserted = insert(sp);
+            [[maybe_unused]] const auto inserted = insert(sp);
             assert(inserted);
         }
     }
@@ -395,9 +392,9 @@ public:
     }
 
     [[nodiscard]]
-    auto space_diagonal() const noexcept -> auto
+    auto diagonal_length() const noexcept -> auto
     {
-        return m_boundary.space_diagonal();
+        return m_boundary.diagonal_length();
     }
 
     auto print_info(std::ostream& os) const -> void
@@ -638,7 +635,7 @@ public:
     {
         for (auto const& e : collection)
         {
-            const auto inserted = insert(&e);
+            [[maybe_unused]] const auto inserted = insert(&e);
             assert(inserted);
         }
     }

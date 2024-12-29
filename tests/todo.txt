@@ -1,0 +1,15 @@
+No te rayes q si te lleva mucho te ayudo, pero creo q se hace rapido
+
+float and double need to be tested, this one is important
+particles should have an initila velocity (maybe biased to be perpendicualr to
+the radius so orbits form)
+brute force function evaluations are known from parameters. Check
+sensible bounds for barnes hut function evaluations can be estimated from parameters,
+specially size, iterations and approximating distance Estimaet and check
+solvers need to be tested
+tree should be tested briefly, some internal checks ensure some corrctness
+cache simulation results to make testing faster
+reals resuls can also be used to check much better
+test larger simulations
+test 2 particle simulations for stability, bounds are known
+physical interaction error depends on epsilon

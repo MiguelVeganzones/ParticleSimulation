@@ -1,4 +1,5 @@
 # Build results
+build/
 [Dd]ebug/
 [Rr]elease/
 [Rr]eleases/
@@ -53,3 +54,6 @@ bld/
 
 #out files
 *.o
+
+# Dotfiles
+.*

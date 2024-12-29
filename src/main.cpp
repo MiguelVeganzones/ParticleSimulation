@@ -1,26 +1,18 @@
 #include "barnes_hut_approximation.hpp"
 #include "brute_force.hpp"
 #include "factory.hpp"
-#include "leapfrog.hpp"
 #include "logging.hpp"
-#include "ndtree.hpp"
 #include "particle.hpp"
-#include "physical_magnitudes.hpp"
-#include "plotting.hpp"
+#include "particle_interaction.hpp"
 #include "random_distributions.hpp"
-#include "runge_kutta.hpp"
-#include "stopwatch.hpp"
 #include "synthetic_clock.hpp"
-#include "utils.hpp"
 #include <array>
-#include <chrono>
-#include <cmath>
+#include <concepts>
 #include <cstdlib>
-#include <ctime>
 #include <iostream>
 #include <vector>
 
-constexpr auto universe_diameter = 20.f;
+constexpr auto universe_radius = 10.0;
 
 template <std::floating_point F>
 auto generate_particle_pair()
@@ -28,13 +20,13 @@ auto generate_particle_pair()
     const F m = 1e8;
     return std::array{ pm::particle::ndparticle<1, F>(
                            pm::magnitudes::mass<F>{ m },
-                           pm::magnitudes::position<1, F>{ -universe_diameter },
+                           pm::magnitudes::position<1, F>{ -universe_radius },
                            pm::magnitudes::linear_velocity<1, F>{ 0 },
                            pm::magnitudes::linear_acceleration<1, F>{ 0 }
                        ),
                        pm::particle::ndparticle<1, F>(
                            pm::magnitudes::mass<F>{ m },
-                           pm::magnitudes::position<1, F>{ universe_diameter },
+                           pm::magnitudes::position<1, F>{ universe_radius },
                            pm::magnitudes::linear_velocity<1, F>{ 0 },
                            pm::magnitudes::linear_acceleration<1, F>{ 0 }
                        ) };
@@ -49,7 +41,7 @@ auto generate_particle_set(std::size_t size)
     auto mass_generator = []() mutable -> F {
         using distribution_t = random_distribution<F, DistributionCategory::Exponential>;
         using param_type     = typename distribution_t::param_type;
-        param_type            params(F{ 0.001f });
+        const param_type      params(0.001);
         static distribution_t d(params);
         return d() * F{ 100 };
     };
@@ -57,13 +49,13 @@ auto generate_particle_set(std::size_t size)
     auto position_generator = []() mutable -> F {
         using distribution_a_t = random_distribution<F, DistributionCategory::Uniform>;
         using param_type_a     = typename distribution_a_t::param_type;
-        param_type_a            params_a(F{ -universe_diameter }, F{ universe_diameter });
+        const param_type_a      params_a(-universe_radius, universe_radius);
         static distribution_a_t d_a(params_a);
         using distribution_b_t = random_distribution<F, DistributionCategory::Gamma>;
         using param_type_b     = typename distribution_b_t::param_type;
-        param_type_b            params_b(F{ 1 }, F{ 1 });
+        const param_type_b      params_b(F{ 1 }, F{ 1 });
         static distribution_b_t d_b(params_b);
-        return d_a(); // + universe_diameter;
+        return d_a(); // + universe_radius;
     };
 
     auto velocity_generator = []() -> F { return F{ 0 }; };
@@ -76,25 +68,27 @@ auto generate_particle_set(std::size_t size)
 int barnes_hut_test()
 {
     using namespace pm;
-    using F                 = double;
-    static constexpr auto N = 3;
-    using particle_t        = particle::ndparticle<N, F>;
-    using tick_t            = synchronization::tick_period<std::chrono::seconds, 1>;
+    using F                    = double;
+    static constexpr auto N    = 3;
+    using particle_t           = particle::ndparticle<N, F>;
+    constexpr auto interaction = pm::interaction::InteractionType::Gravitational;
 
-    const auto size         = 200;
-    auto       particles    = generate_particle_set<N, F>(size);
-    const auto duration     = std::chrono::seconds(1000);
-    const auto max_depth    = 7;
+    const auto size      = 200;
+    auto       particles = generate_particle_set<N, F>(size);
+    const auto duration  = std::chrono::seconds(100000);
+    using tick_t         = synchronization::tick_period<std::chrono::milliseconds, 100>;
+    const auto max_depth = 7;
     const auto box_capacity = 3;
+    const auto theta        = F{ 0.4 };
 
-    simulation::bh_approx::barnes_hut_approximation<particle_t> simulation_a(
-        particles, duration, tick_t::period_duration, max_depth, box_capacity
+    simulation::bh_approx::barnes_hut_approximation<particle_t, interaction> simulation_a(
+        particles, duration, tick_t::period_duration, theta, max_depth, box_capacity
     );
 
     std::cout << "Simulation A\n";
     simulation_a.run();
 
-    simulation::bf::brute_force_computation<particle_t> simulation_b(
+    simulation::bf::brute_force_computation<particle_t, interaction> simulation_b(
         particles, duration, tick_t::period_duration
     );
 

@@ -20,10 +20,10 @@ scatter_plot_3D::scatter_plot_3D()
 }
 
 auto scatter_plot_3D::plot(
-    const int          n,
-    float const* const x,
-    float const* const y,
-    float const* const z
+   [[maybe_unused]] const int          n,
+   [[maybe_unused]] float const* const x,
+   [[maybe_unused]] float const* const y,
+   [[maybe_unused]] float const* const z
 ) -> void
 {
 #ifdef USE_ROOT_PLOTTING

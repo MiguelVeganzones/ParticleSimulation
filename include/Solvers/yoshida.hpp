@@ -49,8 +49,6 @@ struct yoshida4_solver
     {
     }
 
-    // Some corners have been cut in this implementation...
-    // TODO Fix, API too transparent and ugly
     auto run() -> void
     {
         const auto dt = dt_.count();
@@ -103,14 +101,10 @@ struct yoshida4_solver
             for (std::size_t j = 0; j != s_order; ++j)
             {
                 std::cout << "---------------------\n";
-                std::cout << position_buffer_[j][i] << '\t';
-                std::cout << velocity_buffer_[j][i] << '\n';
+                std::cout << system_->position_buffer_read(j, i) << '\t';
+                std::cout << system_->velocity_buffer_read(j, i) << '\n';
                 std::cout << "---------------------\n";
             }
-        }
-        for (auto const& p : particles_)
-        {
-            std::cout << p << '\n';
         }
 #endif
     }

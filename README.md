@@ -76,9 +76,9 @@ project to support the creation of large scale particle systems through density
 fields.
 
 ## Getting Started
-Clone the project with `git clone https://gitlab.lrz.de/00000000014BECEA/barnes-hut-galaxy-simulation.git` \
+Clone the project with `git clone https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation.git` \
 Build with make: `make main`\
-Execute as: './bin/debug/main.o'
+Execute as: `./bin/debug/main.o`
 
 ### Prerequisites
 This project uses C++23 features and thus, a modern compiler is needed.
@@ -88,7 +88,7 @@ ROOT (CERN) ("Root" from now on) is an optional dependency for real-time plottin
 Boost is an optional dependency for logging. Boost logging is conditionally compiled.\
 
 ### Installation
-Clone the project with `git clone https://gitlab.lrz.de/00000000014BECEA/barnes-hut-galaxy-simulation.git` \
+Clone the project with `git clone https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation.git` \
 
 ### Building the Project
 
@@ -109,7 +109,7 @@ Leaving out any flag or setting equal to 0 (or any other number) disables the re
 ## Usage
 The code can be compiled by running:
 `make main [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` \
-This will generate the executable './bin/[bin,release,full_release]/main.o', which can be directly executed (by running './bin/[bin,release,full_release]/main.o').
+This will generate the executable `./bin/[bin,release,full_release]/main.o`, which can be directly executed (by running `./bin/[bin,release,full_release]/main.o`).
 
 ## Configuration
 #### Optimization Level
@@ -134,7 +134,7 @@ The supported arguments are
 
 ## Testing
 Compile: `make tests [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` \
-Execute: './tests/bin/{debug,release,full_release}/tests.o'
+Execute: `./tests/bin/{debug,release,full_release}/tests.o`
 
 ## Performance
 ToDo
@@ -145,9 +145,12 @@ ToDo
 
 ## Documentation
 
-- [Numerical simulations of gravitational dynamics](docs/numerical_simulation_of_gravitational_dynamics.pdf)
-- [Optimal doftening for gravitational computations.pdf](docs/optimal_doftening_for_gravitational_computations.pdf)
-[Construction of higher order symplectic integrators](docs/construction_of_higher_order_symplectic_integrators.pdf)
+- [Numerical simulations of gravitational dynamics](http://eugvas.net/teaching/nbody2016/lectures.pdf)
+- [Optimal Softening for Gravitational Force Calculations in N-body Dynamics](https://doi.org/10.3847/1538-4357/abe94d)
+- [Construction of higher order symplectic integrators](https://www.sciencedirect.com/science/article/abs/pii/0375960190900923)
+- [Solving Ordinary Differential Equations I Nonstiff Problems](https://link.springer.com/book/10.1007/978-3-540-78862-1)
+- [Optimal Smoothing for N -Body Codes](https://arxiv.org/abs/astro-ph/9511146v2)
+- [Numerical Integration Methods for Orbital Motion](https://link.springer.com/article/10.1007/BF00049361)
 
 ## License
 This project is licensed under the [GNU General Public License](./LICENSE).

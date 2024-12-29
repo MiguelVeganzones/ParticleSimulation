@@ -26,7 +26,9 @@ struct physical_vector
     using const_iterator = typename container_t::const_iterator;
     using iterator       = typename container_t::iterator;
 
-    inline auto assert_in_bounds(std::integral auto const idx) const -> void
+    inline auto assert_in_bounds(
+[[maybe_unused]]
+        std::integral auto const idx) const -> void
     {
         assert(idx < utility::casts::safe_cast<decltype(idx)>(s_dimension));
     }
@@ -222,7 +224,7 @@ auto operator_impl(T1&& pva, T2&& pvb, auto&& binary_op) noexcept -> decltype(au
         {
             return v[idx];
         }
-        if constexpr (std::ranges::range<v_t>)
+        else if constexpr (std::ranges::range<v_t>)
         {
             return v[idx];
         }

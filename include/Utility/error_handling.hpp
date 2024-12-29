@@ -10,10 +10,10 @@ namespace utility::error_handling
 [[noreturn]]
 inline auto assert_unreachable() -> void
 {
-#if !NDEBUG
-    assert(false);
-#endif
+#ifdef NDEBUG
     std::unreachable();
+#endif
+    assert(false);
 }
 
 } // namespace utility::error_handling

@@ -96,8 +96,8 @@ FULL_RELEASE_CXXFLAGS = -fdiagnostics-color=always \
 			-fconcepts-diagnostics-depth=3 \
 			-fno-math-errno \
 			-fno-trapping-math \
+			-fno-exceptions \
 			-std=c++23
-			#-fno-exceptions
 
 OPTIMIZATION_LEVEL ?= 0
 ifeq (${OPTIMIZATION_LEVEL}, 1)
@@ -143,6 +143,7 @@ ENABLE_ROOT_PLOTTING ?= 0
 ifeq (${ENABLE_ROOT_PLOTTING}, 1)
 IMPL_ROOT_FLAG			= USE_ROOT_PLOTTING
 CXXFLAGS			+= -Wno-cpp -D$(IMPL_ROOT_FLAG)
+CXXFLAGS			+= -std=c++23
 PLOTTING_LIB			= `root-config --libs`
 ROOT_FLAGS			= `root-config --cflags` -Wno-cpp -D$(IMPL_ROOT_FLAG)
 endif
@@ -212,7 +213,7 @@ $(PLOTTING_DIR)/$(OUT_DIR)/scatter_plot.o: $(PLOTTING_DIR)/scatter_plot.cpp $(PL
 #=============================================================
 tests: ${TEST_DIR}/$(OUT_DIR)/tests.o
 
-${TEST_DIR}/$(OUT_DIR)/tests.o: $(TEST_DIR)/*tests.cpp $(INCLUDE_DIR)/*/*.hpp
+${TEST_DIR}/$(OUT_DIR)/tests.o: $(TEST_DIR)/*.cpp $(INCLUDE_DIR)/*/*.hpp
 	@echo -e Building $@..."\n"
 	@mkdir -p $(TEST_DIR)/$(OUT_DIR)
 	$(CXX) $(CXXFLAGS) $(TESTS_INCL) $(TESTS_LIB) $(TEST_DIR)/*tests.cpp -o $@

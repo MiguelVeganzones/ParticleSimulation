@@ -29,7 +29,6 @@ auto helper_write_to_csv(
         return;
     }
 
-    // TODO: refotmat propperly
     file << "ID" << delimiter;
     file << "Mass"
 #ifdef USE_UNIT_SYSTEM
