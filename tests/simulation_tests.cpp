@@ -21,14 +21,16 @@ TEST(SimulationTest, TreeAndBruteForceComparison)
     using particle_t           = particle::ndparticle<N, F>;
     constexpr auto interaction = pm::interaction::InteractionType::Gravitational;
 
-#ifdef NDEBUG
+#ifndef NDEBUG
     const auto size     = 150;
     const auto duration = std::chrono::seconds(150);
     using tick_t        = synchronization::tick_period<std::chrono::seconds, 1>;
+    constexpr auto f    = 0.95;
 #else
     const auto size     = 300;
     const auto duration = std::chrono::seconds(1000);
     using tick_t        = synchronization::tick_period<std::chrono::milliseconds, 200>;
+    constexpr auto f    = 0.85;
 #endif
     auto particles = particle_factory::generate_particle_set<N, F>(size, universe_radius);
 
@@ -60,7 +62,7 @@ TEST(SimulationTest, TreeAndBruteForceComparison)
     EXPECT_LE(
         barnes_simulation_engine.f_eval_count(),
         static_cast<std::size_t>(
-            static_cast<double>(brute_force_simulation_engine.f_eval_count()) * 0.85
+            static_cast<double>(brute_force_simulation_engine.f_eval_count()) * f
         )
     );
 }

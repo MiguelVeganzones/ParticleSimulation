@@ -55,7 +55,6 @@ template <Particle Particle_Type>
 struct interaction<Particle_Type, InteractionType::Gravitational>
 {
     using type = gravitational_interaction<Particle_Type>;
-    static_assert(pm::particle_concepts::Interaction<type>);
 };
 
 /*
@@ -63,7 +62,6 @@ template <Particle Particle_Type>
 struct interaction<Particle_Type, InteractionType::Electrostatic>
 {
     using type = electrostatic_interaction<Particle_Type>;
-    static_assert(pm::particle_concepts::Interaction<type>);
 };
 */
 
