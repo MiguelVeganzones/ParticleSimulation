@@ -39,7 +39,7 @@ struct gravitational_interaction
     {
         const auto distance = utils::distance(a.position(), b.position());
         const auto d        = utils::l2_norm(distance.value());
-        return acceleration_t{ pm::physical_constants<value_type>::G *
+        return acceleration_t{ pm::physical_parameters<value_type>::G *
                                b.mass().magnitude() * distance /
                                std::pow(d * d + epsilon * epsilon, value_type{ 1.5 }) };
     }

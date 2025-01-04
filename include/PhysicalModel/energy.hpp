@@ -67,9 +67,10 @@ inline static constexpr auto compute_gravitational_potential_energy(
         {
             auto const& p2 = particles[j];
             const auto  r =
-                utils::l2_norm(utils::distance(p1.position(), p2.position()).value()) + value_type{0.01};
-            e = std::move(e) - physical_constants<value_type>::G * p1.mass().magnitude() *
-                                   p2.mass().magnitude() / r;
+                utils::l2_norm(utils::distance(p1.position(), p2.position()).value()) +
+                value_type{ 0.01 };
+            e = std::move(e) - physical_parameters<value_type>::G *
+                                   p1.mass().magnitude() * p2.mass().magnitude() / r;
         }
     }
     return e;

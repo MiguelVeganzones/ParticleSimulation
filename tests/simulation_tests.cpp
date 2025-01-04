@@ -1,4 +1,3 @@
-#include <chrono>
 #undef USE_BOOST_LOGGING
 #undef USE_ROOT_PLOTTING
 #undef DEBUG_NDTREE
@@ -8,7 +7,9 @@
 #include "factory.hpp"
 #include "particle.hpp"
 #include "particle_factory.hpp"
+#include "simulation_config.hpp"
 #include "synthetic_clock.hpp"
+#include <chrono>
 #include <gtest/gtest.h>
 
 constexpr auto universe_radius = 100;
@@ -22,28 +23,33 @@ TEST(SimulationTest, TreeAndBruteForceComparison)
     constexpr auto interaction = pm::interaction::InteractionType::Gravitational;
 
 #ifndef NDEBUG
-    const auto size     = 150;
-    const auto duration = std::chrono::seconds(150);
-    using tick_t        = synchronization::tick_period<std::chrono::seconds, 1>;
-    constexpr auto f    = 0.95;
+    simulation::config::simulation_common_config<particle_t> base_config{
+        .dt_             = std::chrono::seconds(1),
+        .duration_       = std::chrono::seconds(150),
+        .particle_count_ = 150,
+        .sim_type_       = simulation::config::SimulationType::_none_
+    };
+    constexpr auto f = 0.95;
 #else
-    const auto size     = 300;
-    const auto duration = std::chrono::seconds(1000);
-    using tick_t        = synchronization::tick_period<std::chrono::milliseconds, 200>;
-    constexpr auto f    = 0.85;
+    simulation::config::simulation_common_config<particle_t> base_config{
+        .dt_             = std::chrono::milliseconds(200),
+        .duration_       = std::chrono::seconds(1000),
+        .particle_count_ = 300,
+        .sim_type_       = simulation::config::SimulationType::_none_
+    };
+    constexpr auto f = 0.85;
 #endif
+    const auto size = base_config.particle_count_;
     auto particles = particle_factory::generate_particle_set<N, F>(size, universe_radius);
 
-    const auto max_depth    = 7;
-    const auto box_capacity = 3;
-    const auto theta        = F{ 0.4 };
+    simulation::config::barnes_hut_specific_config<particle_t> bh_config{
+        .tree_max_depth_ = 7, .tree_box_capacity_ = 3, .theta_ = F{ 0.4 }
+    };
 
     simulation::bh_approx::barnes_hut_approximation<particle_t, interaction>
-        barnes_simulation_engine(
-            particles, duration, tick_t::period_duration, theta, max_depth, box_capacity
-        );
+        barnes_simulation_engine(particles, base_config, bh_config);
     simulation::bf::brute_force_computation<particle_t, interaction>
-        brute_force_simulation_engine(particles, duration, tick_t::period_duration);
+        brute_force_simulation_engine(particles, base_config);
 
     barnes_simulation_engine.run();
     brute_force_simulation_engine.run();

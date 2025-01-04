@@ -9,9 +9,11 @@
 #include "particle_concepts.hpp"
 #include "particle_interaction.hpp"
 #include "random.hpp"
+#include "simulation_config.hpp"
 #include "stopwatch.hpp"
 #include "utils.hpp"
 #include "yoshida.hpp"
+#include <bits/ranges_algo.h>
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -60,31 +62,41 @@ public:
         utility::generics::interval{ value_type{ 0 }, value_type{ 1 } };
 
     barnes_hut_approximation(
-        std::vector<particle_t>                particles,
+        std::vector<particle_t> const& particles,
+        /*
         utility::concepts::Duration auto const sim_duration,
         utility::concepts::Duration auto const sim_dt,
         value_type                             theta,
         depth_t const                          tree_max_depth,
         size_type const                        tree_box_capacity,
-        std::optional<boundary_t>              tree_bounds = std::nullopt
+    */
+        simulation::config::simulation_common_config<particle_t> const&   base_config,
+        simulation::config::barnes_hut_specific_config<particle_t> const& specific_config,
+        std::optional<boundary_t> tree_bounds = std::nullopt
     ) :
-        m_simulation_duration{ std::chrono::duration_cast<duration_t>(sim_duration) },
-        m_dt{ std::chrono::duration_cast<duration_t>(sim_dt) },
+        m_simulation_duration{
+            std::chrono::duration_cast<duration_t>(base_config.duration_)
+        },
+        m_dt{ std::chrono::duration_cast<duration_t>(base_config.dt_) },
         m_particles{
             utility::compile_time_utility::array_factory<s_working_copies + 1>(particles)
         },
         m_ndtrees{ utility::compile_time_utility::array_factory<s_working_copies>(
-            [this, tree_max_depth, tree_box_capacity, tree_bounds](std::size_t I
-            ) -> tree_t {
+            [this, specific_config, tree_bounds](std::size_t I) -> tree_t {
                 return tree_t(
-                    m_particles[I], tree_max_depth, tree_box_capacity, tree_bounds
+                    m_particles[I],
+                    specific_config.tree_max_depth_,
+                    specific_config.tree_box_capacity_,
+                    tree_bounds
                 );
             }
         ) },
         m_simulation_size{ std::ranges::size(current_system_state()) },
         m_solver(this, m_simulation_size, m_dt),
-        m_theta{ theta, s_theta_range }
+        m_theta{ specific_config.theta_, s_theta_range }
     {
+        assert(m_dt > duration_t{ 0 });
+        assert(m_simulation_duration > duration_t{ 0 });
     }
 
     auto run() noexcept -> void
@@ -167,27 +179,35 @@ public:
         }
         else
         {
-            acceleration_t acc{};
             if (b.fragmented())
             {
-                for (auto const& subbox : b.subboxes())
-                {
-                    acc = std::move(acc) + get_box_contribution(p, subbox);
-                }
+                return std::ranges::fold_left(
+                    b.subboxes(),
+                    acceleration_t{},
+                    [this, p](auto acc, auto const& subbox) {
+                        return std::move(acc) + get_box_contribution(p, subbox);
+                    }
+                );
             }
             else
             {
-                for (auto const* const other : b.contained_elements())
-                {
-                    if (other->id() != p.id()) [[likely]]
-                    {
-                        ++m_f_eval_count;
-                        acc = std::move(acc) +
-                              interaction_t::acceleration_contribution(p, *other);
+                return std::ranges::fold_left(
+                    b.contained_elements(),
+                    acceleration_t{},
+                    [this, p](auto acc, auto const* const other) {
+                        if (other->id() != p.id()) [[likely]]
+                        {
+                            ++m_f_eval_count;
+                            return std::move(acc) +
+                                   interaction_t::acceleration_contribution(p, *other);
+                        }
+                        else
+                        {
+                            return acc;
+                        }
                     }
-                }
+                );
             }
-            return acc;
         }
     }
 

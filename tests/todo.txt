@@ -13,3 +13,5 @@ reals resuls can also be used to check much better
 test larger simulations
 test 2 particle simulations for stability, bounds are known
 physical interaction error depends on epsilon
+Tolerance when comparing brute force and barnes hut should be normalized by the
+value of G

@@ -1,10 +1,11 @@
 #pragma once
 
 #include "compile_time_utility.hpp"
-#include "concepts.hpp"
+#include "energy.hpp"
 #include "particle_concepts.hpp"
 #include "particle_interaction.hpp"
-#include "utils.hpp"
+#include "random.hpp"
+#include "simulation_config.hpp"
 #include "yoshida.hpp"
 #include <chrono>
 #include <iostream>
@@ -26,8 +27,8 @@ public:
     using solver_t      = solvers::yoshida4_solver<brute_force_computation, particle_t>;
     using interaction_t = particle_interaction_t<particle_t, Interaction_Type>;
     static_assert(pm::particle_concepts::Interaction<interaction_t>);
-    using duration_t                              = std::chrono::seconds;
     using value_type                              = typename particle_t::value_type;
+    using duration_t                              = std::chrono::duration<value_type>;
     using acceleration_t                          = typename particle_t::acceleration_t;
     using position_t                              = typename particle_t::position_t;
     using velocity_t                              = typename particle_t::velocity_t;
@@ -36,18 +37,25 @@ public:
     inline static constexpr auto s_working_copies = solver_t::s_working_copies;
 
     brute_force_computation(
-        std::vector<particle_t>                particles,
+        std::vector<particle_t> const& particles,
+        /*
         utility::concepts::Duration auto const sim_duration,
         utility::concepts::Duration auto const sim_dt
+        */
+        simulation::config::simulation_common_config<particle_t> const& base_config
     ) :
-        m_simulation_duration{ std::chrono::duration_cast<duration_t>(sim_duration) },
-        m_dt{ std::chrono::duration_cast<duration_t>(sim_dt) },
+        m_simulation_duration{
+            std::chrono::duration_cast<duration_t>(base_config.duration_)
+        },
+        m_dt{ std::chrono::duration_cast<duration_t>(base_config.dt_) },
         m_particles{
             utility::compile_time_utility::array_factory<s_working_copies + 1>(particles)
         },
         m_simulation_size{ std::ranges::size(m_particles[0]) },
         m_solver(this, m_simulation_size, m_dt)
     {
+        assert(m_dt > duration_t{ 0 });
+        assert(m_simulation_duration > duration_t{ 0 });
     }
 
     auto run() noexcept -> void
@@ -66,6 +74,15 @@ public:
         {
             m_solver.run();
             m_current_time += m_dt;
+            if (utility::random::srandom::randfloat<float>() < 0.02f)
+            {
+                std::cout << "Current time: " << m_current_time << '\n';
+                std::cout << pm::energy::compute_kinetic_energy(current_system_state()) +
+                                 pm::energy::compute_gravitational_potential_energy(
+                                     current_system_state()
+                                 )
+                          << std::endl;
+            }
         }
 #ifdef USE_ROOT_PLOTTING
         if (iteration++ % 2 == 0)
@@ -102,15 +119,27 @@ public:
     }
 
     [[nodiscard]]
+    inline auto current_system_state() const noexcept -> auto const&
+    {
+        return m_particles[s_working_copies];
+    }
+
+    [[nodiscard]]
+    inline auto current_system_state() noexcept -> auto&
+    {
+        return m_particles[s_working_copies];
+    }
+
+    [[nodiscard]]
     inline auto position_read(std::size_t p_idx) const noexcept -> position_t const&
 
     {
-        return m_particles[s_working_copies][p_idx].position();
+        return current_system_state()[p_idx].position();
     }
 
     inline auto position_write(std::size_t p_idx, position_t value) noexcept -> void
     {
-        m_particles[s_working_copies][p_idx].position() = value;
+        current_system_state()[p_idx].position() = value;
     }
 
     [[nodiscard]]
@@ -132,12 +161,12 @@ public:
     [[nodiscard]]
     inline auto velocity_read(std::size_t p_idx) const noexcept -> velocity_t const&
     {
-        return m_particles[s_working_copies][p_idx].velocity();
+        return current_system_state()[p_idx].velocity();
     }
 
     inline auto velocity_write(std::size_t p_idx, velocity_t value) noexcept -> void
     {
-        m_particles[s_working_copies][p_idx].velocity() = value;
+        current_system_state()[p_idx].velocity() = value;
     }
 
     [[nodiscard]]
