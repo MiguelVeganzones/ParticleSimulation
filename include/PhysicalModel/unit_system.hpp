@@ -18,6 +18,7 @@ enum struct Units
     kg,
     newton,
     joule,
+    coulomb,
     _runtime_unit_,
 };
 

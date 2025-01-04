@@ -223,18 +223,6 @@ public:
         return m_particles[s_working_copies];
     }
 
-    [[nodiscard]]
-    inline auto current_system_state() const noexcept -> auto const&
-    {
-        return m_particles[s_working_copies];
-    }
-
-    [[nodiscard]]
-    inline auto current_system_state() noexcept -> auto&
-    {
-        return m_particles[s_working_copies];
-    }
-
     inline auto commit_buffer(std::size_t working_copy_idx) noexcept -> void
     {
         m_ndtrees[working_copy_idx].reorganize();
