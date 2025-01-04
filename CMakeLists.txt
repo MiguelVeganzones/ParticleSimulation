@@ -31,6 +31,7 @@ set(DEBUG_CXX_FLAGS
 	-Wlogical-op
 	-Wmisleading-indentation
 	-Wnull-dereference
+	-Wnrvo
 	-Wodr
 	-Wpointer-arith
 	-Wrestrict
@@ -86,6 +87,7 @@ set(RELEASE_CXX_FLAGS
 	-Wshadow
 	-ffinite-math-only
 	-Wconversion
+	-Wnrvo
 	-Wuninitialized
 	-Wmisleading-indentation
 	-Werror

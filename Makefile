@@ -16,6 +16,7 @@ DEBUG_CXXFLAGS_GCC =	-O0 \
 			-Wlogical-op \
 			-Wmisleading-indentation \
 			-Wnull-dereference \
+			-Wnrvo \
 			-Wodr \
 			-Wpointer-arith \
 			-Wrestrict \
@@ -159,8 +160,8 @@ ifeq (${ENABLE_FFAST_MATH}, 1)
 CXXFLAGS			+= -ffast-math
 endif
 
-MAIN_SIMULATION_LIB		= $(LOG_LIB) $(PLOTTING_LIB)
-TESTS_LIB			= -lgtest -lgtest_main -lpthread
+MAIN_SIMULATION_LIB		= $(LOG_LIB) $(PLOTTING_LIB) -lboost_program_options
+TESTS_LIB			= -lgtest -lgtest_main -lpthread -lboost_program_options
 
 
 #=================================================================================================

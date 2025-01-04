@@ -88,7 +88,7 @@ auto clamp(T value, interval<T> limits) noexcept -> T
 
 template <typename T>
 [[nodiscard]]
-auto in(T value, interval<T> limits) noexcept -> T
+auto in(T value, interval<T> limits) noexcept -> bool
 {
     return (value >= limits.min) && (value <= limits.max);
 }

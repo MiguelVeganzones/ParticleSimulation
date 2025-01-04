@@ -5,6 +5,7 @@
 #include "particle.hpp"
 #include "particle_interaction.hpp"
 #include "random_distributions.hpp"
+#include "simulation_config.hpp"
 #include "synthetic_clock.hpp"
 #include <array>
 #include <concepts>
@@ -41,20 +42,20 @@ auto generate_particle_set(std::size_t size)
     auto mass_generator = []() mutable -> F {
         using distribution_t = random_distribution<F, DistributionCategory::Exponential>;
         using param_type     = typename distribution_t::param_type;
-        const param_type      params(0.001);
-        static distribution_t d(params);
+        static const param_type params(0.001);
+        static distribution_t   d(params);
         return d() * F{ 100 };
     };
 
     auto position_generator = []() mutable -> F {
         using distribution_a_t = random_distribution<F, DistributionCategory::Uniform>;
         using param_type_a     = typename distribution_a_t::param_type;
-        const param_type_a      params_a(-universe_radius, universe_radius);
-        static distribution_a_t d_a(params_a);
+        static const param_type_a params_a(-universe_radius, universe_radius);
+        static distribution_a_t   d_a(params_a);
         using distribution_b_t = random_distribution<F, DistributionCategory::Gamma>;
         using param_type_b     = typename distribution_b_t::param_type;
-        const param_type_b      params_b(F{ 1 }, F{ 1 });
-        static distribution_b_t d_b(params_b);
+        static const param_type_b params_b(F{ 1 }, F{ 1 });
+        static distribution_b_t   d_b(params_b);
         return d_a(); // + universe_radius;
     };
 
@@ -73,23 +74,34 @@ int barnes_hut_test()
     using particle_t           = particle::ndparticle<N, F>;
     constexpr auto interaction = pm::interaction::InteractionType::Gravitational;
 
-    const auto size      = 200;
+#if NDEBUG
+    const auto config_file_path = "data/input/release/config.ini";
+#else
+    const auto config_file_path = "data/input/debug/config.ini";
+#endif
+
+    const auto config    = simulation::config::parse_config<particle_t>(config_file_path);
+    const auto size      = config.general_config().particle_count_;
     auto       particles = generate_particle_set<N, F>(size);
-    const auto duration  = std::chrono::seconds(100000);
-    using tick_t         = synchronization::tick_period<std::chrono::milliseconds, 100>;
-    const auto max_depth = 7;
-    const auto box_capacity = 3;
-    const auto theta        = F{ 0.4 };
+
+    assert(config.is_valid());
+    config.print();
+    if (config.physics_config_.gravitational_constant_.has_value())
+    {
+        pm::physical_parameters<F>::set_gravitational_constant(
+            config.physics_config_.gravitational_constant_.value()
+        );
+    }
 
     simulation::bh_approx::barnes_hut_approximation<particle_t, interaction> simulation_a(
-        particles, duration, tick_t::period_duration, theta, max_depth, box_capacity
+        particles, config.general_config(), config.barnes_hut_config()
     );
 
     std::cout << "Simulation A\n";
     simulation_a.run();
 
     simulation::bf::brute_force_computation<particle_t, interaction> simulation_b(
-        particles, duration, tick_t::period_duration
+        particles, config.general_config()
     );
 
     std::cout << "Simulation B\n";

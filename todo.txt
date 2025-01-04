@@ -7,3 +7,7 @@ keeping the unit vector invariant would be more expensive for some computations.
 This could then be improved again by introducing expression templates, as it
 would minimize the number of vector normalizations to one per computation, if at
 least one operation maps a vector out of its span.
+
+Plot `size` vs kf_barnes / kf_bf, f call reduction.
+
+Update rk4 to new api

@@ -127,6 +127,8 @@ auto init() -> void
                      << "  " << expr::smessage
     );
     errors_sink->set_filter(severity >= severity_level::warning);
+    general_sink->locked_backend()->auto_flush(true);
+    errors_sink->locked_backend()->auto_flush(true);
 
     log::core::get()->add_sink(general_sink);
     log::core::get()->add_sink(errors_sink);

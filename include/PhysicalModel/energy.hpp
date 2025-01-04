@@ -13,8 +13,8 @@ namespace pm::energy
 
 template <particle_concepts::Particle Particle_Type>
 [[nodiscard]]
-inline static constexpr auto compute_kinetic_energy(Particle_Type const& p) noexcept
-    -> magnitudes::energy<typename Particle_Type::value_type>
+inline static constexpr auto compute_kinetic_energy(Particle_Type const& p
+) noexcept -> magnitudes::energy<typename Particle_Type::value_type>
 {
     using particle_t = Particle_Type;
     using value_type = typename particle_t::value_type;
@@ -67,9 +67,10 @@ inline static constexpr auto compute_gravitational_potential_energy(
         {
             auto const& p2 = particles[j];
             const auto  r =
-                utils::l2_norm(utils::distance(p1.position(), p2.position()).value()) + value_type{0.01};
-            e = std::move(e) - physical_constants<value_type>::G * p1.mass().magnitude() *
-                                   p2.mass().magnitude() / r;
+                utils::l2_norm(utils::distance(p1.position(), p2.position()).value()) +
+                value_type{ 0.01 };
+            e = std::move(e) - physical_parameters<value_type>::G *
+                                   p1.mass().magnitude() * p2.mass().magnitude() / r;
         }
     }
     return e;
