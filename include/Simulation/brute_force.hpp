@@ -9,6 +9,9 @@
 #include "yoshida.hpp"
 #include <chrono>
 #include <iostream>
+#ifdef USE_ROOT_PLOTTING
+#include "scatter_plot_3D.hpp"
+#endif
 
 namespace simulation::bf
 {
@@ -63,12 +66,11 @@ public:
 // Plotting is this ugly yet again unfortunately
 // Actualy it just does not even work
 #ifdef USE_ROOT_PLOTTING
-        root_plotting::scatter_plot_3D scatter_plot;
-
-        std::vector<float> x(m_simulation_size);
-        std::vector<float> y(m_simulation_size);
-        std::vector<float> z(m_simulation_size);
-        std::size_t        iteration{};
+        using data_point_t = typename plotting::plots_3D::scatter_plot_3D::data_point;
+        std::vector<std::vector<data_point_t>> data(1);
+        data[0].resize(m_simulation_size);
+        plotting::plots_3D::scatter_plot_3D scatter_plot(data);
+        std::size_t                         iteration{};
 #endif
         while (m_current_time < m_simulation_duration)
         {
@@ -85,15 +87,18 @@ public:
             }
         }
 #ifdef USE_ROOT_PLOTTING
-        if (iteration++ % 2 == 0)
+        if (iteration++ % 20 == 0)
         {
             for (auto j = decltype(m_simulation_size){}; j != m_simulation_size; ++j)
             {
-                x[j] = static_cast<float>(m_particles[s_working_copies][j].position()[0]);
-                y[j] = static_cast<float>(m_particles[s_working_copies][j].position()[1]);
-                z[j] = static_cast<float>(m_particles[s_working_copies][j].position()[2]);
+                data[0][j].x =
+                    static_cast<float>(m_particles[s_working_copies][j].position()[0]);
+                data[0][j].y =
+                    static_cast<float>(m_particles[s_working_copies][j].position()[1]);
+                data[0][j].z =
+                    static_cast<float>(m_particles[s_working_copies][j].position()[2]);
             }
-            scatter_plot.plot(static_cast<int>(m_simulation_size), &x[0], &y[0], &z[0]);
+            scatter_plot.render();
         }
 #endif
     }

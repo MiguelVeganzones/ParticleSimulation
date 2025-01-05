@@ -74,7 +74,7 @@ int barnes_hut_test()
     using particle_t           = particle::ndparticle<N, F>;
     constexpr auto interaction = pm::interaction::InteractionType::Gravitational;
 
-#if NDEBUG
+#ifdef NDEBUG
     const auto config_file_path = "data/input/release/config.ini";
 #else
     const auto config_file_path = "data/input/debug/config.ini";

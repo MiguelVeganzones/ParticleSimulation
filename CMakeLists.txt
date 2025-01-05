@@ -181,7 +181,7 @@ include_directories(
 )
 
 # Source files
-file(GLOB_RECURSE SRC_FILES src/*.cpp include/**/*.cpp)
+file(GLOB_RECURSE SRC_FILES src/*.cpp)
 file(GLOB_RECURSE TEST_FILES tests/*.cpp)
 file(GLOB_RECURSE PLOTTING_FILES include/Plotting/*.cpp)
 
@@ -193,14 +193,6 @@ option(FFAST_MATH "Enable fast math optimizations" OFF)
 
 if(UNIT_SYSTEM)
     add_compile_definitions(USE_UNIT_SYSTEM)
-endif()
-
-if(ROOT_PLOTTING)
-    find_package(ROOT REQUIRED)
-    include_directories(${ROOT_INCLUDE_DIRS})
-    add_compile_definitions(USE_ROOT_PLOTTING)
-    add_compile_options(-pthread -m64 -Wno-cpp)
-    set(PLOTTING_LIBS ${ROOT_LIBRARIES})
 endif()
 
 if(BOOST_LOGGING)
@@ -215,10 +207,23 @@ if(FFAST_MATH)
     add_compile_options(-ffast-math)
 endif()
 
+# Plotting library
+add_library(plotting STATIC ${PLOTTING_FILES})
+target_include_directories(plotting PUBLIC ${CMAKE_SOURCE_DIR}/include/Plotting)
+target_compile_options(plotting PRIVATE ${CXX_FLAGS})
+if(ROOT_PLOTTING)
+    find_package(ROOT REQUIRED)
+    include_directories(${ROOT_INCLUDE_DIRS})
+    add_compile_definitions(USE_ROOT_PLOTTING)
+    set(CXX_FLAGS "${CXX_FLAGS};-Wno-cpp")
+    target_compile_options(plotting PRIVATE -pthread -m64 -Wno-cpp)
+    target_link_libraries(plotting PRIVATE ${ROOT_LIBRARIES})
+endif()
+
 # Main executable
 add_executable(main ${SRC_FILES})
 # Link libraries for main
-set(MAIN_LIBS ${PLOTTING_LIBS} ${LOG_LIBS} ${LINK_FLAGS})
+set(MAIN_LIBS plotting ${LOG_LIBS} ${LINK_FLAGS} -lboost_program_options)
 target_compile_options(main PRIVATE ${CXX_FLAGS})
 target_link_libraries(main PRIVATE ${MAIN_LIBS})
 
@@ -226,13 +231,9 @@ target_link_libraries(main PRIVATE ${MAIN_LIBS})
 add_executable(tests ${TEST_FILES})
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
-target_link_libraries(tests PRIVATE ${LINK_FLAGS} ${GTEST_BOTH_LIBRARIES} pthread)
+target_link_libraries(tests PRIVATE plotting ${LINK_FLAGS} ${GTEST_BOTH_LIBRARIES} pthread)
 
 target_compile_options(tests PRIVATE ${CXX_FLAGS})
-
-# Plotting library
-add_library(plotting STATIC ${PLOTTING_FILES})
-target_link_libraries(plotting PRIVATE ${PLOTTING_LIBS})
 
 # Build messages
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")

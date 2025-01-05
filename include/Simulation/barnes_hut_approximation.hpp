@@ -21,10 +21,7 @@
 #include <sstream>
 #include <vector>
 #ifdef USE_ROOT_PLOTTING
-#include "TApplication.h"
-#include "TCanvas.h"
-#include "TGraph.h"
-#include "scatter_plot.hpp"
+#include "scatter_plot_3D.hpp"
 #endif
 
 namespace simulation::bh_approx
@@ -103,12 +100,11 @@ public:
     {
 // Plotting is this ugly as on now unfortunately
 #ifdef USE_ROOT_PLOTTING
-        root_plotting::scatter_plot_3D scatter_plot;
-
-        std::vector<float> x(m_simulation_size);
-        std::vector<float> y(m_simulation_size);
-        std::vector<float> z(m_simulation_size);
-        std::size_t        iteration{};
+        using data_point_t = typename plotting::plots_3D::scatter_plot_3D::data_point;
+        std::vector<std::vector<data_point_t>> data(1);
+        data[0].resize(m_simulation_size);
+        plotting::plots_3D::scatter_plot_3D scatter_plot(data);
+        std::size_t                         iteration{};
 #endif
         m_ndtrees[0].cache_summary();
         while (m_current_time < m_simulation_duration)
@@ -133,20 +129,21 @@ public:
             }
 #endif
 #ifdef USE_ROOT_PLOTTING
-            if (iteration++ % 2 == 0)
+            if (iteration++ % 20 == 0)
             {
                 for (auto j = decltype(m_simulation_size){}; j != m_simulation_size; ++j)
                 {
-                    x[j] = static_cast<float>(m_particles[s_working_copies][j].position(
-                    )[0]);
-                    y[j] = static_cast<float>(m_particles[s_working_copies][j].position(
-                    )[1]);
-                    z[j] = static_cast<float>(m_particles[s_working_copies][j].position(
-                    )[2]);
+                    data[0][j].x =
+                        static_cast<float>(m_particles[s_working_copies][j].position()[0]
+                        );
+                    data[0][j].y =
+                        static_cast<float>(m_particles[s_working_copies][j].position()[1]
+                        );
+                    data[0][j].z =
+                        static_cast<float>(m_particles[s_working_copies][j].position()[2]
+                        );
                 }
-                scatter_plot.plot(
-                    static_cast<int>(m_simulation_size), &x[0], &y[0], &z[0]
-                );
+                scatter_plot.render();
             }
 #endif
         }
