@@ -152,9 +152,9 @@ public:
     auto get_acceleration(size_type copy_idx, std::size_t p_idx) noexcept
         -> acceleration_t
     {
-        auto const acc =
-            get_box_contribution(m_particles[copy_idx][p_idx], m_ndtrees[copy_idx].box());
-        return acc;
+        return get_box_contribution(
+            m_particles[copy_idx][p_idx], m_ndtrees[copy_idx].box()
+        );
     }
 
     [[nodiscard]]
@@ -182,7 +182,8 @@ public:
                     b.subboxes(),
                     acceleration_t{},
                     [this, p](auto acc, auto const& subbox) {
-                        return std::move(acc) + get_box_contribution(p, subbox);
+                        return acceleration_t{ std::move(acc) +
+                                               get_box_contribution(p, subbox) };
                     }
                 );
             }
@@ -195,8 +196,10 @@ public:
                         if (other->id() != p.id()) [[likely]]
                         {
                             ++m_f_eval_count;
-                            return std::move(acc) +
-                                   interaction_t::acceleration_contribution(p, *other);
+                            return acceleration_t{
+                                std::move(acc) +
+                                interaction_t::acceleration_contribution(p, *other)
+                            };
                         }
                         else
                         {
