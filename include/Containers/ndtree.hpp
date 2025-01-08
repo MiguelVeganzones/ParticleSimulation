@@ -389,14 +389,12 @@ public:
 
     [[nodiscard]]
     inline auto fragmented() const noexcept -> bool
-
     {
         return m_fragmented;
     }
 
     [[nodiscard]]
     auto summary() const noexcept -> std::optional<sample_t> const&
-
     {
         return m_summary;
     }
