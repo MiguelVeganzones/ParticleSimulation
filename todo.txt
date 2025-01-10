@@ -11,3 +11,5 @@ least one operation maps a vector out of its span.
 Plot `size` vs kf_barnes / kf_bf, f call reduction.
 
 Update rk4 to new api
+
+rewrite vector operations with std::valarray.

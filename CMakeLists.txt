@@ -63,18 +63,6 @@ set(DEBUG_CXX_FLAGS
 	-pedantic
 )
 
-set(DEBUG_SANITIZERS
-	-fsanitize=address
-	-fsanitize=bounds
-	-fsanitize=float-cast-overflow
-	-fsanitize=float-divide-by-zero
-	-fsanitize=integer-divide-by-zero
-	-fsanitize=leak
-	-fsanitize=null
-	-fsanitize=signed-integer-overflow
-	-fsanitize=undefined
-)
-
 set(RELEASE_CXX_FLAGS
 	-fdiagnostics-color=always
 	-fdiagnostics-show-template-tree
@@ -108,18 +96,6 @@ set(RELEASE_CXX_FLAGS
 	-fconcepts-diagnostics-depth=3
 )
 
-set(RELEASE_SANITIZERS
-	-fsanitize=address
-	-fsanitize=bounds
-	-fsanitize=float-cast-overflow
-	-fsanitize=float-divide-by-zero
-	-fsanitize=integer-divide-by-zero
-	-fsanitize=leak
-	-fsanitize=null
-	-fsanitize=signed-integer-overflow
-	-fsanitize=undefined
-)
-
 set(FULL_RELEASE_CXX_FLAGS
 	-fdiagnostics-color=always
 	-fdiagnostics-show-template-tree
@@ -142,26 +118,33 @@ set(FULL_RELEASE_CXX_FLAGS
 	-fno-exceptions
 )
 
-set(FULL_RELEASE_SANITIZERS
+set(SANITIZER_FLAGS
+	-fsanitize=address
+	-fsanitize=bounds
+	-fsanitize=float-cast-overflow
+	-fsanitize=float-divide-by-zero
+	-fsanitize=integer-divide-by-zero
+	-fsanitize=leak
+	-fsanitize=null
+	-fsanitize=signed-integer-overflow
+	-fsanitize=undefined
 )
 
 # Set output directory based on build configuration
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CXX_FLAGS ${DEBUG_CXX_FLAGS} ${DEBUG_SANITIZERS})
-    set(LINK_FLAGS ${DEBUG_SANITIZERS})
+    set(CXX_FLAGS ${DEBUG_CXX_FLAGS})
     set(OUT_TAIL_DIR "debug")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(CXX_FLAGS ${RELEASE_CXX_FLAGS} ${RELEASE_SANITIZERS})
-    set(LINK_FLAGS ${RELEASE_SANITIZERS})
+    set(CXX_FLAGS ${RELEASE_CXX_FLAGS})
     set(OUT_TAIL_DIR "release")
 elseif(CMAKE_BUILD_TYPE STREQUAL "FullRelease")
-    set(CXX_FLAGS ${FULL_RELEASE_CXX_FLAGS} ${FULL_RELEASE_SANITIZERS})
-    set(LINK_FLAGS ${FULL_RELEASE_SANITIZERS})
+    set(CXX_FLAGS ${FULL_RELEASE_CXX_FLAGS})
     set(OUT_TAIL_DIR "full_release")
 else()
     message(ERROR "Unknown build type!")
 endif()
 message(STATUS "CXX Flags: ${CXX_FLAGS}")
+set(LINK_FLAGS)
 
 # Output directories
 set(OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/${OUT_TAIL_DIR})
@@ -186,10 +169,16 @@ file(GLOB_RECURSE TEST_FILES tests/*.cpp)
 file(GLOB_RECURSE PLOTTING_FILES include/Plotting/*.cpp)
 
 # Optional features
+option(ENABLE_SANITIZERS "Enable address, bounds, and other sanitizers" ON)
 option(UNIT_SYSTEM "Enable unit system" OFF)
 option(ROOT_PLOTTING "Enable ROOT plotting" OFF)
 option(BOOST_LOGGING "Enable Boost logging" OFF)
 option(FFAST_MATH "Enable fast math optimizations" OFF)
+
+if(ENABLE_SANITIZERS)
+    list(APPEND CXX_FLAGS ${SANITIZER_FLAGS})
+    list(APPEND LINK_FLAGS ${SANITIZER_FLAGS})
+endif()
 
 if(UNIT_SYSTEM)
     add_compile_definitions(USE_UNIT_SYSTEM)
@@ -200,7 +189,7 @@ if(BOOST_LOGGING)
     include_directories(${Boost_INCLUDE_DIRS})
     add_compile_definitions(USE_BOOST_LOGGING)
     set(LOG_LIBS ${Boost_LIBRARIES})
-    set(CXX_FLAGS "${CXX_FLAGS};-fexceptions")
+    list(APPEND CXX_FLAGS -fexceptions)
 endif()
 
 if(FFAST_MATH)
@@ -223,21 +212,23 @@ endif()
 # Main executable
 add_executable(main ${SRC_FILES})
 # Link libraries for main
-set(MAIN_LIBS plotting ${LOG_LIBS} ${LINK_FLAGS} -lboost_program_options)
+find_package(Boost REQUIRED COMPONENTS program_options)
 target_compile_options(main PRIVATE ${CXX_FLAGS})
-target_link_libraries(main PRIVATE ${MAIN_LIBS})
+target_link_libraries(main PRIVATE plotting ${LOG_LIBS} Boost::program_options)
+target_link_options(main PRIVATE ${LINK_FLAGS})
 
 # Tests executable
 add_executable(tests ${TEST_FILES})
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
-target_link_libraries(tests PRIVATE plotting ${LINK_FLAGS} ${GTEST_BOTH_LIBRARIES} pthread)
-
+target_link_libraries(tests PRIVATE GTest::GTest GTest::Main plotting pthread)
 target_compile_options(tests PRIVATE ${CXX_FLAGS})
+target_link_options(tests PRIVATE ${LINK_FLAGS})
 
 # Build messages
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Output directory: ${OUTPUT_DIR}")
+message(STATUS "Sanitizers: ${ENABLE_SANITIZERS}")
 message(STATUS "Unit system: ${UNIT_SYSTEM}")
 message(STATUS "ROOT plotting: ${ROOT_PLOTTING}")
 message(STATUS "Boost logging: ${BOOST_LOGGING}")
