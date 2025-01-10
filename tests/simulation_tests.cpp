@@ -76,7 +76,6 @@ TEST(SimulationTest, TreeAndBruteForceComparisonReturnsSimilarResults)
 
 TEST(SimulationTest, TreeAndBruteForceComparisonReturnsTheSameResult)
 {
-    GTEST_SKIP();
     using namespace pm;
     using F                    = double;
     static constexpr auto N    = 3;
