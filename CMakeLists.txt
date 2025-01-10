@@ -31,7 +31,6 @@ set(DEBUG_CXX_FLAGS
 	-Wlogical-op
 	-Wmisleading-indentation
 	-Wnull-dereference
-	-Wnrvo
 	-Wodr
 	-Wpointer-arith
 	-Wrestrict
@@ -87,12 +86,11 @@ set(RELEASE_CXX_FLAGS
 	-Wshadow
 	-ffinite-math-only
 	-Wconversion
-	-Wnrvo
 	-Wuninitialized
 	-Wmisleading-indentation
-	-Werror
 	-pedantic
 	-mavx
+	-lboost_program_options
 	-march=native
 	-fstrength-reduce
 	-fsanitize=address
@@ -204,7 +202,7 @@ if(ROOT_PLOTTING)
 endif()
 
 if(BOOST_LOGGING)
-    find_package(Boost REQUIRED COMPONENTS log thread system)
+    find_package(Boost REQUIRED COMPONENTS log thread system program_options)
     include_directories(${Boost_INCLUDE_DIRS})
     add_compile_definitions(USE_BOOST_LOGGING)
     set(LOG_LIBS ${Boost_LIBRARIES})

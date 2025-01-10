@@ -10,10 +10,12 @@ namespace pm::factory
 {
 
 template <std::size_t N, std::floating_point F, auto U, typename Fn, typename... Args>
-    requires std::
-        is_invocable_r_v<F, std::remove_reference_t<Fn>, std::remove_reference_t<Args>...>
-    [[nodiscard]]
-    auto physical_magnitude_factory(Fn&& fn, Args&&... args) noexcept
+    requires std::is_invocable_r_v<
+                 F,
+                 std::remove_reference_t<Fn>,
+                 std::remove_reference_t<Args>...>
+[[nodiscard]]
+auto physical_magnitude_factory(Fn&& fn, Args&&... args) noexcept
     -> pm::magnitudes::physical_magnitude_t<N, F, U>
 {
     using magnitude_t = magnitudes::physical_magnitude_t<N, F, U>;
@@ -32,8 +34,8 @@ template <
     typename Pos_Generator,
     typename Vel_Generator>
     requires std::is_invocable_r_v<F, Mass_Generator> &&
-             std::is_invocable_r_v<F, Vel_Generator> &&
-             std::is_invocable_r_v<F, Pos_Generator>
+                 std::is_invocable_r_v<F, Vel_Generator> &&
+                 std::is_invocable_r_v<F, Pos_Generator>
 [[nodiscard]]
 auto particle_set_factory(
     std::size_t      size,
@@ -58,6 +60,51 @@ auto particle_set_factory(
             ),
             physical_magnitude_factory<N, F, units::Units::m_s>(
                 std::forward<Vel_Generator>(vel_gen)
+            )
+        ));
+    return ret;
+}
+
+template <
+    std::size_t         N,
+    std::floating_point F,
+    typename Mass_Generator,
+    typename Pos_Generator,
+    typename Vel_Generator,
+    typename Charge_Generator>
+    requires std::is_invocable_r_v<F, Mass_Generator> &&
+                 std::is_invocable_r_v<F, Vel_Generator> &&
+                 std::is_invocable_r_v<F, Pos_Generator> &&
+                 std::is_invocable_r_v<F, Charge_Generator>
+[[nodiscard]]
+auto particle_set_factory(
+    std::size_t        size,
+    Mass_Generator&&   mass_gen,
+    Pos_Generator&&    pos_gen,
+    Vel_Generator&&    vel_gen,
+    Charge_Generator&& ch_gen
+) noexcept -> std::vector<pm::particle::ndparticle<N, F>>
+{
+    using particle_t  = pm::particle::ndparticle<N, F>;
+    using container_t = std::vector<particle_t>;
+    container_t ret{};
+    ret.reserve(size);
+
+    for ([[maybe_unused]]
+         auto _ : std::views::iota(0uz, size))
+        ret.push_back(particle_t(
+            physical_magnitude_factory<1, F, units::Units::kg>(
+                std::forward<Mass_Generator>(mass_gen)
+            ),
+            physical_magnitude_factory<N, F, units::Units::m>(
+                std::forward<Pos_Generator>(pos_gen)
+            ),
+            physical_magnitude_factory<N, F, units::Units::m_s>(
+                std::forward<Vel_Generator>(vel_gen)
+            ),
+            pm::particle::ParticleType::real,
+            physical_magnitude_factory<1, F, units::Units::coulomb>(
+                std::forward<Charge_Generator>(ch_gen)
             )
         ));
     return ret;

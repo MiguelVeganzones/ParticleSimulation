@@ -66,6 +66,47 @@ auto generate_particle_set(std::size_t size)
     );
 }
 
+template <std::size_t N, std::floating_point F>
+auto generate_charged_particle_set(std::size_t size)
+{
+    using namespace pm::factory;
+    using namespace utility::random_distributions;
+
+    auto charge_generator = []() mutable -> F {
+        using distribution_c_t = random_distribution<F, DistributionCategory::Uniform>;
+        using param_type_c     = typename distribution_c_t::param_type;
+        static const param_type_c params(F{ -1e-6 }, F{ 1e-6 });
+        static distribution_c_t   d_c(params);
+        return d_c();
+    };
+
+    auto mass_generator = []() mutable -> F {
+        using distribution_t = random_distribution<F, DistributionCategory::Exponential>;
+        using param_type     = typename distribution_t::param_type;
+        static const param_type params(0.001);
+        static distribution_t   d(params);
+        return d() * F{ 100 };
+    };
+
+    auto position_generator = []() mutable -> F {
+        using distribution_a_t = random_distribution<F, DistributionCategory::Uniform>;
+        using param_type_a     = typename distribution_a_t::param_type;
+        static const param_type_a params_a(-universe_radius, universe_radius);
+        static distribution_a_t   d_a(params_a);
+        using distribution_b_t = random_distribution<F, DistributionCategory::Gamma>;
+        using param_type_b     = typename distribution_b_t::param_type;
+        static const param_type_b params_b(F{ 1 }, F{ 1 });
+        static distribution_b_t   d_b(params_b);
+        return d_a(); // + universe_radius;
+    };
+
+    auto velocity_generator = []() -> F { return F{ 0 }; };
+
+    return particle_set_factory<N, F>(
+        size, mass_generator, position_generator, velocity_generator, charge_generator
+    );
+}
+
 int barnes_hut_test()
 {
     using namespace pm;
@@ -110,6 +151,37 @@ int barnes_hut_test()
     return EXIT_SUCCESS;
 }
 
+int electrostatic_test()
+{
+    using namespace pm;
+    using F                    = double;
+    static constexpr auto N    = 3;
+    using particle_t           = particle::ndparticle<N, F>;
+    constexpr auto interaction = pm::interaction::InteractionType::Electrostatic;
+
+#if NDEBUG
+    const auto config_file_path = "data/input/release/config.ini";
+#else
+    const auto config_file_path = "data/input/debug/config.ini";
+#endif
+
+    const auto config    = simulation::config::parse_config<particle_t>(config_file_path);
+    const auto size      = config.general_config().particle_count_;
+    auto       particles = generate_charged_particle_set<N, F>(size);
+
+    assert(config.is_valid());
+    config.print();
+
+    simulation::bf::brute_force_computation<particle_t, interaction> simulation(
+        particles, config.general_config()
+    );
+
+    std::cout << "Electrostatic Simulation\n";
+    simulation.run();
+
+    return EXIT_SUCCESS;
+}
+
 int main()
 {
 #ifdef USE_ROOT_PLOTTING
@@ -122,6 +194,7 @@ int main()
         utility::logging::severity_level::error, "Huge error or sth..."
     );
 
+    electrostatic_test();
     barnes_hut_test();
 
 #ifdef USE_ROOT_PLOTTING

@@ -40,6 +40,7 @@ inline constexpr auto repr() noexcept -> std::string_view
         case units::Units::kg: return "kg";
         case units::Units::newton: return "N";
         case units::Units::joule: return "J";
+        case units::Units::coulomb: return "C";
         case units::Units::_runtime_unit_: return "?";
         default: return "UNKNOWN";
         }
