@@ -188,6 +188,7 @@ option(UNIT_SYSTEM "Enable unit system" OFF)
 option(ROOT_PLOTTING "Enable ROOT plotting" OFF)
 option(BOOST_LOGGING "Enable Boost logging" OFF)
 option(FFAST_MATH "Enable fast math optimizations" OFF)
+option(ELECTROSTATIC_EXAMPLE "Include an electrostatic example simulation" OFF)
 
 if(UNIT_SYSTEM)
     add_compile_definitions(USE_UNIT_SYSTEM)
@@ -203,6 +204,10 @@ endif()
 
 if(FFAST_MATH)
     add_compile_options(-ffast-math)
+endif()
+
+if(ELECTROSTATIC_EXAMPLE)
+	add_compile_definitions(INCLUDE_ELECTROSTATIC_SIMULATION)
 endif()
 
 # Plotting library
@@ -240,3 +245,4 @@ message(STATUS "Unit system: ${UNIT_SYSTEM}")
 message(STATUS "ROOT plotting: ${ROOT_PLOTTING}")
 message(STATUS "Boost logging: ${BOOST_LOGGING}")
 message(STATUS "Fast math: ${FFAST_MATH}")
+message(STATUS "Electrostatic example: ${ELECTROSTATIC_EXAMPLE}")
