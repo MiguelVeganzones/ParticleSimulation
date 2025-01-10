@@ -76,9 +76,9 @@ set(RELEASE_CXX_FLAGS
 	-Wconversion
 	-Wuninitialized
 	-Wmisleading-indentation
+	-Werror
 	-pedantic
 	-mavx
-	-lboost_program_options
 	-march=native
 	-fstrength-reduce
 	-fsanitize=address
@@ -184,7 +184,7 @@ if(UNIT_SYSTEM)
 endif()
 
 if(BOOST_LOGGING)
-    find_package(Boost REQUIRED COMPONENTS log thread system program_options)
+    find_package(Boost REQUIRED COMPONENTS log thread system)
     include_directories(${Boost_INCLUDE_DIRS})
     add_compile_definitions(USE_BOOST_LOGGING)
     set(LOG_LIBS ${Boost_LIBRARIES})

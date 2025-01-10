@@ -92,6 +92,12 @@ public:
     }
 
     [[nodiscard]]
+    constexpr auto charge(this auto&& self) noexcept -> auto&&
+    {
+        return std::forward<decltype(self)>(self).m_charge;
+    }
+
+    [[nodiscard]]
     constexpr auto properties(this auto&& self) noexcept -> decltype(auto)
     {
         return std::tie(
@@ -119,9 +125,15 @@ public:
     }
 
     [[nodiscard]]
+    constexpr auto charge() noexcept -> charge_t&
+    {
+        return m_charge;
+    }
+
+    [[nodiscard]]
     constexpr auto properties() noexcept -> decltype(auto)
     {
-        return std::tie(m_mass, m_velocity);
+        return std::tie(m_mass, m_velocity, m_charge);
     }
 
     [[nodiscard]]
@@ -151,7 +163,7 @@ public:
     [[nodiscard]]
     constexpr auto properties() const noexcept -> decltype(auto)
     {
-        return std::tie(m_mass, m_velocity);
+        return std::tie(m_mass, m_velocity, m_charge);
     }
 
 #endif
@@ -177,8 +189,8 @@ private:
 };
 
 [[nodiscard]]
-auto merge(std::ranges::input_range auto&& particles
-) noexcept -> std::optional<std::ranges::range_value_t<decltype(particles)>>
+auto merge(std::ranges::input_range auto&& particles) noexcept
+    -> std::optional<std::ranges::range_value_t<decltype(particles)>>
     requires particle_concepts::Particle<std::ranges::range_value_t<decltype(particles)>>
 {
     using particle_t        = std::ranges::range_value_t<decltype(particles)>;

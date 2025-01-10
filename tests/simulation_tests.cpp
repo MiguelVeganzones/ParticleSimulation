@@ -1,4 +1,5 @@
 #include <chrono>
+#include <limits>
 #undef USE_BOOST_LOGGING
 #undef USE_ROOT_PLOTTING
 #undef DEBUG_NDTREE
@@ -89,7 +90,7 @@ TEST(SimulationTest, TreeAndBruteForceComparisonReturnsTheSameResult)
         .particle_count_ = 150,
         .sim_type_       = simulation::config::SimulationType::_none_
     };
-    constexpr auto f = 0.95;
+    constexpr auto f = F{ 0.95 };
 #else
     simulation::config::simulation_common_config<particle_t> base_config{
         .dt_             = std::chrono::milliseconds(200),
@@ -101,7 +102,7 @@ TEST(SimulationTest, TreeAndBruteForceComparisonReturnsTheSameResult)
 #endif
     const auto size = base_config.particle_count_;
     auto       particles =
-        particle_factory::generate_particle_set<N, F>(size, universe_radius / 2);
+        particle_factory::generate_particle_set<N, F>(size, universe_radius / F{ 2 });
 
     simulation::config::barnes_hut_specific_config<particle_t> bh_config{
         .tree_max_depth_ = 7, .tree_box_capacity_ = 3, .theta_ = F{ 0.0 }
@@ -119,9 +120,10 @@ TEST(SimulationTest, TreeAndBruteForceComparisonReturnsTheSameResult)
     {
         for (std::size_t i = 0; i != N; ++i)
         {
-            EXPECT_FLOAT_EQ(
+            EXPECT_NEAR(
                 barnes_simulation_engine.velocity_read(p_idx)[i],
-                brute_force_simulation_engine.velocity_read(p_idx)[i]
+                brute_force_simulation_engine.velocity_read(p_idx)[i],
+                std::numeric_limits<F>::epsilon()
             );
         }
     }
