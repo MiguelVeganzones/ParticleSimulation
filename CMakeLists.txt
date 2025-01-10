@@ -31,7 +31,6 @@ set(DEBUG_CXX_FLAGS
 	-Wlogical-op
 	-Wmisleading-indentation
 	-Wnull-dereference
-	-Wnrvo
 	-Wodr
 	-Wpointer-arith
 	-Wrestrict
@@ -75,12 +74,11 @@ set(RELEASE_CXX_FLAGS
 	-Wshadow
 	-ffinite-math-only
 	-Wconversion
-	-Wnrvo
 	-Wuninitialized
 	-Wmisleading-indentation
-	-Werror
 	-pedantic
 	-mavx
+	-lboost_program_options
 	-march=native
 	-fstrength-reduce
 	-fsanitize=address
@@ -174,6 +172,7 @@ option(UNIT_SYSTEM "Enable unit system" OFF)
 option(ROOT_PLOTTING "Enable ROOT plotting" OFF)
 option(BOOST_LOGGING "Enable Boost logging" OFF)
 option(FFAST_MATH "Enable fast math optimizations" OFF)
+option(ELECTROSTATIC_EXAMPLE "Include an electrostatic example simulation" OFF)
 
 if(ENABLE_SANITIZERS)
     list(APPEND CXX_FLAGS ${SANITIZER_FLAGS})
@@ -185,7 +184,7 @@ if(UNIT_SYSTEM)
 endif()
 
 if(BOOST_LOGGING)
-    find_package(Boost REQUIRED COMPONENTS log thread system)
+    find_package(Boost REQUIRED COMPONENTS log thread system program_options)
     include_directories(${Boost_INCLUDE_DIRS})
     add_compile_definitions(USE_BOOST_LOGGING)
     set(LOG_LIBS ${Boost_LIBRARIES})
@@ -194,6 +193,10 @@ endif()
 
 if(FFAST_MATH)
     add_compile_options(-ffast-math)
+endif()
+
+if(ELECTROSTATIC_EXAMPLE)
+	add_compile_definitions(INCLUDE_ELECTROSTATIC_SIMULATION)
 endif()
 
 # Plotting library
@@ -233,3 +236,4 @@ message(STATUS "Unit system: ${UNIT_SYSTEM}")
 message(STATUS "ROOT plotting: ${ROOT_PLOTTING}")
 message(STATUS "Boost logging: ${BOOST_LOGGING}")
 message(STATUS "Fast math: ${FFAST_MATH}")
+message(STATUS "Electrostatic example: ${ELECTROSTATIC_EXAMPLE}")
