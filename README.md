@@ -106,6 +106,9 @@ This is meant to be an example rather than a sensible way of executing the code.
 \
 Leaving out any flag or setting equal to 0 (or any other number) disables the respective conditional compilation.
 
+#### Video of live simulation
+![Video with root](/assets/simulation_video.mp4)
+
 ## Usage
 The code can be compiled by running:
 `make main [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` \
