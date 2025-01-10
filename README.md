@@ -77,67 +77,82 @@ fields.
 
 ## Getting Started
 Clone the project with `git clone https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation.git` \
-Build with make: `make main`\
-Execute as: `./bin/debug/main.o`
+Build with cmake. Refer to [Building the Project](#building-the-project)
+Execute as: `./build/bin/[debug,release,full_release]/main.o` if the project was built in the directory `build`.
 
 ### Prerequisites
 This project uses C++23 features and thus, a modern compiler is needed.
 Currently only gcc-13 and gcc-14 are supported.\
 Make is needed as part of the build chain too, not any specific version.\
 ROOT (CERN) ("Root" from now on) is an optional dependency for real-time plotting. Root plotting functionality are conditionally compiled.\
-Boost is an optional dependency for logging. Boost logging is conditionally compiled.\
+Boost log is an optional dependency for logging. Boost logging is conditionally compiled.\
+Boost program options is a required dependency since configuration files where
+added.
 
 ### Installation
 Clone the project with `git clone https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation.git` \
 
 ### Building the Project
 
-This project can be compiled using the provided Makefile.\
-Execute `make main [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` to build the project.\
-Execute `make tests [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` to build the tests
-project. Requires GTest.\
-Similarly, `make [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` will build both.
-Refer to [Configuration](#Configuration) for further details.
+This project can be compiled with cmake using the provided CMakeLists.txt.\
+One possible way to compile is:
+1. Create a build directory: `mkdir build`
+2. Move into that directory: `cd build`
+3. Run cmake: `cmake -DCMAKE_BUILD_TYPE=[Debug,Release,FullRelease] [-DOPTIONS=ON...] ..`
+4. Run the generated Makefile: `make`
+If compilation is successful, the build output will be located in
+`bin/[debug,release,full_release]/[main,tests]`, but it should be run from the
+project directory rather than from `build`, as `cd ..; ./build/bin/release/main`
+Refer to [Compile time configuration](#Compile_time_configuration) for further details.
 
 #### Example
 Using all flags can be done with:\
-`make main OPTIMIZATION_LEVEL=2 ENABLE_UNIT_SYSTEM=1 ENABLE_BOOST_LOGGING=1 ENABLE_ROOT_PLOTTING=1 ENABLE_FFAST_MATH=1`\
+`cmake -DCMAKE_BUILD_TYPE=Release -DUNIT_SYSTEM=ON -DBOOST_LOGGING=ON -DROOT_PLOTTING=ON -DFFAST_MATH=ON ..`\
 This is meant to be an example rather than a sensible way of executing the code.
 \
-Leaving out any flag or setting equal to 0 (or any other number) disables the respective conditional compilation.
+Leaving out any flag or setting equal to `OFF` disables the respective conditional compilation.
 
 #### Video of live simulation
 ![Video with root](/assets/simulation_video.mp4)
 
 ## Usage
-The code can be compiled by running:
-`make main [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` \
-This will generate the executable `./bin/[bin,release,full_release]/main.o`, which can be directly executed (by running `./bin/[bin,release,full_release]/main.o`).
+The code must be run from the project directory, or the configuration files will
+not be found. These files can be used to configure some parameters of the simulation without recompiling.
 
 ## Configuration
+
+### Compile time configuration
+
 #### Optimization Level
 
 The project supports three levels of optimization, which is controlled through
-the optional build flag `OPTIMIZATION_LEVEL`. Where x is one of {0, 1, 2}.
-- 0: Debug mode. Enables all the supported compiler checks and sanitizers. It is
+the optional cmake flag `-DCMAKE_BUILD_TYPE=x`. Where x is one of {Debug, Release,
+FullRelease}.
+`Debug`: Debug mode. Enables all the supported compiler checks and sanitizers. It is
 the default mode. Should not be used for heavy simulations due to performance
 issues.
-- 1: Release mode: Enables compiler optimization. Sanitizers are still
+`Release`: Release mode: Enables compiler optimization. Sanitizers are still
 enabled. Should be the preferred execution mode in general.
-- 2: Full release mode: Enable full compiler optimization and disables all sanitizers. Enables some floating point math (generally safe) optimizations. Execution mode for larger simulations.
+`FullRelease`: Full release mode: Enable full compiler optimization and disables all sanitizers. Enables some floating point math (generally safe) optimizations. Execution mode for larger simulations.
 
 #### Build Options
 The optional build flags `OPTIONS` are used to enable parts of the project that might require dependencies or might not make sense always.
 The supported arguments are
-- `ENABLE_UNIT_SYSTEM={0,1}`: Disables/Enables a basic unit system that provides type checking of compile time units and formatting. Defaults to 0.
-- `ENABLE_ROOT_PLOTTING={0,1}`: Disables/Enables the root plotting backend. Default is not plotting. Enabling this option requires the root library properly configured (root header files and libraries must be in the include and lib search path). Defaults to 0.
-- `ENABLE_BOOST_LOGGING={0,1}`: Disables/Enables boost log as the backend for logging. Default backend is iostream. Enabling this option requires Boost properly configured (boost header files and libraries must be in the include and lib search path). Defaults to 0.
-- `ENABLE_FFAST_MATH={0,1}`: Disables/Enables -ffast-math compiler flags. Use carefully. Defaults to 0.
+- `ENABLE_SANITIZERS={OFF,ON}`:Disables/Enables the use of sanitizers. Defaults
+  to `ON`.
+- `UNIT_SYSTEM={OFF,ON}`: Disables/Enables a basic unit system that provides type checking of compile time units and formatting. Defaults to `OFF`.
+- `ROOT_PLOTTING={OFF,ON}`: Disables/Enables the root plotting backend. Default is not plotting. Enabling this option requires the root library properly configured (root header files and libraries must be in the include and lib search path). Defaults to `OFF`.
+- `BOOST_LOGGING={OFF,ON}`: Disables/Enables boost log as the backend for logging. Default backend is iostream. Enabling this option requires Boost properly configured (boost header files and libraries must be in the include and lib search path). Defaults to `OFF`.
+- `FFAST_MATH={OFF,ON}`: Disables/Enables -ffast-math compiler flags. Use carefully. Defaults to `OFF`.
 
+### Runtime configuration
+
+Simulation parameters can be configured through a config file in
+`data/input/[debug/release]/config.ini` or through compile time values in the
+code.
 
 ## Testing
-Compile: `make tests [OPTIMIZATION_LEVEL=x] [OPTIONS=y...]` \
-Execute: `./tests/bin/{debug,release,full_release}/tests.o`
+After compiling the project, execute as: `./build/bin/{debug,release,full_release}/tests`
 
 ## Performance
 ToDo

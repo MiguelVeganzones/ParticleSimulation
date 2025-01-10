@@ -193,10 +193,8 @@ int main()
     utility::logging::default_source::log(
         utility::logging::severity_level::error, "Huge error or sth..."
     );
-#ifdef INCLUDE_ELECTROSTATIC_SIMULATION
-    electrostatic_test();
-#endif
     barnes_hut_test();
+    electrostatic_test();
 
 #ifdef USE_ROOT_PLOTTING
     app.Run();

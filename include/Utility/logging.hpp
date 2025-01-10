@@ -3,7 +3,6 @@
 
 
 #ifdef USE_BOOST_LOGGING
-#define BOOST_LOG_DYN_LINK 1
 
 #include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/log/attributes.hpp>

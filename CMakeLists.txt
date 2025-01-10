@@ -172,7 +172,6 @@ option(UNIT_SYSTEM "Enable unit system" OFF)
 option(ROOT_PLOTTING "Enable ROOT plotting" OFF)
 option(BOOST_LOGGING "Enable Boost logging" OFF)
 option(FFAST_MATH "Enable fast math optimizations" OFF)
-option(ELECTROSTATIC_EXAMPLE "Include an electrostatic example simulation" OFF)
 
 if(ENABLE_SANITIZERS)
     list(APPEND CXX_FLAGS ${SANITIZER_FLAGS})
@@ -183,20 +182,8 @@ if(UNIT_SYSTEM)
     add_compile_definitions(USE_UNIT_SYSTEM)
 endif()
 
-if(BOOST_LOGGING)
-    find_package(Boost REQUIRED COMPONENTS log thread system)
-    include_directories(${Boost_INCLUDE_DIRS})
-    add_compile_definitions(USE_BOOST_LOGGING)
-    set(LOG_LIBS ${Boost_LIBRARIES})
-    list(APPEND CXX_FLAGS -fexceptions)
-endif()
-
 if(FFAST_MATH)
     add_compile_options(-ffast-math)
-endif()
-
-if(ELECTROSTATIC_EXAMPLE)
-	add_compile_definitions(INCLUDE_ELECTROSTATIC_SIMULATION)
 endif()
 
 # Plotting library
@@ -214,10 +201,11 @@ endif()
 
 # Main executable
 add_executable(main ${SRC_FILES})
+
 # Link libraries for main
 find_package(Boost REQUIRED COMPONENTS program_options)
 target_compile_options(main PRIVATE ${CXX_FLAGS})
-target_link_libraries(main PRIVATE plotting ${LOG_LIBS} Boost::program_options)
+target_link_libraries(main PRIVATE plotting Boost::program_options)
 target_link_options(main PRIVATE ${LINK_FLAGS})
 
 # Tests executable
@@ -228,6 +216,15 @@ target_link_libraries(tests PRIVATE GTest::GTest GTest::Main plotting pthread)
 target_compile_options(tests PRIVATE ${CXX_FLAGS})
 target_link_options(tests PRIVATE ${LINK_FLAGS})
 
+if(BOOST_LOGGING)
+    find_package(Boost REQUIRED COMPONENTS log thread system)
+    include_directories(${Boost_INCLUDE_DIRS})
+    add_compile_definitions(USE_BOOST_LOGGING)
+    target_link_libraries(main PRIVATE plotting Boost::log Boost::thread Boost::system)
+    target_link_libraries(tests PRIVATE plotting Boost::log Boost::thread Boost::system)
+    list(APPEND CXX_FLAGS -fexceptions)
+endif()
+
 # Build messages
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "Output directory: ${OUTPUT_DIR}")
@@ -236,4 +233,3 @@ message(STATUS "Unit system: ${UNIT_SYSTEM}")
 message(STATUS "ROOT plotting: ${ROOT_PLOTTING}")
 message(STATUS "Boost logging: ${BOOST_LOGGING}")
 message(STATUS "Fast math: ${FFAST_MATH}")
-message(STATUS "Electrostatic example: ${ELECTROSTATIC_EXAMPLE}")
