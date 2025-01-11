@@ -4,7 +4,7 @@
 1. [Introduction](#introduction)
 2. [Features](#features)
     - [NDTree](#ndtree)
-    - [Numerical solvers](#numerical-solvers)
+    - [Numerical Solvers](#numerical-solvers)
     - [Particle System](#particle-system)
     - [Plotting](#plotting)
     - [Random Distributions](#random-distributions)
@@ -14,14 +14,56 @@
     - [Building the Project](#building-the-project)
 4. [Usage](#usage)
 5. [Configuration](#configuration)
-    - [Optimization Level](#optimization-level)
-    - [Build Options](#build-options)
+    - [Compile Time Configuration](#compile-time-configuration)
+        - [Optimization Level](#optimization-level)
+        - [Build Options](#build-options)
+    - [Runtime Configuration](#runtime-configuration)
 6. [Testing](#testing)
 7. [Performance](#performance)
 8. [Documentation](#documentation)
 9. [Contributing](#contributing)
 10. [License](#license)
 11. [Acknowledgments](#acknowledgments)
+
+## Introduction
+The Barnes-Hut simulation is an approximation algorithm for the N-body problem, designed for the simulation of large clusters of particles, such as galaxies.
+This algorithm uses an NDTree to cluster particles spatially, allowing the treatment of local clusters as a single particle when computing their gravitational interaction with a distant particle.
+This approximation reduces the complexity of the N-body problem from \(O(N^2)\) to \(O(N\log N)\), where \(N\) is the number of particles.
+The precision of force calculations can be controlled via the configuration parameter `theta`, enabling a balance between performance and accuracy.
+**Note**: This software is not yet thoroughly tested. Sensible `theta` values can achieve 99.9% accuracy for short simulations but may be unsuitable for long-running simulations due to the chaotic nature of the N-body problem.
+
+## Features
+### NDTree
+The NDTree data structure is a templated, tree-like, non-owning spatial view into a set of particles. It enables the Barnes-Hut approximation and offers:
+- Support for n-dimensional sample types.
+- Concept-based interface.
+- Flexible number of subdivisions per dimension.
+- Static or dynamic limit computation at construction.
+
+**Limitations**:
+- Parallel construction or recaching is not supported (yet).
+- Empty boxes are not recollected.
+
+### Numerical Solvers
+Experimental numerical integrators include:
+- **RK4**: Standard Runge-Kutta 4th order.
+- **Yoshida**: 4th order symplectic integrator.
+- **Leapfrog**: Baseline symplectic integrator.
+- **ODEX2**: Under development.
+
+### Particle System
+A flexible particle type system supports a conditional unit system, allowing high-level simulations with minimal performance overhead.
+
+### Plotting
+Basic APIs for ROOT-based plotting are included, though still under development.
+
+### Random Distributions
+Random distribution utilities help generate particle systems from density fields.
+
+## Getting Started
+Clone the project:  
+```bash
+git clone https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation.git
 
 ## Introduction
 The Barnes-Hut simulation is an approximation algorithm for the n-body problem intended for the simulation of large clusters of particles, such as galaxies.
@@ -67,7 +109,7 @@ This allows for a high level implementation of the simulations without a big
 penalty in performance or space.
 
 ### Plotting
-Simple APIs into root plotting utilities have been implemented, but they are
+Simple APIs into Root plotting utilities have been implemented, but they are
 still in development.
 
 ### Random Distributions
@@ -78,7 +120,7 @@ fields.
 ## Getting Started
 Clone the project with `git clone https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation.git` \
 Build with cmake. Refer to [Building the Project](#building-the-project)
-Execute as: `./build/bin/[debug,release,full_release]/main.o` if the project was built in the directory `build`.
+Execute as: `./build/bin/{debug,release,full_release}/main` if the project was built in the directory `build`.
 
 ### Prerequisites
 This project uses C++23 features and thus, a modern compiler is needed.
@@ -96,12 +138,11 @@ Clone the project with `git clone https://gitlab.lrz.de/advprog2024/83-barnes-hu
 
 This project can be compiled with cmake using the provided CMakeLists.txt.\
 One possible way to compile is:
-1. Create a build directory: `mkdir build`
-2. Move into that directory: `cd build`
-3. Run cmake: `cmake -DCMAKE_BUILD_TYPE=[Debug,Release,FullRelease] [-DOPTIONS=ON...] ..`
-4. Run the generated Makefile: `make`
+1. Create a build directory and move into it: `mkdir build && cd build`
+2. Run cmake: `cmake -DCMAKE_BUILD_TYPE={Debug,Release,FullRelease} [-DOPTIONS=ON...] ..`
+3. Run the generated Makefile: `make`
 If compilation is successful, the build output will be located in
-`bin/[debug,release,full_release]/[main,tests]`, but it should be run from the
+`bin/{debug,release,full_release}/{main,tests}`, but it should be run from the
 project directory rather than from `build`, as `cd ..; ./build/bin/release/main`
 Refer to [Compile time configuration](#Compile_time_configuration) for further details.
 
@@ -141,14 +182,14 @@ The supported arguments are
 - `ENABLE_SANITIZERS={OFF,ON}`:Disables/Enables the use of sanitizers. Defaults
   to `ON`.
 - `UNIT_SYSTEM={OFF,ON}`: Disables/Enables a basic unit system that provides type checking of compile time units and formatting. Defaults to `OFF`.
-- `ROOT_PLOTTING={OFF,ON}`: Disables/Enables the root plotting backend. Default is not plotting. Enabling this option requires the root library properly configured (root header files and libraries must be in the include and lib search path). Defaults to `OFF`.
+- `ROOT_PLOTTING={OFF,ON}`: Disables/Enables the Root plotting backend. Default is not plotting. Enabling this option requires the Root library properly configured (Root header files and libraries must be in the include and lib search path). Defaults to `OFF`.
 - `BOOST_LOGGING={OFF,ON}`: Disables/Enables boost log as the backend for logging. Default backend is iostream. Enabling this option requires Boost properly configured (boost header files and libraries must be in the include and lib search path). Defaults to `OFF`.
 - `FFAST_MATH={OFF,ON}`: Disables/Enables -ffast-math compiler flags. Use carefully. Defaults to `OFF`.
 
 ### Runtime configuration
 
 Simulation parameters can be configured through a config file in
-`data/input/[debug/release]/config.ini` or through compile time values in the
+`data/input/{debug,release}/config.ini` or through compile time values in the
 code.
 
 ## Testing
