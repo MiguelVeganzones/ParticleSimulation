@@ -2,7 +2,6 @@
 
 #include <concepts>
 #include <iterator>
-#include <utility>
 
 namespace pm::particle_concepts
 {
