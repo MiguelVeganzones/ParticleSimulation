@@ -58,59 +58,6 @@ A flexible particle type system supports a conditional unit system, allowing hig
 Basic APIs for ROOT-based plotting are included, though still under development.
 
 ### Random Distributions
-Random distribution utilities help generate particle systems from density fields.
-
-## Getting Started
-Clone the project: git clone https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation.git
-
-## Introduction
-The Barnes-Hut simulation is an approximation algorithm for the n-body problem intended for the simulation of large clusters of particles, such as galaxies.
-This algorithm uses a nd-tree to cluster particles spatially.
-This allows treating local clusters as a single particle when computing their gravitational interaction with another particle that is far away enough.
-This approximation reduces the complexity of the N-body problem from O(N^2) to O(NlogN) where N is the amount of particles in the system.
-This approximation is necessary to scale n-body simulations to large particle
-systems.
-
-The precision of force calculations can be arbitrarily high (compared to the
-brute force computation) through a configuration parameter (theta).
-This software is not well tested enough yet, but sensible values of theta
-approximate the force up to a 99.9%.
-This may be good enough for short-running simulations, but due to the chaotic
-nature of the n-body problem it is not suit for long-running simulations.
-
-## Features
-The main building blocks of this project are described below.
-
-### NDTree
-The ndtree data structure is a templated tree-like non-owning spatial view into a set of particles. This data structure enables the Barnes Hut approximation. Some of its
-features are:
- - Supports n-dimensional sample types.
- - Concept based interface
- - Supports an arbitrary (enough) number of subdivisions per dimension.
- - Limits can be either dynamically computed or established on construction, but
-   they do not update.
- - It does NOT support (yet) parallel construction or recaching.
- - It does not support (yet) recollection of empty boxes.
-
-### Numerical solvers
-Numerical integrators serve as the engine for the simulations. Experimental, not
-too tested versions of the following solvers are provided:
- - RK4: Standard Runge Kutta 4th order integrator.
- - Yoshida 4th order symplectic integrator.
- - Leapfrog: Baseline of the leapfrog family symplectic integrators.
- - ODEX2: Under development....
-
-### Particle System
-This project implements an expressive particle type system that supports
-conditional compilation of a basic unit system.
-This allows for a high level implementation of the simulations without a big
-penalty in performance or space.
-
-### Plotting
-Simple APIs into Root plotting utilities have been implemented, but they are
-still in development.
-
-### Random Distributions
 A simple random distribution and random number library is packaged in this
 project to support the creation of large scale particle systems through density
 fields.
