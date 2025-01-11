@@ -61,9 +61,7 @@ Basic APIs for ROOT-based plotting are included, though still under development.
 Random distribution utilities help generate particle systems from density fields.
 
 ## Getting Started
-Clone the project:  
-```bash
-git clone https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation.git
+Clone the project: git clone https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation.git
 
 ## Introduction
 The Barnes-Hut simulation is an approximation algorithm for the n-body problem intended for the simulation of large clusters of particles, such as galaxies.
