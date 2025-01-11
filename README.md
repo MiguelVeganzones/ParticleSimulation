@@ -62,6 +62,12 @@ A simple random distribution and random number library is packaged in this
 project to support the creation of large scale particle systems through density
 fields.
 
+### Configuration files
+
+Some simulation parameters can be specified through a configuration file
+located in `data/input/{debug/release}/config.ini`. This allows configuration
+without recompilation. The project build output must be run from the project directory so that these files can be found.
+
 ## Getting Started
 Clone the project with `git clone https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation.git` \
 Build with cmake. Refer to [Building the Project](#building-the-project)
@@ -70,11 +76,10 @@ Execute as: `./build/bin/{debug,release,full_release}/main` if the project was b
 ### Prerequisites
 This project uses C++23 features and thus, a modern compiler is needed.
 Currently only gcc-13 and gcc-14 are supported.\
-Make is needed as part of the build chain too, not any specific version.\
-ROOT (CERN) ("Root" from now on) is an optional dependency for real-time plotting. Root plotting functionality are conditionally compiled.\
+CMake 3.30 or better is needed as part of the build system.
+ROOT (CERN) ("Root" from now on) is an optional dependency for real-time plotting. Root plotting functionality is conditionally compiled.\
 Boost log is an optional dependency for logging. Boost logging is conditionally compiled.\
-Boost program options is a required dependency since configuration files where
-added.
+Boost program options is a required dependency since configuration files where added.
 
 ### Installation
 Clone the project with `git clone https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation.git` \
