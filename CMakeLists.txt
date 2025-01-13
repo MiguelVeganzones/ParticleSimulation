@@ -113,7 +113,6 @@ set(FULL_RELEASE_CXX_FLAGS
 	-fconcepts-diagnostics-depth=3
 	-fno-math-errno
 	-fno-trapping-math
-	-fno-exceptions
 )
 
 set(SANITIZER_FLAGS
