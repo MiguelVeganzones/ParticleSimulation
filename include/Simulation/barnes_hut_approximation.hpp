@@ -8,6 +8,7 @@
 #include "ndtree.hpp"
 #include "particle_concepts.hpp"
 #include "particle_interaction.hpp"
+#include "physical_magnitudes.hpp"
 #include "random.hpp"
 #include "simulation_config.hpp"
 #include "stopwatch.hpp"
@@ -114,10 +115,15 @@ public:
             if (utility::random::srandom::randfloat<float>() < 0.02f)
             {
                 std::cout << "Current time: " << m_current_time << '\n';
-                std::cout << pm::energy::compute_kinetic_energy(current_system_state()) +
-                                 pm::energy::compute_gravitational_potential_energy(
-                                     current_system_state()
-                                 )
+                std::cout << "System total energy: "
+                          << pm::magnitudes::energy<
+                                 value_type>{ pm::energy::compute_kinetic_energy(
+                                                  current_system_state()
+                                              ) +
+                                              pm::energy::
+                                                  compute_gravitational_potential_energy(
+                                                      current_system_state()
+                                                  ) }
                           << std::endl;
             }
 #ifdef LOG_TO_CSV
