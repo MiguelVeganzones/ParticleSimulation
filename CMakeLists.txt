@@ -34,6 +34,7 @@ set(DEBUG_CXX_FLAGS
 	-Wodr
 	-Wpointer-arith
 	-Wrestrict
+	-Wreturn-local-addr
 	-Wshadow
 	-Wswitch-default
 	-Wswitch-enum
@@ -47,15 +48,6 @@ set(DEBUG_CXX_FLAGS
 	-fdiagnostics-show-template-tree
 	-ffinite-math-only
 	-fmax-errors=5
-	-fsanitize=address
-	-fsanitize=bounds
-	-fsanitize=float-cast-overflow
-	-fsanitize=float-divide-by-zero
-	-fsanitize=integer-divide-by-zero
-	-fsanitize=leak
-	-fsanitize=null
-	-fsanitize=signed-integer-overflow
-	-fsanitize=undefined
 	-ggdb3
 	-mavx
 	-march=native
@@ -71,6 +63,7 @@ set(RELEASE_CXX_FLAGS
 	-O2
 	-Wall
 	-Wextra
+	-Wreturn-local-addr
 	-Wshadow
 	-ffinite-math-only
 	-Wconversion
@@ -81,15 +74,6 @@ set(RELEASE_CXX_FLAGS
 	-mavx
 	-march=native
 	-fstrength-reduce
-	-fsanitize=address
-	-fsanitize=bounds
-	-fsanitize=float-cast-overflow
-	-fsanitize=float-divide-by-zero
-	-fsanitize=integer-divide-by-zero
-	-fsanitize=leak
-	-fsanitize=null
-	-fsanitize=signed-integer-overflow
-	-fsanitize=undefined
 	-fbounds-check
 	-fconcepts-diagnostics-depth=3
 )
