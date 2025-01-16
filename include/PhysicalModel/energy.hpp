@@ -13,8 +13,8 @@ namespace pm::energy
 
 template <particle_concepts::Particle Particle_Type>
 [[nodiscard]]
-inline static constexpr auto compute_kinetic_energy(Particle_Type const& p
-) noexcept -> magnitudes::energy<typename Particle_Type::value_type>
+inline static constexpr auto compute_kinetic_energy(Particle_Type const& p) noexcept
+    -> magnitudes::energy<typename Particle_Type::value_type>
 {
     using particle_t = Particle_Type;
     using value_type = typename particle_t::value_type;

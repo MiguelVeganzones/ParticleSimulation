@@ -51,6 +51,7 @@ public:
     using value_type                              = typename particle_t::value_type;
     using acceleration_t                          = typename particle_t::acceleration_t;
     using position_t                              = typename particle_t::position_t;
+    using distance_t                              = position_t;
     using velocity_t                              = typename particle_t::velocity_t;
     using mass_t                                  = typename particle_t::mass_t;
     using duration_t                              = std::chrono::duration<value_type>;
@@ -115,16 +116,12 @@ public:
             if (utility::random::srandom::randfloat<float>() < 0.02f)
             {
                 std::cout << "Current time: " << m_current_time << '\n';
-                std::cout << "System total energy: "
-                          << pm::magnitudes::energy<
-                                 value_type>{ pm::energy::compute_kinetic_energy(
-                                                  current_system_state()
-                                              ) +
-                                              pm::energy::
-                                                  compute_gravitational_potential_energy(
-                                                      current_system_state()
-                                                  ) }
-                          << std::endl;
+                const pm::magnitudes::energy<value_type> system_energy =
+                    pm::energy::compute_kinetic_energy(current_system_state()) +
+                    pm::energy::compute_gravitational_potential_energy(
+                        current_system_state()
+                    );
+                std::cout << "System total energy: " << system_energy << '\n';
             }
 #ifdef LOG_TO_CSV
             std::ostringstream filename;
@@ -171,8 +168,8 @@ public:
             return acceleration_t{};
         }
         auto const summary = b.summary().value();
-        const auto s       = pm::utils::l2_norm(b.diagonal_length().value());
-        const auto d       = pm::utils::l2_norm(
+        const auto s = pm::utils::l2_norm(distance_t{ b.diagonal_length() }.value());
+        const auto d = pm::utils::l2_norm(
             pm::utils::distance(p.position(), summary.position()).value()
         );
         if ((s / d) < m_theta.get())

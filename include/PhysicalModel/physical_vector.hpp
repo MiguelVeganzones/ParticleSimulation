@@ -1,13 +1,13 @@
 #pragma once
 
 #include "casts.hpp"
+#include "expression_templates.hpp"
 #include "particle_concepts.hpp"
-#include "unit_system.hpp"
 #include <algorithm>
 #include <array>
 #include <concepts>
+#include <functional>
 #include <ranges>
-#include <tuple>
 #include <type_traits>
 
 // physical_vector cannot be in its own namespace unfortunately to enable ADL
@@ -26,14 +26,29 @@ struct physical_vector
     using const_iterator = typename container_t::const_iterator;
     using iterator       = typename container_t::iterator;
 
-    inline auto assert_in_bounds(
-[[maybe_unused]]
-        std::integral auto const idx) const -> void
+    inline auto assert_in_bounds([[maybe_unused]] std::integral auto const idx) const
+        -> void
     {
         assert(idx < utility::casts::safe_cast<decltype(idx)>(s_dimension));
     }
 
-#ifdef USE_UNIT_SYSTEM
+    physical_vector(const auto& src) noexcept
+    {
+        for (size_type i = 0; i != s_dimension; ++i)
+        {
+            value_[i] = src[i];
+        }
+    }
+
+    auto operator=(const auto& src) noexcept -> physical_vector&
+    {
+        for (size_type i = 0; i != s_dimension; ++i)
+        {
+            value_[i] = src[i];
+        }
+        return *this;
+    }
+
     constexpr physical_vector() noexcept                       = default;
     constexpr physical_vector(physical_vector const&) noexcept = default;
     constexpr physical_vector(physical_vector&&) noexcept      = default;
@@ -41,12 +56,6 @@ struct physical_vector
         -> physical_vector&                                                  = default;
     constexpr auto operator=(physical_vector&&) noexcept -> physical_vector& = default;
     ~physical_vector() noexcept                                              = default;
-
-    physical_vector(std::initializer_list<value_type> init) noexcept
-    {
-        std::copy(init.begin(), init.end(), value_.begin());
-    }
-#endif
 
 #if __GNUC__ >= 14
     [[nodiscard]]
@@ -145,50 +154,6 @@ public:
     container_t value_;
 };
 
-auto operator+(auto&& pva, auto&& pvb) noexcept -> decltype(auto)
-    requires particle_concepts::Vector<std::remove_reference_t<decltype(pva)>> ||
-             particle_concepts::Vector<std::remove_reference_t<decltype(pvb)>>
-{
-    return operator_impl(
-        std::forward<std::remove_reference_t<decltype(pva)>>(pva),
-        std::forward<std::remove_reference_t<decltype(pvb)>>(pvb),
-        std::plus{}
-    );
-}
-
-auto operator-(auto&& pva, auto&& pvb) noexcept -> decltype(auto)
-    requires particle_concepts::Vector<std::remove_reference_t<decltype(pva)>> ||
-             particle_concepts::Vector<std::remove_reference_t<decltype(pvb)>>
-{
-    return operator_impl(
-        std::forward<std::remove_reference_t<decltype(pva)>>(pva),
-        std::forward<std::remove_reference_t<decltype(pvb)>>(pvb),
-        std::minus{}
-    );
-}
-
-auto operator*(auto&& pva, auto&& pvb) noexcept -> decltype(auto)
-    requires particle_concepts::Vector<std::remove_reference_t<decltype(pva)>> ||
-             particle_concepts::Vector<std::remove_reference_t<decltype(pvb)>>
-{
-    return operator_impl(
-        std::forward<std::remove_reference_t<decltype(pva)>>(pva),
-        std::forward<std::remove_reference_t<decltype(pvb)>>(pvb),
-        std::multiplies{}
-    );
-}
-
-auto operator/(auto&& pva, auto&& pvb) noexcept -> decltype(auto)
-    requires particle_concepts::Vector<std::remove_reference_t<decltype(pva)>> ||
-             particle_concepts::Vector<std::remove_reference_t<decltype(pvb)>>
-{
-    return operator_impl(
-        std::forward<std::remove_reference_t<decltype(pva)>>(pva),
-        std::forward<std::remove_reference_t<decltype(pvb)>>(pvb),
-        std::divides{}
-    );
-}
-
 template <particle_concepts::Vector Vector_Type>
 auto max(Vector_Type const& pva, Vector_Type const& pvb) noexcept -> decltype(auto)
 {
@@ -207,58 +172,6 @@ auto min(Vector_Type const& pva, Vector_Type const& pvb) noexcept -> decltype(au
         return std::min(std::get<0>(e), std::get<1>(e));
     });
     return ret;
-}
-
-template <typename T1, typename T2>
-    requires(particle_concepts::Vector<std::remove_reference_t<T1>> || particle_concepts::Vector<std::remove_reference_t<T2>>)
-[[nodiscard]]
-auto operator_impl(T1&& pva, T2&& pvb, auto&& binary_op) noexcept -> decltype(auto)
-{
-    using T1_t            = std::remove_reference_t<T1>;
-    using T2_t            = std::remove_reference_t<T2>;
-    constexpr auto at_idx = [](auto&& v, std::integral auto idx) noexcept
-        requires(particle_concepts::Vector<std::remove_reference_t<decltype(v)>> || std::is_floating_point_v<std::remove_reference_t<decltype(v)>>)
-    {
-        using v_t = std::remove_reference_t<decltype(v)>;
-        if constexpr (particle_concepts::Vector<v_t>)
-        {
-            return v[idx];
-        }
-        else if constexpr (std::ranges::range<v_t>)
-        {
-            return v[idx];
-        }
-        else if constexpr (std::is_floating_point_v<v_t>)
-        {
-            return v;
-        }
-        else
-        {
-            utility::error_handling::assert_unreachable();
-        }
-    };
-    if constexpr (particle_concepts::Vector<T1_t>)
-    {
-        physical_vector<T1_t::s_dimension, typename T1_t::value_type> ret{};
-        for (auto i = 0uz; i != std::ranges::size(pva); ++i)
-        {
-            ret[i] = binary_op(pva[i], at_idx(pvb, i));
-        }
-        return ret;
-    }
-    else if constexpr (particle_concepts::Vector<T2_t>)
-    {
-        physical_vector<T2_t::s_dimension, typename T2_t::value_type> ret{};
-        for (auto i = 0uz; i != std::ranges::size(pvb); ++i)
-        {
-            ret[i] = binary_op(at_idx(pva, i), pvb[i]);
-        }
-        return ret;
-    }
-    else
-    {
-        utility::error_handling::assert_unreachable();
-    }
 }
 
 template <std::size_t N, std::floating_point F>

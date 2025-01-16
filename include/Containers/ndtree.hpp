@@ -3,6 +3,7 @@
 #include "constexpr_functions.hpp"
 #include "error_handling.hpp"
 #include "logging.hpp"
+#include "physical_magnitudes.hpp"
 #include <algorithm>
 #include <array>
 #include <cassert>

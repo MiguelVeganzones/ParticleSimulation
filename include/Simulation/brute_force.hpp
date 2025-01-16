@@ -79,11 +79,12 @@ public:
             if (utility::random::srandom::randfloat<float>() < 0.02f)
             {
                 std::cout << "Current time: " << m_current_time << '\n';
-                std::cout << pm::energy::compute_kinetic_energy(current_system_state()) +
-                                 pm::energy::compute_gravitational_potential_energy(
-                                     current_system_state()
-                                 )
-                          << std::endl;
+                const pm::magnitudes::energy<value_type> system_energy =
+                    pm::energy::compute_kinetic_energy(current_system_state()) +
+                    pm::energy::compute_gravitational_potential_energy(
+                        current_system_state()
+                    );
+                std::cout << "System total energy: " << system_energy << '\n';
             }
         }
 #ifdef USE_ROOT_PLOTTING

@@ -31,36 +31,22 @@ public:
     inline static constexpr auto _disambiguator_physical_magnitude_ = 0;
     using container_t                        = physical_vector<N, F>;
     using value_type                         = typename container_t::value_type;
+    using size_type                          = typename container_t::size_type;
     inline static constexpr auto s_dimension = container_t::s_dimension;
 #ifdef USE_UNIT_SYSTEM
     inline static constexpr auto s_units = U;
 #endif
 
-#ifdef USE_UNIT_SYSTEM
     constexpr physical_magnitude() noexcept                          = default;
     constexpr physical_magnitude(physical_magnitude const&) noexcept = default;
     constexpr physical_magnitude(physical_magnitude&&) noexcept      = default;
-    constexpr auto operator=(physical_magnitude const&) noexcept -> physical_magnitude& =
-                                                                        default;
-    constexpr auto operator=(physical_magnitude&&) noexcept -> physical_magnitude& =
-                                                                   default;
+    constexpr auto operator=(physical_magnitude const&) noexcept
+        -> physical_magnitude& = default;
+    constexpr auto operator=(physical_magnitude&&) noexcept
+        -> physical_magnitude&     = default;
     ~physical_magnitude() noexcept = default;
 
-    physical_magnitude(std::initializer_list<value_type> init) noexcept :
-        value_{ init }
-    {
-    }
-
-    physical_magnitude(container_t const& v) noexcept :
-        value_{ v }
-    {
-    }
-
-    physical_magnitude(container_t&& v) noexcept :
-        value_{ std::move(v) }
-    {
-    }
-
+#ifdef USE_UNIT_SYSTEM
     template <particle_concepts::Magnitude Other>
         requires(std::remove_reference_t<Other>::s_units == units::Units::_runtime_unit_)
     constexpr physical_magnitude(Other&& other) noexcept :
@@ -77,6 +63,29 @@ public:
     }
 #endif
 
+    physical_magnitude(const value_type v) noexcept
+        requires(N == 1)
+    {
+        value_[0] = v;
+    }
+
+    physical_magnitude(const auto& src) noexcept
+    {
+        for (size_type i = 0; i != s_dimension; ++i)
+        {
+            value_[i] = src[i];
+        }
+    }
+
+    auto operator=(const auto& src) noexcept -> physical_magnitude&
+    {
+        for (size_type i = 0; i != s_dimension; ++i)
+        {
+            value_[i] = src[i];
+        }
+        return *this;
+    }
+
 #if __GNUC__ >= 14
     template <typename Self>
     [[nodiscard]]
@@ -87,14 +96,10 @@ public:
 
     template <typename Self>
     [[nodiscard]]
-    auto magnitude(this Self&& self) noexcept -> auto&&
-        requires(N == 1)
-    {
-        return std::forward<Self>(self).value_[0];
-    }
+    auto magnitude(this Self&& self) noexcept
+        -> auto&& requires(N == 1) { return std::forward<Self>(self).value_[0]; }
 
-    [[nodiscard]]
-    auto operator[](this auto&& self, std::integral auto idx) -> auto&&
+    [[nodiscard]] auto operator[](this auto&& self, std::integral auto idx) -> auto&&
     {
         return std::forward<decltype(self)>(self).value_[idx];
     }
@@ -119,14 +124,9 @@ public:
     }
 
     [[nodiscard]]
-    auto magnitude() noexcept -> value_type&
-        requires(N == 1)
-    {
-        return value_[0];
-    }
+    auto magnitude() noexcept -> value_type& requires(N == 1) { return value_[0]; }
 
-    [[nodiscard]]
-    auto operator[](std::integral auto idx) const -> value_type
+    [[nodiscard]] auto operator[](std::integral auto idx) const -> value_type
     {
         return value_[idx];
     }
@@ -190,33 +190,25 @@ public:
 
     auto operator+=(auto&& other) noexcept -> decltype(auto)
     {
-        value_ = operator_impl(
-            value_, std::forward<decltype(other)>(other).value(), std::plus{}
-        );
+        value_ = value_ + other;
         return *this;
     }
 
     auto operator-=(auto&& other) noexcept -> decltype(auto)
     {
-        value_ = operator_impl(
-            value_, std::forward<decltype(other)>(other).value(), std::minus{}
-        );
+        value_ = value_ - other;
         return *this;
     }
 
     auto operator*=(auto&& other) noexcept -> decltype(auto)
     {
-        value_ = operator_impl(
-            value_, std::forward<decltype(other)>(other).value(), std::multiplies{}
-        );
+        value_ = value_ * other;
         return *this;
     }
 
     auto operator/=(auto&& other) noexcept -> decltype(auto)
     {
-        value_ = operator_impl(
-            value_, std::forward<decltype(other)>(other).value(), std::divides{}
-        );
+        value_ = value_ / other;
         return *this;
     }
 
@@ -265,50 +257,6 @@ using energy = physical_magnitude_t<1, F, units::Units::joule>;
 template <std::size_t N, std::floating_point F>
 using runtime_unit = physical_magnitude_t<N, F, units::Units::_runtime_unit_>;
 
-auto operator+(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
-    requires particle_concepts::Magnitude<std::remove_reference_t<decltype(pma)>> ||
-             particle_concepts::Magnitude<std::remove_reference_t<decltype(pmb)>>
-{
-    return operator_impl(
-        std::forward<std::remove_reference_t<decltype(pma)>>(pma),
-        std::forward<std::remove_reference_t<decltype(pmb)>>(pmb),
-        std::plus{}
-    );
-}
-
-auto operator-(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
-    requires particle_concepts::Magnitude<std::remove_reference_t<decltype(pma)>> ||
-             particle_concepts::Magnitude<std::remove_reference_t<decltype(pmb)>>
-{
-    return operator_impl(
-        std::forward<std::remove_reference_t<decltype(pma)>>(pma),
-        std::forward<std::remove_reference_t<decltype(pmb)>>(pmb),
-        std::minus{}
-    );
-}
-
-auto operator*(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
-    requires particle_concepts::Magnitude<std::remove_reference_t<decltype(pma)>> ||
-             particle_concepts::Magnitude<std::remove_reference_t<decltype(pmb)>>
-{
-    return operator_impl(
-        std::forward<std::remove_reference_t<decltype(pma)>>(pma),
-        std::forward<std::remove_reference_t<decltype(pmb)>>(pmb),
-        std::multiplies{}
-    );
-}
-
-auto operator/(auto&& pma, auto&& pmb) noexcept -> decltype(auto)
-    requires particle_concepts::Magnitude<std::remove_reference_t<decltype(pma)>> ||
-             particle_concepts::Magnitude<std::remove_reference_t<decltype(pmb)>>
-{
-    return operator_impl(
-        std::forward<std::remove_reference_t<decltype(pma)>>(pma),
-        std::forward<std::remove_reference_t<decltype(pmb)>>(pmb),
-        std::divides{}
-    );
-}
-
 template <particle_concepts::Magnitude Magnitude_Type>
 auto max(Magnitude_Type const& pma, Magnitude_Type const& pmb) noexcept -> decltype(auto)
 {
@@ -319,54 +267,6 @@ template <particle_concepts::Magnitude Magnitude_Type>
 auto min(Magnitude_Type const& pma, Magnitude_Type const& pmb) noexcept -> decltype(auto)
 {
     return Magnitude_Type{ min(pma.value(), pmb.value()) };
-}
-
-template <typename T1, typename T2>
-    requires(particle_concepts::Magnitude<std::remove_reference_t<T1>> ||
-             particle_concepts::Magnitude<std::remove_reference_t<T2>>)
-[[nodiscard]]
-auto operator_impl(T1&& pma, T2&& pmb, auto&& binary_op) noexcept -> decltype(auto)
-{
-    using T1_t = std::remove_reference_t<T1>;
-    using T2_t = std::remove_reference_t<T2>;
-    if constexpr (particle_concepts::Magnitude<T1_t> &&
-                  particle_concepts::Magnitude<T2_t>)
-    {
-        return physical_magnitude_t<
-            T1_t::s_dimension,
-            typename T1_t::value_type,
-            units::Units::_runtime_unit_>{ operator_impl(
-            std::forward<T1>(pma).value(),
-            std::forward<T2>(pmb).value(),
-            std::forward<decltype(binary_op)>(binary_op)
-        ) };
-    }
-    else if constexpr (particle_concepts::Magnitude<T1_t>)
-    {
-        return physical_magnitude_t<
-            T1_t::s_dimension,
-            typename T1_t::value_type,
-            units::Units::_runtime_unit_>{ operator_impl(
-            std::forward<T1>(pma).value(),
-            std::forward<T2>(pmb),
-            std::forward<decltype(binary_op)>(binary_op)
-        ) };
-    }
-    else if constexpr (particle_concepts::Magnitude<T2_t>)
-    {
-        return physical_magnitude_t<
-            T2_t::s_dimension,
-            typename T2_t::value_type,
-            units::Units::_runtime_unit_>{ operator_impl(
-            std::forward<T1>(pma),
-            std::forward<T2>(pmb).value(),
-            std::forward<decltype(binary_op)>(binary_op)
-        ) };
-    }
-    else
-    {
-        utility::error_handling::assert_unreachable();
-    }
 }
 
 template <

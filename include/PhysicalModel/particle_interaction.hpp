@@ -38,8 +38,8 @@ struct gravitational_interaction
     ) noexcept -> acceleration_t
     {
 
-        const auto distance = utils::distance(a.position(), b.position());
-        const auto d        = utils::l2_norm(distance.value());
+        const auto distance = utils::distance(a.position(), b.position()).value();
+        const auto d        = utils::l2_norm(distance);
         return acceleration_t{ pm::physical_parameters<value_type>::G *
                                b.mass().magnitude() * distance /
                                std::pow(d * d + epsilon * epsilon, value_type{ 1.5 }) };
@@ -64,8 +64,8 @@ struct electrostatic_interaction
     ) noexcept -> acceleration_t
     {
 
-        const auto distance = utils::distance(a.position(), b.position());
-        const auto d        = utils::l2_norm(distance.value());
+        const auto distance = utils::distance(a.position(), b.position()).value();
+        const auto d        = utils::l2_norm(distance);
         return acceleration_t{ pm::physical_constants_<value_type>::K *
                                b.charge().magnitude() * a.charge().magnitude() /
                                a.mass().magnitude() * distance /

@@ -194,10 +194,10 @@ auto merge(std::ranges::input_range auto&& particles) noexcept
     requires particle_concepts::Particle<std::ranges::range_value_t<decltype(particles)>>
 {
     using particle_t        = std::ranges::range_value_t<decltype(particles)>;
+    using value_type        = typename particle_t::value_type;
     using mass_t            = typename particle_t::mass_t;
     using position_t        = typename particle_t::position_t;
     using velocity_t        = typename particle_t::velocity_t;
-    using runtime_1d_unit_t = typename particle_t::runtime_1d_unit_t;
     using runtime_nd_unit_t = typename particle_t::runtime_nd_unit_t;
 
     const auto size =
@@ -212,21 +212,23 @@ auto merge(std::ranges::input_range auto&& particles) noexcept
     }
     const auto total_mass = mass_t(std::ranges::fold_left(
         particles,
-        runtime_1d_unit_t{},
-        [](auto const& acc, auto const& p) { return acc + p.mass(); }
+        value_type{},
+        [](auto const& acc, auto const& p) { return acc + p.mass().magnitude(); }
     ));
     const auto merged_pos = position_t(std::ranges::fold_left(
         particles,
         runtime_nd_unit_t{},
         [&total_mass](auto const& acc, auto const& p) {
-            return acc + p.mass().magnitude() / total_mass.magnitude() * p.position();
+            return runtime_nd_unit_t{ acc + p.mass().magnitude() /
+                                                total_mass.magnitude() * p.position() };
         }
     ));
     const auto merged_vel = velocity_t(std::ranges::fold_left(
         particles,
         runtime_nd_unit_t{},
         [&total_mass](auto const& acc, auto const& p) {
-            return acc + p.mass().magnitude() / total_mass.magnitude() * p.velocity();
+            return runtime_nd_unit_t{ acc + p.mass().magnitude() /
+                                                total_mass.magnitude() * p.velocity() };
         }
     ));
     return particle_t(total_mass, merged_pos, merged_vel, ParticleType::fictitious);
