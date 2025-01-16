@@ -2,15 +2,14 @@
 
 #include "generics.hpp"
 #include "logging.hpp"
-#include "ndtree.hpp"
 #include "particle_concepts.hpp"
 #include <boost/program_options.hpp>
 #include <chrono>
-#include <concepts>
 #include <exception>
 #include <fstream>
 #include <iostream>
 #include <optional>
+#include <string_view>
 #include <unordered_map>
 #include <variant>
 
@@ -28,21 +27,23 @@ namespace detail
 {
 
 [[nodiscard]]
-auto simulation_type_parse(std::string sim_type) -> SimulationType
+inline auto simulation_type_parse(std::string_view sim_type) -> SimulationType
 {
-    static const std::unordered_map<std::string, SimulationType> map{
-        { "barnes_hut", SimulationType::barnes_hut },
-        { "brute_force", SimulationType::brute_force }
+    using namespace std::literals;
+    static const std::unordered_map<std::string_view, SimulationType> map{
+        { "barnes_hut"sv, SimulationType::barnes_hut },
+        { "brute_force"sv, SimulationType::brute_force }
     };
     return map.at(sim_type);
 }
 
 [[nodiscard]]
-auto simulation_type_to_str(SimulationType sim_type) -> std::string
+inline auto simulation_type_to_str(SimulationType sim_type) -> std::string_view
 {
-    static const std::unordered_map<SimulationType, std::string> map{
-        { SimulationType::barnes_hut, "barnes_hut" },
-        { SimulationType::brute_force, "brute_force" }
+    using namespace std::literals;
+    static const std::unordered_map<SimulationType, std::string_view> map{
+        { SimulationType::barnes_hut, "barnes_hut"sv },
+        { SimulationType::brute_force, "brute_force"sv }
     };
     return map.at(sim_type);
 }

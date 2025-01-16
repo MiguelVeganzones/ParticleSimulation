@@ -60,9 +60,11 @@ namespace attrs = boost::log::attributes;
 // Enable streaming of severity_level enum
 auto operator<<(std::ostream& strm, severity_level level) -> std::ostream&
 {
-    static const std::string_view strings[] = { "trace",          "debug",   "info",
-                                                "important info", "warning", "error",
-                                                "fatal" };
+    using namespace std::literals;
+    static const std::string_view strings[] = { "trace"sv,   "debug"sv,
+                                                "info"sv,    "important info"sv,
+                                                "warning"sv, "error"sv,
+                                                "fatal"sv };
     if (static_cast<std::size_t>(level) < sizeof(strings) / sizeof(*strings))
     {
         const auto s = strings[level];
@@ -79,7 +81,7 @@ auto operator<<(std::ostream& strm, severity_level level) -> std::ostream&
 // Define attribute keywords
 BOOST_LOG_ATTRIBUTE_KEYWORD(line_id, "LineID", unsigned int)
 BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", severity_level)
-BOOST_LOG_ATTRIBUTE_KEYWORD(tag_attr, "Tag", std::string)
+BOOST_LOG_ATTRIBUTE_KEYWORD(tag_attr, "Tag", std::string_view)
 BOOST_LOG_ATTRIBUTE_KEYWORD(scope, "Scope", attrs::named_scope::value_type)
 BOOST_LOG_ATTRIBUTE_KEYWORD(timeline, "Timeline", attrs::timer::value_type)
 
