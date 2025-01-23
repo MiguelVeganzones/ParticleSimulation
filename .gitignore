@@ -62,3 +62,6 @@ bld/
 # Do not ignore configuration files
 ![Dd]ata/input/**/
 ![Dd]ata/input/**/*.ini
+
+# Ignore Callgrind Outputs
+*.out.*

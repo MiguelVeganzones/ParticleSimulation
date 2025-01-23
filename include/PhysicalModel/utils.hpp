@@ -34,21 +34,6 @@ auto l2_norm_sq(particle_concepts::Vector auto const& v) noexcept ->
         ret += v[i] * v[i];
     }
     return ret;
-    /*
-    using value_type = typename std::remove_cvref_t<decltype(v)>::value_type;
-    return std::sqrt(std::reduce(
-        std::execution::unseq,
-        v.begin(),
-        v.end(),
-        value_type{ 0 },
-        [](auto acc, auto e) { return acc + e * e; }
-    ));
-    */
-    /*
-    return std::sqrt(std::ranges::fold_left(v, 0, [](const auto acc, const auto e) {
-        return e * e + acc;
-    }));
-    */
 }
 
 [[gnu::pure, nodiscard]]

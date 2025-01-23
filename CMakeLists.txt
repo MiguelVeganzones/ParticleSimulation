@@ -60,7 +60,7 @@ set(RELEASE_CXX_FLAGS
 	-fdiagnostics-path-format=inline-events
 	-fdiagnostics-show-caret
 	-ggdb3
-	-O2
+	-O3
 	-Wall
 	-Wextra
 	-Wreturn-local-addr
@@ -125,7 +125,9 @@ else()
     message(ERROR "Unknown build type!")
 endif()
 message(STATUS "CXX Flags: ${CXX_FLAGS}")
-set(LINK_FLAGS)
+set(LINK_FLAGS
+    -pg
+)
 
 # Output directories
 set(OUTPUT_DIR ${CMAKE_BINARY_DIR}/bin/${OUT_TAIL_DIR})
@@ -169,6 +171,7 @@ if(FFAST_MATH)
     add_compile_options(-ffast-math)
 endif()
 
+
 # Plotting library
 add_library(plotting STATIC ${PLOTTING_FILES})
 target_include_directories(plotting PUBLIC ${CMAKE_SOURCE_DIR}/include/Plotting)
@@ -188,14 +191,14 @@ add_executable(main ${SRC_FILES})
 # Link libraries for main
 find_package(Boost REQUIRED COMPONENTS program_options)
 target_compile_options(main PRIVATE ${CXX_FLAGS})
-target_link_libraries(main PRIVATE plotting Boost::program_options)
+target_link_libraries(main PRIVATE plotting Boost::program_options tbb)
 target_link_options(main PRIVATE ${LINK_FLAGS})
 
 # Tests executable
 add_executable(tests ${TEST_FILES})
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
-target_link_libraries(tests PRIVATE GTest::GTest GTest::Main plotting pthread)
+target_link_libraries(tests PRIVATE GTest::GTest GTest::Main plotting pthread tbb)
 target_compile_options(tests PRIVATE ${CXX_FLAGS})
 target_link_options(tests PRIVATE ${LINK_FLAGS})
 

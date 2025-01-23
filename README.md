@@ -146,7 +146,174 @@ code.
 After compiling the project, execute as: `./build/bin/{debug,release,full_release}/tests`
 
 ## Performance
-ToDo
+
+### Optimization Steps
+
+Performance will be optimized based on a single benchmark test.
+The relevant parameters for this benchmark are:
+ - 3D Space
+ - 250 seconds duration
+ - 0.5 seconds time increment
+ - 1000 particles
+ - Theta = 0.5 in Barnes-Hut approximation
+ - Gravitational interaction
+ - Release mode (-O3 optimization level)
+ - No -ffast-math
+ - No santizers
+ - No plotting
+ - Initial conditions will be the same in all cases. This will be done by hand-seeding the random number engines.
+
+Vallgrind Callgrind will be used to find hotspots and improve performance for
+this specific performance benchmark.
+A broader suit of tests should be used, but due to time requirements this will
+be enough.
+Every experiment will be run three times and the minimum clock time will be
+considered.
+
+Performance will be measured in average particle-to-particle interaction computations per microsecond.
+This is clearly a non standard unit, but it will allow measuring the throughput of out physics engine for simulations of arbitrary size and duration.
+We will measure the total clock time of the simulation against the theoretical number of particle-to-particle interactions required, which is not the real amount of particle-to-particle interactions computed due to the Barnes-Hut approximation.
+This is because some computation is used to maintain the `ndtree`, which should add positively to the throughput, as well as the approximation factor theta.
+
+In this simulation there are 5e2 time steps, 1e3 particles, and each solver call
+requires 3 gravitational interaction calculations.
+This leads to a value of 1.5e9 theoretical particle-to-particle interactions.
+
+1.
+We see from valgrind that std::pow takes 40% of the time. This makes sense because `std::pow is a fairly expensive operation to compute and we use it in our hot path.
+It is so expensive beacuse it is a highly general operation, which we can ditch.
+We use `std::pow` in our force calculation: $(d^2 + e_1^2)^{3/2}$, or in c++: `std::pow(d * d + e * e, 1.5)`.
+This equation is an approximation to $d^3$ that prevents divisions by zero by introducing an epsilon $e$.
+We can substitute this with $d^3 + \frac{e_2}$, which is a much better approximation to $d^3$ and does not require a call to `std::pow`.
+This optimization reduces our execution time by roughly 40%, which matches the CPU time we measured for std::pow.
+
+2.
+Now, our vector `l2_norm` calculations represent a significant portion of the
+new CPU time, 13.8% approximately.
+This function is implemented using `std::ranges::fold_left`, which is another
+highly generic and high level operation, which can be changed either by a `for
+loop`, which could be easily unrolled by the compiler as vector size is known at
+compile time, or by `std::reduce`, which is a more specialized and appropriate
+algorithm for this particular computation, this algorithm also allows enabling
+SIMD instructions automatically by providing an unsequenced execution policy.
+After trying out the three alternatives, the most effective optimization was the
+raw `loop`.
+
+3.
+After further inspection, actually, the call to `std::sqrt` in `l2_norm` is what takes most of the time. This function will be split into `l2_norm_sq`
+and `l2_norm`, such that a version that does not use `std::sqrt` can be used
+when needed.
+
+| Total Clock Time | P2P interaction throughput | Speedup | Info |
+|-----------------|------------------|-----------------|---------|
+| 35.443 [s]      | 42.32 [us^{}-1}] | 42%  |Base Performance    |
+| 20.489 [s]      | 73.21 [us^{-1}]  | | Removed call to `std::pow` in the critical path     |
+| 15.597 [s]   | 96.17 [us^{-1}]    | | Changed `std::ranges::fold_left` for raw
+for loop in vector l2 norm calculaiton|
+| 14.833 [s]   | 101.13 [us^{-1}]    | | provided `l2_norm_sq` specialization |
+| 14.833 [s]   | 101.13 [us^{-1}]    | | provided `l2_norm_sq` specialization |
+
+### Failed Attempts
+1. We implemented physical magnitude and vector operations with expression templates, but this did not improve performance. This is an extremely interesting optimization, but apparently of no use if containers do not allocate.
+2. Added Multithreading. Multithreading is always nice. Each particle
+   calculation is independent in the integrator. Old buffers are read only and
+only one element of the current buffer is written at each iteration, so it can
+be parallelized and vectorized with `std::execution::par_unseq`... Actually this
+did not improve performance, nor did `std::execution::unseq`. Maybe due to the
+small number of particles.
+
+### ToDo
+
+A memory pool would be interesting to allocate the `ndboxes` of the `ndtree`.
+
+## Performance
+
+### Optimization Steps
+
+Performance optimization was conducted based on a single benchmark test with the following parameters:
+- 3D space
+- 250 seconds duration
+- 0.5 seconds time increment
+- 1000 particles
+- Theta = 0.5 (Barnes-Hut approximation factor)
+- Gravitational interaction
+- Release mode (`-O3` optimization level)
+- No `-ffast-math`
+- No sanitizers
+- No plotting
+ - Initial conditions will be the same in all cases. This will be done by hand-seeding the random number engines.
+
+Valgrind Callgrind was used to identify hotspots in the simulation, guiding optimizations for this specific performance benchmark. A broader test suit should be used, but due to time limitation this will be enough. Each experiment was executed three times, and the minimum clock time was considered.
+
+Performance was evaluated in particle-to-particle (P2P) interaction computations per microsecond. This is clearly a non standard unit, but it will allow measuring the throughput of our physics engine for simulations of arbitrary size and duration. We will measure the total clock time of the simulation against the theoretical number of P2P interactions required, which is not the real amount of P2P interactions computed due to the Barnes-Hut approximation. This is because some computation is used to maintain the `ndtree`, which should add positively to the throughput, as well as the approximation factor theta.
+
+For this specific benchmark, the number of P2P interactions depends on:
+- The number of time steps: `500`
+- The number of particles:** `1,000`
+- The force calculations the solver requires per update: `3`
+- Gravitational interactions per step: `1.5E9` theoretical P2P interactions.
+
+### Key Optimizations
+
+1. Eliminating `std::pow` in the critical path:
+   - Valgrind revealed that `std::pow` accounted for approximately 40% of the execution time. This makes sense because `std::pow` is a fairly expensive operation to compute and it is present in our hot path.
+I
+   - `std::pow` was used in the force calculation:
+     \[
+     F(d, e) = (d^2 + e^2)^{3/2} \approx d^3
+     \]
+     Or in C++: `std::pow(d * d + e * e, 1.5)`.
+     This equation is an approximation to \( d^3 \) that introduces an epsilon term \( e \) that prevents division by zero and ensures numerical stability.
+   - This call to `std::pow` can be ditched by changing the approximation to:
+     \[
+     F(d, e) = d^3 + \frac{\epsilon}{2} \approx d^3
+     \]
+   - This resulted in a reduction in clock time of about 40%.
+
+2. Optimizing `l2_norm` calculations:
+   - After removing `std::pow`, the `l2_norm` vector calculation represents a significant part of the CPU time 13.8% approximately. This function was implemented using `std::ranges::fold_left`, which is high-level but less efficient than a raw loop.
+   - We tried optimizing this implementation by replacing `fold_left` with:
+     - A raw `for` loop, which would be easy for the compiler to unroll, as the
+     vector size is a small compile time constant.
+     - `std::reduce`, which is a more specialized version of `std::accumualte` for numeric computation and also allows execution policies such as `std::execution::unseq` for SIMD optimization.
+    - After trying out both alternatives, the most effective optimization was the raw `for` loop.
+   - This optimization resulted in a 24 CPU time reduction.
+
+3. Specialization of `l2_norm` with `l2_norm_sq`:
+   - A significant portion of the `l2_norm` computation time was spent in the `std::sqrt` call. However, some computations can work with the squared norm too.
+   - Providing a `l2_norm_sq` version of `l2_norm` that does not compute the square root would improve performance. Wherever possible, we replaced calls to `l2_norm` with `l2_norm_sq`.
+   - Execution time was reduced by around 5%. This is not a very significant
+   reduction, but out tests showed that this specific `std::sqrt` call amounts
+   for around 50% of the total execution time, as this `l2_norm` is needed in
+   more places in the simulation. Anyways, `std::sqrt` is an expensive operation
+   but not that much.
+
+### Summary of Results
+
+| Total Clock Time | P2P Interaction Throughput | Speedup (%) | Optimization                           |
+|------------------|----------------------------|-------------|----------------------------------------|
+| 35.443 [s]       | 42.32 [us\(^{-1}\)]        | Baseline    | Base performance                      |
+| 20.489 [s]       | 73.21 [us\(^{-1}\)]        | +42%        | Eliminated `std::pow` in the critical path |
+| 15.597 [s]       | 96.17 [us\(^{-1}\)]        | +25%        | Replaced `fold_left` with raw `for` loop |
+| 14.833 [s]       | 101.13 [us\(^{-1}\)]       | +5%         | Introduced `l2_norm_sq` specialization  |
+
+Improving performance further is not trivial and would require modifying
+algorithms or memory pools to eliminate the very few allocations we are
+currently doing in the `ndtree`.
+
+### Failed Attempts
+
+1. Expression templates for vector operations:
+   - We implemented physical magnitude and vector operations with expression templates to reduce temporaries. However, this did not improve performance, probably because the containers we use do not require dynamic allocation and some overhead is needed for this technique.
+
+2. Multithreading and SIMD:
+   - We attempted to parallelize solver computations using `std::execution::par_unseq` and `std::execution::unseq`. Each particle calculation is independent in the integrator. Previous value buffers are read only and only one element of the current buffer is written at each iteration, so it can be parallelized and vectorized with `std::execution::par_unseq`. This did not improve performance, presumably because the overhead of launching threads was greater than the work they did. A thread pool would be required to improve performance 
+
+### ToDo
+
+- Implement a real benchmarking suite with diverse parameters.
+- Implement a thread pool to add efficient multithreading.
+- Implement a memory pool for `ndbox` allocation.
 
 ## Contributing
 - Guidelines for contributing to the project.

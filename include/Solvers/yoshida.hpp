@@ -2,6 +2,7 @@
 
 #include "particle_concepts.hpp"
 #include "utils.hpp"
+#include <execution>
 
 #define DEBUG_PRINT_YOSHIDA (false)
 
@@ -34,9 +35,10 @@ struct yoshida4_solver
 
     inline static constexpr auto d = std::array<value_type, s_order - 1>{ x1, x0, x1 };
 
-    system_t*   system_;
-    std::size_t size_;
-    duration_t  dt_;
+    system_t*                system_;
+    std::size_t              size_;
+    duration_t               dt_;
+    std::vector<std::size_t> indeces_;
 
     yoshida4_solver(
         system_t*                              system,
@@ -45,8 +47,10 @@ struct yoshida4_solver
     ) :
         system_{ system },
         size_{ size },
-        dt_{ delta_t }
+        dt_{ delta_t },
+        indeces_(size)
     {
+        std::iota(indeces_.begin(), indeces_.end(), 0);
     }
 
     auto run() -> void
@@ -62,26 +66,30 @@ struct yoshida4_solver
             );
             system_->velocity_buffer_write(0, p_idx, system_->velocity_read(p_idx));
         }
-        value_type max_acc{};
         for (std::size_t i = 1; i != s_order; ++i)
         {
             system_->commit_buffer(i - 1);
-            for (std::size_t p_idx = 0; p_idx != size_; ++p_idx)
-            {
-                const auto a = system_->get_acceleration(i - 1, p_idx);
-                max_acc      = std::max(max_acc, utils::l2_norm(a.value()));
-                system_->velocity_buffer_write(
-                    i,
-                    p_idx,
-                    system_->velocity_buffer_read(i - 1, p_idx) + d[i - 1] * a * dt
-                );
-                system_->position_buffer_write(
-                    i,
-                    p_idx,
-                    system_->position_buffer_read(i - 1, p_idx) +
-                        c[i] * system_->velocity_buffer_read(i, p_idx) * dt
-                );
-            }
+
+            // for (std::size_t p_idx = 0; p_idx != size_; ++p_idx)
+            std::for_each(
+                std::execution::seq,
+                std::cbegin(indeces_),
+                std::cend(indeces_),
+                [this, i, dt](auto const p_idx) {
+                    const auto a = system_->get_acceleration(i - 1, p_idx);
+                    system_->velocity_buffer_write(
+                        i,
+                        p_idx,
+                        system_->velocity_buffer_read(i - 1, p_idx) + d[i - 1] * a * dt
+                    );
+                    system_->position_buffer_write(
+                        i,
+                        p_idx,
+                        system_->position_buffer_read(i - 1, p_idx) +
+                            c[i] * system_->velocity_buffer_read(i, p_idx) * dt
+                    );
+                }
+            );
         }
         for (std::size_t p_idx = 0; p_idx != size_; ++p_idx)
         {
