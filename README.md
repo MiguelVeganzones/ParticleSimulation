@@ -180,13 +180,13 @@ The resulting total theoretical gravitational interactions is: `1.5E9`.
 I
    - `std::pow` was used in the force calculation:
      $$
-     F(d, e) = (d^2 + e^2)^{3/2} \approx d^3
+     F(d, \epsilon) = (d^2 + \epsilon^2)^{3/2} \approx d^3
      $$
      Or in C++: `std::pow(d * d + e * e, 1.5)`.
-     This equation is an approximation to $d^3$ that introduces an epsilon term  $e$ that prevents division by zero and ensures numerical stability.
+     This equation is an approximation to $d^3$ that introduces an epsilon term  $\epsilon$ that prevents division by zero and ensures numerical stability.
    - This call to `std::pow` can be ditched by changing the approximation to:
      $$
-     F(d, e) = d^3 + \frac{\epsilon}{2} \approx d^3
+     F(d, \epsilon) = d^3 + \frac{\epsilon}{2} \approx d^3
      $$
    - This resulted in a reduction in clock time of about 40%.
 
