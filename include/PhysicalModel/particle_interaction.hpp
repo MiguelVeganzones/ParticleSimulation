@@ -37,12 +37,15 @@ struct gravitational_interaction
         particle_t const& b
     ) noexcept -> acceleration_t
     {
-
         const auto distance = utils::distance(a.position(), b.position());
         const auto d        = utils::l2_norm(distance.value());
         return acceleration_t{ pm::physical_parameters<value_type>::G *
+                               b.mass().magnitude() * distance / (d * d * d + 0.45) };
+        /*
+        return acceleration_t{ pm::physical_parameters<value_type>::G *
                                b.mass().magnitude() * distance /
-                               std::pow(d * d + epsilon * epsilon, value_type{ 1.5 }) };
+                               std::pow(d * d + epsilon * epsilon, 1.5) };
+        */
     }
 };
 
