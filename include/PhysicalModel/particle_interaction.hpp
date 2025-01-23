@@ -30,7 +30,7 @@ struct gravitational_interaction
     using position_t                                = typename particle_t::position_t;
     using mass_t                                    = typename particle_t::mass_t;
 
-    inline static constexpr auto epsilon = static_cast<value_type>(8e-1);
+    inline static constexpr auto epsilon = static_cast<value_type>(4.5e-1);
 
     inline static auto acceleration_contribution(
         particle_t const& a,
@@ -40,12 +40,7 @@ struct gravitational_interaction
         const auto distance = utils::distance(a.position(), b.position());
         const auto d        = utils::l2_norm(distance.value());
         return acceleration_t{ pm::physical_parameters<value_type>::G *
-                               b.mass().magnitude() * distance / (d * d * d + 0.45) };
-        /*
-        return acceleration_t{ pm::physical_parameters<value_type>::G *
-                               b.mass().magnitude() * distance /
-                               std::pow(d * d + epsilon * epsilon, 1.5) };
-        */
+                               b.mass().magnitude() * distance / (d * d * d + epsilon) };
     }
 };
 
@@ -71,35 +66,33 @@ struct electrostatic_interaction
         const auto d        = utils::l2_norm(distance.value());
         return acceleration_t{ pm::physical_constants_<value_type>::K *
                                b.charge().magnitude() * a.charge().magnitude() /
-                               a.mass().magnitude() * distance /
-                               std::pow(d * d + epsilon * epsilon, value_type{ 1.5 }) };
-    }
-};
+                               a.mass().magnitude() * distance / (d * d * d + epsilon) };
+    };
 
-namespace detail
-{
+    namespace detail
+    {
 
-template <Particle Particle_Type, InteractionType Interaction>
-struct interaction;
+    template <Particle Particle_Type, InteractionType Interaction>
+    struct interaction;
 
-template <Particle Particle_Type>
-struct interaction<Particle_Type, InteractionType::Gravitational>
-{
-    using type = gravitational_interaction<Particle_Type>;
-};
+    template <Particle Particle_Type>
+    struct interaction<Particle_Type, InteractionType::Gravitational>
+    {
+        using type = gravitational_interaction<Particle_Type>;
+    };
 
-template <Particle Particle_Type>
-struct interaction<Particle_Type, InteractionType::Electrostatic>
-{
-    using type = electrostatic_interaction<Particle_Type>;
-};
+    template <Particle Particle_Type>
+    struct interaction<Particle_Type, InteractionType::Electrostatic>
+    {
+        using type = electrostatic_interaction<Particle_Type>;
+    };
 
-template <Particle Particle_Type, InteractionType Interaction>
-using interaction_t = typename interaction<Particle_Type, Interaction>::type;
+    template <Particle Particle_Type, InteractionType Interaction>
+    using interaction_t = typename interaction<Particle_Type, Interaction>::type;
 
-} // namespace detail
+    } // namespace detail
 
-template <Particle Particle_Type, InteractionType Interaction>
-using particle_interaction_t = detail::interaction_t<Particle_Type, Interaction>;
+    template <Particle Particle_Type, InteractionType Interaction>
+    using particle_interaction_t = detail::interaction_t<Particle_Type, Interaction>;
 
 } // namespace pm::interaction
