@@ -178,15 +178,15 @@ For this specific benchmark, the number of P2P interactions depends on:
    - Valgrind revealed that `std::pow` accounted for approximately 40% of the execution time. This makes sense because `std::pow` is a fairly expensive operation to compute and it is present in our hot path.
 I
    - `std::pow` was used in the force calculation:
-     \[
+     $$
      F(d, e) = (d^2 + e^2)^{3/2} \approx d^3
-     \]
+     $$
      Or in C++: `std::pow(d * d + e * e, 1.5)`.
-     This equation is an approximation to \( d^3 \) that introduces an epsilon term \( e \) that prevents division by zero and ensures numerical stability.
+     This equation is an approximation to $d^3$ that introduces an epsilon term  $e$ that prevents division by zero and ensures numerical stability.
    - This call to `std::pow` can be ditched by changing the approximation to:
-     \[
+     $$
      F(d, e) = d^3 + \frac{\epsilon}{2} \approx d^3
-     \]
+     $$
    - This resulted in a reduction in clock time of about 40%.
 
 2. Optimizing `l2_norm` calculations:
@@ -212,7 +212,7 @@ I
 | Total Clock Time | P2P Interaction Throughput | Speedup (%) | Optimization                               |
 |------------------|----------------------------|-------------|--------------------------------------------|
 | 35.443 [s]       | 42.32 [us<sup>-1</sup>]    | Baseline    | Base performance                           |
-| 20.489 [s]       | 73.21 [us<sup>-1</sup>]    | +42%        | Eliminated `std::pow` in the critical path |
+| 20.489 [s]       | 73.21 [us$^-1$]    | +42%        | Eliminated `std::pow` in the critical path |
 | 15.597 [s]       | 96.17 [us<sup>-1</sup>]    | +25%        | Replaced `fold_left` with raw `for` loop   |
 | 14.833 [s]       | 101.13 [us<sup>-1</sup>]   | +5%         | Introduced `l2_norm_sq` specialization     |
 
