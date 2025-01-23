@@ -186,7 +186,6 @@ The resulting total theoretical gravitational interactions is: `1.5E9`.
 
 1. Eliminating `std::pow` in the critical path:
    - Valgrind revealed that `std::pow` accounted for approximately 40% of the execution time. This makes sense because `std::pow` is a fairly expensive operation to compute and it is present in our hot path.
-I
    - `std::pow` was used in the force calculation:
      $$
      F(d, \epsilon) = (d^2 + \epsilon_1^2)^{3/2} \approx d^3
