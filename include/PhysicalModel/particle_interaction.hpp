@@ -67,32 +67,33 @@ struct electrostatic_interaction
         return acceleration_t{ pm::physical_constants_<value_type>::K *
                                b.charge().magnitude() * a.charge().magnitude() /
                                a.mass().magnitude() * distance / (d * d * d + epsilon) };
-    };
+    }
+};
 
-    namespace detail
-    {
+namespace detail
+{
 
-    template <Particle Particle_Type, InteractionType Interaction>
-    struct interaction;
+template <Particle Particle_Type, InteractionType Interaction>
+struct interaction;
 
-    template <Particle Particle_Type>
-    struct interaction<Particle_Type, InteractionType::Gravitational>
-    {
-        using type = gravitational_interaction<Particle_Type>;
-    };
+template <Particle Particle_Type>
+struct interaction<Particle_Type, InteractionType::Gravitational>
+{
+    using type = gravitational_interaction<Particle_Type>;
+};
 
-    template <Particle Particle_Type>
-    struct interaction<Particle_Type, InteractionType::Electrostatic>
-    {
-        using type = electrostatic_interaction<Particle_Type>;
-    };
+template <Particle Particle_Type>
+struct interaction<Particle_Type, InteractionType::Electrostatic>
+{
+    using type = electrostatic_interaction<Particle_Type>;
+};
 
-    template <Particle Particle_Type, InteractionType Interaction>
-    using interaction_t = typename interaction<Particle_Type, Interaction>::type;
+template <Particle Particle_Type, InteractionType Interaction>
+using interaction_t = typename interaction<Particle_Type, Interaction>::type;
 
-    } // namespace detail
+} // namespace detail
 
-    template <Particle Particle_Type, InteractionType Interaction>
-    using particle_interaction_t = detail::interaction_t<Particle_Type, Interaction>;
+template <Particle Particle_Type, InteractionType Interaction>
+using particle_interaction_t = detail::interaction_t<Particle_Type, Interaction>;
 
 } // namespace pm::interaction

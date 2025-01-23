@@ -210,26 +210,25 @@ auto merge(std::ranges::input_range auto&& particles) noexcept
     {
         return *particles.begin();
     }
-    const auto total_mass = mass_t(std::ranges::fold_left(
-        particles,
-        runtime_1d_unit_t{},
-        [](auto const& acc, auto const& p) { return acc + p.mass(); }
-    ));
-    const auto merged_pos = position_t(std::ranges::fold_left(
-        particles,
-        runtime_nd_unit_t{},
-        [&total_mass](auto const& acc, auto const& p) {
-            return acc + p.mass().magnitude() / total_mass.magnitude() * p.position();
-        }
-    ));
-    const auto merged_vel = velocity_t(std::ranges::fold_left(
-        particles,
-        runtime_nd_unit_t{},
-        [&total_mass](auto const& acc, auto const& p) {
-            return acc + p.mass().magnitude() / total_mass.magnitude() * p.velocity();
-        }
-    ));
-    return particle_t(total_mass, merged_pos, merged_vel, ParticleType::fictitious);
+    runtime_1d_unit_t total_mass{};
+    for (auto const& p : particles)
+    {
+        total_mass += p.mass();
+    }
+    runtime_nd_unit_t merged_pos{};
+    runtime_nd_unit_t merged_vel{};
+    for (auto const& p : particles)
+    {
+        const auto k = p.mass().magnitude() / total_mass.magnitude();
+        merged_pos += k * p.position();
+        merged_vel += k * p.velocity();
+    }
+    return particle_t(
+        mass_t{ total_mass },
+        position_t{ merged_pos },
+        velocity_t{ merged_vel },
+        ParticleType::fictitious
+    );
 }
 
 template <std::size_t N, std::floating_point F>
