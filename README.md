@@ -223,7 +223,7 @@ currently doing in the `ndtree`.
 ### Failed Attempts
 
 1. Expression templates for vector operations:
-   - We implemented physical magnitude and vector operations with expression templates to reduce temporaries. However, this did not improve performance, probably because the containers we use do not require dynamic allocation and some overhead is needed for this technique.
+   - We implemented physical magnitude and vector operations with expression templates to reduce temporaries. However, this did not improve performance, probably because the containers we use do not require dynamic allocation and some overhead is needed for this technique. Please refer to the [expression templates branch](https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation/-/tree/expression_templates) for the implementation.
 
 2. Multithreading and SIMD:
    - We attempted to parallelize solver computations using `std::execution::par_unseq` and `std::execution::unseq`. Each particle calculation is independent in the integrator. Previous value buffers are read only and only one element of the current buffer is written at each iteration, so it can be parallelized and vectorized with `std::execution::par_unseq`. This did not improve performance, presumably because the overhead of launching threads was greater than the work they did. A thread pool would be required to improve performance 
