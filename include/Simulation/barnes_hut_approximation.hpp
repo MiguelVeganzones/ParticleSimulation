@@ -2,27 +2,27 @@
 
 #include "compile_time_utility.hpp"
 #include "concepts.hpp"
-#include "csv_logger.hpp"
-#include "energy.hpp"
 #include "generics.hpp"
 #include "ndtree.hpp"
 #include "particle_concepts.hpp"
 #include "particle_interaction.hpp"
 #include "physical_magnitudes.hpp"
-#include "random.hpp"
 #include "simulation_config.hpp"
-#include "stopwatch.hpp"
 #include "utils.hpp"
 #include "yoshida.hpp"
+#include <atomic>
 #include <bits/ranges_algo.h>
 #include <chrono>
-#include <fstream>
 #include <iostream>
 #include <ranges>
-#include <sstream>
 #include <vector>
 #ifdef USE_ROOT_PLOTTING
 #include "scatter_plot_3D.hpp"
+#endif
+#define MEASURE_ENERGY 0
+#if MEASURE_ENERGY
+#include "energy.hpp"
+#include "random.hpp"
 #endif
 
 namespace simulation::bh_approx
@@ -91,7 +91,7 @@ public:
         ) },
         m_simulation_size{ std::ranges::size(current_system_state()) },
         m_solver(this, m_simulation_size, m_dt),
-        m_theta{ specific_config.theta_, s_theta_range }
+        m_theta_sq{ std::pow(specific_config.theta_, value_type{ 2 }), s_theta_range }
     {
         assert(m_dt > duration_t{ 0 });
         assert(m_simulation_duration > duration_t{ 0 });
@@ -112,6 +112,7 @@ public:
         {
             m_solver.run();
             m_current_time += m_dt;
+#if MEASURE_ENERGY
             if (utility::random::srandom::randfloat<float>() < 0.02f)
             {
                 std::cout << "Current time: " << m_current_time << '\n';
@@ -126,6 +127,7 @@ public:
                                                   ) }
                           << std::endl;
             }
+#endif
 #ifdef LOG_TO_CSV
             std::ostringstream filename;
             filename << "execution_data_" << m_current_time;
@@ -171,11 +173,11 @@ public:
             return acceleration_t{};
         }
         auto const summary = b.summary().value();
-        const auto s       = pm::utils::l2_norm(b.diagonal_length().value());
-        const auto d       = pm::utils::l2_norm(
+        const auto s       = pm::utils::l2_norm_sq(b.diagonal_length().value());
+        const auto d       = pm::utils::l2_norm_sq(
             pm::utils::distance(p.position(), summary.position()).value()
         );
-        if ((s / d) < m_theta.get())
+        if ((s / d) < m_theta_sq.get())
         {
             ++m_f_eval_count;
             return interaction_t::acceleration_contribution(p, summary);
@@ -304,8 +306,8 @@ private:
     std::array<tree_t, s_working_copies>                 m_ndtrees;
     size_type                                            m_simulation_size;
     solver_t                                             m_solver;
-    mutable std::size_t                                  m_f_eval_count = 0;
-    utility::generics::ranged_value<value_type>          m_theta;
+    mutable std::atomic<std::size_t>                     m_f_eval_count = 0;
+    utility::generics::ranged_value<value_type>          m_theta_sq;
 };
 
 } // namespace simulation::bh_approx
