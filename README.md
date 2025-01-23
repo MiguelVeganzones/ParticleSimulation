@@ -209,12 +209,12 @@ I
 
 ### Summary of Results
 
-| Total Clock Time | P2P Interaction Throughput | Speedup (%) | Optimization                           |
-|------------------|----------------------------|-------------|----------------------------------------|
-| 35.443 [s]       | 42.32 \[us\(^{-1}\)\]        | Baseline    | Base performance                       |
-| 20.489 [s]       | 73.21 \[us\(^{-1}\)\]        | +42%        | Eliminated `std::pow` in the critical path |
-| 15.597 [s]       | 96.17 \[us\(^{-1}\)\]        | +25%        | Replaced `fold_left` with raw `for` loop |
-| 14.833 [s]       | 101.13 \[us\(^{-1}\)\]       | +5%         | Introduced `l2_norm_sq` specialization  |
+| Total Clock Time | P2P Interaction Throughput | Speedup (%) | Optimization                               |
+|------------------|----------------------------|-------------|--------------------------------------------|
+| 35.443 [s]       | 42.32 [us<sup>-1</sup>]    | Baseline    | Base performance                           |
+| 20.489 [s]       | 73.21 [us<sup>-1</sup>]    | +42%        | Eliminated `std::pow` in the critical path |
+| 15.597 [s]       | 96.17 [us<sup>-1</sup>]    | +25%        | Replaced `fold_left` with raw `for` loop   |
+| 14.833 [s]       | 101.13 [us<sup>-1</sup>]   | +5%         | Introduced `l2_norm_sq` specialization     |
 
 Improving performance further is not trivial and would require modifying
 algorithms or memory pools to eliminate the very few allocations we are
