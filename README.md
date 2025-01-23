@@ -170,7 +170,7 @@ For this specific benchmark, the number of P2P interactions depends on:
 - The number of time steps: `500`
 - The number of particles: `1,000`
 - The force calculations the solver requires per update: `3`
-- Gravitational interactions per step: `1.5E9` theoretical P2P interactions.
+The resulting total theoretical gravitational interactions is: `1.5E9`.
 
 ### Key Optimizations
 
