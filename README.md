@@ -189,14 +189,15 @@ The resulting total theoretical gravitational interactions is: `1.5E9`.
 I
    - `std::pow` was used in the force calculation:
      $$
-     F(d, \epsilon) = (d^2 + \epsilon^2)^{3/2} \approx d^3
+     F(d, \epsilon) = (d^2 + \epsilon_1^2)^{3/2} \approx d^3
      $$
-     Or in C++: `std::pow(d * d + e * e, 1.5)`.
+     Or, in C++: `std::pow(d * d + e * e, 1.5)`.
      This equation is an approximation to $d^3$ that introduces an epsilon term  $\epsilon$ that prevents division by zero and ensures numerical stability.
    - This call to `std::pow` can be ditched by changing the approximation to:
      $$
-     F(d, \epsilon) = d^3 + \frac{\epsilon}{2} \approx d^3
+     F(d, \epsilon) = d^3 + \epsilon_2 \approx d^3
      $$
+   - Which can be expressed ad `d * d * d + e`
    - This resulted in a reduction in clock time of about 40%.
 
 2. Optimizing `l2_norm` calculations:
@@ -206,7 +207,7 @@ I
      vector size is a small compile time constant.
      - `std::reduce`, which is a more specialized version of `std::accumualte` for numeric computation and also allows execution policies such as `std::execution::unseq` for SIMD optimization.
     - After trying out both alternatives, the most effective optimization was the raw `for` loop.
-   - This optimization resulted in a 24 CPU time reduction.
+   - This optimization resulted in a 24% CPU time reduction.
 
 3. Specialization of `l2_norm` with `l2_norm_sq`:
    - A significant portion of the `l2_norm` computation time was spent in the `std::sqrt` call. However, some computations can work with the squared norm too.
