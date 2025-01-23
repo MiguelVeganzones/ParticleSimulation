@@ -2,7 +2,6 @@
 
 #include "particle_concepts.hpp"
 #include "utils.hpp"
-#include <execution>
 
 #define DEBUG_PRINT_YOSHIDA (false)
 
@@ -70,26 +69,21 @@ struct yoshida4_solver
         {
             system_->commit_buffer(i - 1);
 
-            // for (std::size_t p_idx = 0; p_idx != size_; ++p_idx)
-            std::for_each(
-                std::execution::seq,
-                std::cbegin(indeces_),
-                std::cend(indeces_),
-                [this, i, dt](auto const p_idx) {
-                    const auto a = system_->get_acceleration(i - 1, p_idx);
-                    system_->velocity_buffer_write(
-                        i,
-                        p_idx,
-                        system_->velocity_buffer_read(i - 1, p_idx) + d[i - 1] * a * dt
-                    );
-                    system_->position_buffer_write(
-                        i,
-                        p_idx,
-                        system_->position_buffer_read(i - 1, p_idx) +
-                            c[i] * system_->velocity_buffer_read(i, p_idx) * dt
-                    );
-                }
-            );
+            for (std::size_t p_idx = 0; p_idx != size_; ++p_idx)
+            {
+                const auto a = system_->get_acceleration(i - 1, p_idx);
+                system_->velocity_buffer_write(
+                    i,
+                    p_idx,
+                    system_->velocity_buffer_read(i - 1, p_idx) + d[i - 1] * a * dt
+                );
+                system_->position_buffer_write(
+                    i,
+                    p_idx,
+                    system_->position_buffer_read(i - 1, p_idx) +
+                        c[i] * system_->velocity_buffer_read(i, p_idx) * dt
+                );
+            }
         }
         for (std::size_t p_idx = 0; p_idx != size_; ++p_idx)
         {
