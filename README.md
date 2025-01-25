@@ -138,8 +138,7 @@ enabled. Should be the preferred execution mode in general.
 #### Build Options
 The optional build flags `OPTIONS` are used to enable parts of the project that might require dependencies or might not make sense always.
 The supported arguments are
-- `ENABLE_SANITIZERS={OFF,ON}`:Disables/Enables the use of sanitizers. Defaults
-  to `ON`.
+- `ENABLE_SANITIZERS={OFF,ON}`:Disables/Enables the use of sanitizers. Defaults to `ON` for `Debug` and `OFF` for `Release` builds.
 - `UNIT_SYSTEM={OFF,ON}`: Disables/Enables a basic unit system that provides type checking of compile time units and formatting. Defaults to `OFF`.
 - `ROOT_PLOTTING={OFF,ON}`: Disables/Enables the Root plotting backend. Default is not plotting. Enabling this option requires the Root library properly configured (Root header files and libraries must be in the include and lib search path). Defaults to `OFF`.
 - `BOOST_LOGGING={OFF,ON}`: Disables/Enables boost log as the backend for logging. Default backend is iostream. Enabling this option requires Boost properly configured (boost header files and libraries must be in the include and lib search path). Defaults to `OFF`.

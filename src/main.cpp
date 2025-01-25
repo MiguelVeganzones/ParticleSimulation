@@ -143,6 +143,7 @@ int barnes_hut_bench()
 
     std::cout << "Simulation A\n";
     simulation_a.run();
+    std::cout << "Done\n";
 
     return EXIT_SUCCESS;
 }
@@ -240,5 +241,8 @@ int main()
     app.Run();
 #endif
 
+    utility::logging::default_source::log(
+        utility::logging::severity_level::info, "Main function terminated."
+    );
     return EXIT_SUCCESS;
 }

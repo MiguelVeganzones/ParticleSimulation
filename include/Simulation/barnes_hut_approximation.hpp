@@ -137,7 +137,7 @@ public:
             }
 #endif
 #ifdef USE_ROOT_PLOTTING
-            if (iteration++ % 20 == 0)
+            if (iteration++ % 50 == 0)
             {
                 for (auto j = decltype(m_simulation_size){}; j != m_simulation_size; ++j)
                 {

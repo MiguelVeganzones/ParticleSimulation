@@ -152,7 +152,13 @@ file(GLOB_RECURSE TEST_FILES tests/*.cpp)
 file(GLOB_RECURSE PLOTTING_FILES include/Plotting/*.cpp)
 
 # Optional features
-option(ENABLE_SANITIZERS "Enable address, bounds, and other sanitizers" ON)
+if (NOT DEFINED ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(default_enable_sanitizers ON)
+else()
+    set(default_enable_sanitizers OFF)
+endif()
+option(ENABLE_SANITIZERS "Enable address, bounds, and other sanitizers" ${default_enable_sanitizers})
+
 option(UNIT_SYSTEM "Enable unit system" OFF)
 option(ROOT_PLOTTING "Enable ROOT plotting" OFF)
 option(BOOST_LOGGING "Enable Boost logging" OFF)
