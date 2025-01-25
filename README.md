@@ -21,7 +21,7 @@
 6. [Testing](#testing)
 7. [Performance](#performance)
     - [Optimization Steps](#optimization-steps)
-        - [Eliminating `std::pow` in the Critical Path](#eliminating-stdpow-in-the-critical-path)
+        - [Eliminating `std::pow` from the Critical Path](#eliminating-stdpow-in-the-critical-path)
         - [Optimizing `l2_norm` Calculations](#optimizing-l2_norm-calculations)
         - [Specialization of `l2_norm` with `l2_norm_sq`](#specialization-of-l2_norm-with-l2_norm_sq)
     - [Summary of Results](#summary-of-results)
@@ -184,7 +184,7 @@ The resulting total theoretical gravitational interactions is: `1.5E9`.
 
 ### Key Optimizations
 
-1. Eliminating `std::pow` in the critical path:
+1. Eliminating `std::pow` from the critical path:
    - Valgrind revealed that `std::pow` accounted for approximately 40% of the execution time. This makes sense because `std::pow` is a fairly expensive operation to compute and it is present in our hot path.
    - `std::pow` was used in the force calculation:
      $$
@@ -222,7 +222,7 @@ The resulting total theoretical gravitational interactions is: `1.5E9`.
 | Total Clock Time | P2P Interaction Throughput | Speedup (%) | Optimization                               |
 |------------------|----------------------------|-------------|--------------------------------------------|
 | 35.443 [s]       | 42.32 [us$^{-1}$]          | Baseline    | Base performance                           |
-| 20.489 [s]       | 73.21 [us$^{-1}$]          | +42%        | Eliminated `std::pow` in the critical path |
+| 20.489 [s]       | 73.21 [us$^{-1}$]          | +42%        | Eliminated `std::pow` from the critical path |
 | 15.597 [s]       | 96.17 [us$^{-1}$]          | +25%        | Replaced `fold_left` with raw `for` loop   |
 | 14.833 [s]       | 101.13 [us$^{-1}$]         | +5%         | Introduced `l2_norm_sq` specialization     |
 
