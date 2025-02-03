@@ -34,10 +34,9 @@ struct yoshida4_solver
 
     inline static constexpr auto d = std::array<value_type, s_order - 1>{ x1, x0, x1 };
 
-    system_t*                system_;
-    std::size_t              size_;
-    duration_t               dt_;
-    std::vector<std::size_t> indeces_;
+    system_t*   system_;
+    std::size_t size_;
+    duration_t  dt_;
 
     yoshida4_solver(
         system_t*                              system,
@@ -46,10 +45,8 @@ struct yoshida4_solver
     ) :
         system_{ system },
         size_{ size },
-        dt_{ delta_t },
-        indeces_(size)
+        dt_{ delta_t }
     {
-        std::iota(indeces_.begin(), indeces_.end(), 0);
     }
 
     auto run() -> void
