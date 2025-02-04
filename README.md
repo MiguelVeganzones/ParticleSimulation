@@ -211,7 +211,7 @@ The resulting total theoretical gravitational interactions is: `1.5E9`.
    - A significant portion of the `l2_norm` computation time was spent in the `std::sqrt` call. However, some computations can work with the squared norm too.
    - Providing a `l2_norm_sq` version of `l2_norm` that does not compute the square root would improve performance. Wherever possible, we replaced calls to `l2_norm` with `l2_norm_sq`.
    - Execution time was reduced by around 5%. This is not a very significant
-   reduction, but out tests showed that this specific `std::sqrt` call amounts
+   reduction, but our tests showed that this specific `std::sqrt` call amounts
    for around 50% of the total execution time, as this `l2_norm` is needed in
    more places in the simulation. Anyways, `std::sqrt` is an expensive operation
    but not that much.
@@ -232,16 +232,17 @@ currently doing in the `ndtree`.
 ### Failed Attempts
 
 1. Expression templates for vector operations:
-   - We implemented physical magnitude and vector operations with expression templates to reduce temporaries. However, this did not improve performance, probably because the containers we use do not require dynamic allocation and some overhead is needed for this technique. Please refer to the [expression templates branch](https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation/-/tree/expression_templates) for the implementation.
+   - We implemented physical magnitude and vector operations with expression templates to reduce the amount of temporary vectors created in arithmetic vector operations. However, this did not improve performance, probably because the containers we use do not require dynamic allocation and some overhead is needed for this technique. Please refer to the [expression templates branch](https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation/-/tree/expression_templates) for the implementation.
 
 2. Multithreading and SIMD:
-   - We attempted to parallelize solver computations using `std::execution::par_unseq` and `std::execution::unseq`. Each particle calculation is independent in the integrator. Previous value buffers are read only and only one element of the current buffer is written at each iteration, so it can be parallelized and vectorized with `std::execution::par_unseq`. This did not improve performance, presumably because the overhead of launching threads was greater than the work they did. A thread pool would be required to improve performance 
+   - We attempted to parallelize solver computations using `std::execution::par_unseq` and `std::execution::unseq`. Each particle calculation is independent in the integrator. Previous value buffers are read only and only one element of the current buffer is written at each iteration, so it can be parallelized and vectorized with `std::execution::par_unseq` without any locking mechanism. This did not improve performance, presumably because the overhead of launching and managing threads was greater than the work they did. A simple lock thread pool did not work either, maybe a lock-free thread pool would be required parallelize these small tasks. If this does not work either, probably simulations with millions of particles are required to exploit parallel execution.
 
 ### ToDo
 
 - Implement a real benchmarking suite with diverse parameters.
-- Implement a thread pool to add efficient multithreading.
+- Implement a lock-free thread pool to add efficient multithreading.
 - Implement a memory pool for `ndbox` allocation.
+- `ndtree` empty box regrouping.
 
 ## Contributing
 - Guidelines for contributing to the project.
