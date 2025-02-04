@@ -199,7 +199,7 @@ The resulting total theoretical gravitational interactions is: `1.5E9`.
    - This resulted in a reduction in clock time of about 40%.
 
 2. Optimizing `l2_norm` calculations:
-   - After removing `std::pow`, the `l2_norm` vector calculation represents a significant part of the CPU time. This operation was responsible for approximately 13.8% of the CPU time in the hot path, but it is also elsewhere. This function was implemented using `std::ranges::fold_left`, which is high-level but less efficient than a raw loop.
+   - After removing `std::pow`, the `l2_norm` vector calculation represents a significant part of the CPU time. This operation was responsible for approximately 13.8% of the CPU time in the hot path, but it is also used elsewhere. This function was implemented using `std::ranges::fold_left`, which is high-level but less efficient than a raw loop.
    - We tried optimizing this implementation by replacing `fold_left` with:
      - A raw `for` loop, which would be easy for the compiler to unroll, as the
      vector size is a small compile time constant.
