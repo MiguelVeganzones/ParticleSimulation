@@ -164,11 +164,12 @@ Performance optimization was conducted based on a single benchmark test with the
 - 1000 particles
 - Theta = 0.5 (Barnes-Hut approximation factor)
 - Gravitational interaction
+- Yoshida symplectic integrator (3 force evaluations per step)
 - Release mode (`-O3` optimization level)
 - No `-ffast-math`
 - No sanitizers
 - No plotting
- - Initial conditions will be the same in all cases. This will be done by hand-seeding the random number engines.
+- Initial conditions will be the same in all cases. This will be done by hand-seeding the random number engines.
 
 Valgrind Callgrind was used to identify hotspots in the simulation, guiding optimizations for this specific performance benchmark. A broader test suit should be used, but due to time limitation this will be enough. Each experiment was executed three times, and the minimum clock time was considered.
 
@@ -177,7 +178,7 @@ Performance was evaluated in particle-to-particle (P2P) interaction computations
 For this specific benchmark, the number of P2P interactions depends on:
 - The number of time steps: `500`
 - The number of particles: `1,000`
-- The force calculations the solver requires per update: `3` \
+- The force calculations the solver requires per step: `3`
 
 The resulting total theoretical gravitational interactions is: `1.5E9`.
 
