@@ -39,8 +39,9 @@ struct gravitational_interaction
     {
         const auto distance = utils::distance(a.position(), b.position());
         const auto d        = utils::l2_norm(distance.value());
-        return acceleration_t{ pm::physical_parameters<value_type>::G *
-                               b.mass().magnitude() * distance / (d * d * d + epsilon) };
+        return acceleration_t{ (pm::physical_parameters<value_type>::G *
+                                b.mass().magnitude() / (d * d * d + epsilon)) *
+                               distance };
     }
 };
 
@@ -64,9 +65,10 @@ struct electrostatic_interaction
 
         const auto distance = utils::distance(a.position(), b.position());
         const auto d        = utils::l2_norm(distance.value());
-        return acceleration_t{ pm::physical_constants_<value_type>::K *
-                               b.charge().magnitude() * a.charge().magnitude() /
-                               a.mass().magnitude() * distance / (d * d * d + epsilon) };
+        return acceleration_t{ (pm::physical_constants_<value_type>::K *
+                                b.charge().magnitude() * a.charge().magnitude() /
+                                a.mass().magnitude() / (d * d * d + epsilon)) /
+                               distance };
     }
 };
 
