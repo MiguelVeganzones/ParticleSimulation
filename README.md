@@ -196,7 +196,7 @@ The resulting total theoretical gravitational interactions is: `1.5E9`.
      $$
      F(d, \epsilon) = d^3 + \epsilon_2 \approx d^3
      $$
-   - Which can be expressed ad `d * d * d + e`
+   - Which can be expressed as `d * d * d + e`
    - This resulted in a reduction in clock time of about 40%.
 
 2. Optimizing `l2_norm` calculations:
@@ -222,7 +222,7 @@ The resulting total theoretical gravitational interactions is: `1.5E9`.
 | Total Clock Time | P2P Interaction Throughput | Speedup (%) | Optimization                               |
 |------------------|----------------------------|-------------|--------------------------------------------|
 | 35.443 [s]       | 42.32 [us$^{-1}$]          | Baseline    | Base performance                           |
-| 20.489 [s]       | 73.21 [us$^{-1}$]          | +42%        | Eliminated `std::pow` from the critical path |
+| 20.489 [s]       | 73.21 [us$^{-1}$]          | +42%        | Removed `std::pow` from the critical path |
 | 15.597 [s]       | 96.17 [us$^{-1}$]          | +25%        | Replaced `fold_left` with raw `for` loop   |
 | 14.833 [s]       | 101.13 [us$^{-1}$]         | +5%         | Introduced `l2_norm_sq` specialization     |
 
@@ -236,7 +236,7 @@ currently doing in the `ndtree`.
    - We implemented physical magnitude and vector operations with expression templates to reduce the amount of temporary vectors created in arithmetic vector operations. However, this did not improve performance, probably because the containers we use do not require dynamic allocation and some overhead is needed for this technique. Please refer to the [expression templates branch](https://gitlab.lrz.de/advprog2024/83-barnes-hut-galaxy-simulation/-/tree/expression_templates) for the implementation.
 
 2. Multithreading and SIMD:
-   - We attempted to parallelize solver computations using `std::execution::par_unseq` and `std::execution::unseq`. Each particle calculation is independent in the integrator. Previous value buffers are read only and only one element of the current buffer is written at each iteration, so it can be parallelized and vectorized with `std::execution::par_unseq` without any locking mechanism. This did not improve performance, presumably because the overhead of launching and managing threads was greater than the work they did. A simple lock thread pool did not work either, maybe a lock-free thread pool would be required parallelize these small tasks. If this does not work either, probably simulations with millions of particles are required to exploit parallel execution.
+   - We attempted to parallelize solver computations using `std::execution::par_unseq` and `std::execution::unseq`. Each particle calculation is independent in the integrator. Previous value buffers are read only and only one element of the current buffer is written at each iteration, so it can be parallelized and vectorized with `std::execution::par_unseq` without any locking mechanism. This did not improve performance, presumably because the overhead of launching and managing threads was greater than the work they did. A simple lock thread pool did not work either, maybe a lock-free thread pool would be required to parallelize these small tasks. If this does not work either, probably simulations with millions of particles are required to exploit parallel execution.
 
 ### ToDo
 
