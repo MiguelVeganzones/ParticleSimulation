@@ -1,38 +1,7 @@
 # Barnes-Hut Simulation
 
 ## Table of Contents
-1. [Introduction](#introduction)
-2. [Features](#features)
-    - [NDTree](#ndtree)
-    - [Numerical Solvers](#numerical-solvers)
-    - [Particle System](#particle-system)
-    - [Plotting](#plotting)
-    - [Random Distributions](#random-distributions)
-3. [Getting Started](#getting-started)
-    - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
-    - [Building the Project](#building-the-project)
-4. [Usage](#usage)
-5. [Configuration](#configuration)
-    - [Compile Time Configuration](#compile-time-configuration)
-        - [Optimization Level](#optimization-level)
-        - [Build Options](#build-options)
-    - [Runtime Configuration](#runtime-configuration)
-6. [Testing](#testing)
-7. [Performance](#performance)
-    - [Optimization Steps](#optimization-steps)
-        - [Eliminating `std::pow` from the Critical Path](#eliminating-stdpow-in-the-critical-path)
-        - [Optimizing `l2_norm` Calculations](#optimizing-l2_norm-calculations)
-        - [Specialization of `l2_norm` with `l2_norm_sq`](#specialization-of-l2_norm-with-l2_norm_sq)
-    - [Summary of Results](#summary-of-results)
-    - [Failed Attempts](#failed-attempts)
-        - [Expression Templates for Vector Operations](#expression-templates-for-vector-operations)
-        - [Multithreading and SIMD](#multithreading-and-simd)
-    - [ToDo](#todo)
-8. [Documentation](#documentation)
-9. [Contributing](#contributing)
-10. [License](#license)
-11. [Acknowledgments](#acknowledgments)
+[[_TOC_]]
 
 ## Introduction
 The Barnes-Hut simulation is an approximation algorithm for the N-body problem, designed for the simulation of large clusters of particles, such as galaxies.
