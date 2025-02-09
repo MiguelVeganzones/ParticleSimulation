@@ -62,14 +62,13 @@ struct yoshida4_solver
             );
             system_->velocity_buffer_write(0, p_idx, system_->velocity_read(p_idx));
         }
-        value_type max_acc{};
         for (std::size_t i = 1; i != s_order; ++i)
         {
             system_->commit_buffer(i - 1);
+
             for (std::size_t p_idx = 0; p_idx != size_; ++p_idx)
             {
                 const auto a = system_->get_acceleration(i - 1, p_idx);
-                max_acc      = std::max(max_acc, utils::l2_norm(a.value()));
                 system_->velocity_buffer_write(
                     i,
                     p_idx,

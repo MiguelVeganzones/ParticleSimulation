@@ -26,7 +26,7 @@ You might need to refresh the linker with `sudo ldconfig`
 
 ## How to run the tests
 
-After installing bazel and google tests, to run the tests in the tests folder just run
+After installing google tests, to run the tests in the tests folder just run
 ``` 
 make tests
 ```

@@ -52,8 +52,16 @@ bld/
 # Swap files
 *.swp
 
-#out files
+# Out files
 *.o
 
 # Dotfiles
 .*
+!.gitignore
+
+# Do not ignore configuration files
+![Dd]ata/input/**/
+![Dd]ata/input/**/*.ini
+
+# Ignore Callgrind Outputs
+*.out.*

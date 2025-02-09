@@ -40,4 +40,16 @@ concept Vector = requires(V v) {
     typename V::value_type;
 };
 
+
+template <typename I>
+concept Interaction = requires {
+    typename I::particle_t;
+    typename I::acceleration_t;
+    {
+        I::acceleration_contribution(
+            std::declval<typename I::particle_t>(), std::declval<typename I::particle_t>()
+        )
+    } -> std::same_as<typename I::acceleration_t>;
+};
+
 } // namespace pm::particle_concepts

@@ -1,49 +1,64 @@
 #pragma once
 
 #include "compile_time_utility.hpp"
-#include "concepts.hpp"
+#include "energy.hpp"
 #include "particle_concepts.hpp"
 #include "particle_interaction.hpp"
-#include "utils.hpp"
+#include "random.hpp"
+#include "simulation_config.hpp"
 #include "yoshida.hpp"
 #include <chrono>
 #include <iostream>
+#ifdef USE_ROOT_PLOTTING
+#include "scatter_plot_3D.hpp"
+#endif
 
 namespace simulation::bf
 {
 
 using namespace pm::interaction;
 
-template <pm::particle_concepts::Particle Particle_Type>
-// typename Solver_Type
+template <
+    pm::particle_concepts::Particle  Particle_Type,
+    pm::interaction::InteractionType Interaction_Type
+    // typename Solver_Type
+    >
 class brute_force_computation
 {
 public:
-    using particle_t     = Particle_Type;
-    using solver_t       = solvers::yoshida4_solver<brute_force_computation, particle_t>;
-    using interaction_t  = gravitational_interaction_calculator<particle_t>;
-    using duration_t     = std::chrono::seconds;
-    using value_type     = typename particle_t::value_type;
-    using acceleration_t = typename particle_t::acceleration_t;
-    using position_t     = typename particle_t::position_t;
-    using velocity_t     = typename particle_t::velocity_t;
-    using mass_t         = typename particle_t::mass_t;
+    using particle_t    = Particle_Type;
+    using solver_t      = solvers::yoshida4_solver<brute_force_computation, particle_t>;
+    using interaction_t = particle_interaction_t<particle_t, Interaction_Type>;
+    static_assert(pm::particle_concepts::Interaction<interaction_t>);
+    using value_type                              = typename particle_t::value_type;
+    using duration_t                              = std::chrono::duration<value_type>;
+    using acceleration_t                          = typename particle_t::acceleration_t;
+    using position_t                              = typename particle_t::position_t;
+    using velocity_t                              = typename particle_t::velocity_t;
+    using mass_t                                  = typename particle_t::mass_t;
     using owning_container_t                      = std::vector<particle_t>;
     inline static constexpr auto s_working_copies = solver_t::s_working_copies;
 
     brute_force_computation(
-        std::vector<particle_t>                particles,
+        std::vector<particle_t> const& particles,
+        /*
         utility::concepts::Duration auto const sim_duration,
         utility::concepts::Duration auto const sim_dt
+        */
+        simulation::config::simulation_common_config<particle_t> const& base_config
     ) :
-        m_simulation_duration{ std::chrono::duration_cast<duration_t>(sim_duration) },
-        m_dt{ std::chrono::duration_cast<duration_t>(sim_dt) },
+        m_simulation_duration{
+            std::chrono::duration_cast<duration_t>(base_config.duration_)
+        },
+        m_dt{ std::chrono::duration_cast<duration_t>(base_config.dt_) },
         m_particles{
             utility::compile_time_utility::array_factory<s_working_copies + 1>(particles)
         },
         m_simulation_size{ std::ranges::size(m_particles[0]) },
         m_solver(this, m_simulation_size, m_dt)
     {
+        assert(m_dt > duration_t{ 0 });
+        assert(m_simulation_duration > duration_t{ 0 });
     }
 
     auto run() noexcept -> void
@@ -51,28 +66,39 @@ public:
 // Plotting is this ugly yet again unfortunately
 // Actualy it just does not even work
 #ifdef USE_ROOT_PLOTTING
-        root_plotting::scatter_plot_3D scatter_plot;
-
-        std::vector<float> x(m_simulation_size);
-        std::vector<float> y(m_simulation_size);
-        std::vector<float> z(m_simulation_size);
-        std::size_t        iteration{};
+        using data_point_t = typename plotting::plots_3D::scatter_plot_3D::data_point;
+        std::vector<std::vector<data_point_t>> data(1);
+        data[0].resize(m_simulation_size);
+        plotting::plots_3D::scatter_plot_3D scatter_plot(data);
+        std::size_t                         iteration{};
 #endif
         while (m_current_time < m_simulation_duration)
         {
             m_solver.run();
             m_current_time += m_dt;
+            if (utility::random::srandom::randfloat<float>() < 0.02f)
+            {
+                std::cout << "Current time: " << m_current_time << '\n';
+                std::cout << pm::energy::compute_kinetic_energy(current_system_state()) +
+                                 pm::energy::compute_gravitational_potential_energy(
+                                     current_system_state()
+                                 )
+                          << std::endl;
+            }
         }
 #ifdef USE_ROOT_PLOTTING
-        if (iteration++ % 2 == 0)
+        if (iteration++ % 20 == 0)
         {
             for (auto j = decltype(m_simulation_size){}; j != m_simulation_size; ++j)
             {
-                x[j] = static_cast<float>(m_particles[s_working_copies][j].position()[0]);
-                y[j] = static_cast<float>(m_particles[s_working_copies][j].position()[1]);
-                z[j] = static_cast<float>(m_particles[s_working_copies][j].position()[2]);
+                data[0][j].x =
+                    static_cast<float>(m_particles[s_working_copies][j].position()[0]);
+                data[0][j].y =
+                    static_cast<float>(m_particles[s_working_copies][j].position()[1]);
+                data[0][j].z =
+                    static_cast<float>(m_particles[s_working_copies][j].position()[2]);
             }
-            scatter_plot.plot(static_cast<int>(m_simulation_size), &x[0], &y[0], &z[0]);
+            scatter_plot.render();
         }
 #endif
     }
@@ -98,15 +124,27 @@ public:
     }
 
     [[nodiscard]]
+    inline auto current_system_state() const noexcept -> auto const&
+    {
+        return m_particles[s_working_copies];
+    }
+
+    [[nodiscard]]
+    inline auto current_system_state() noexcept -> auto&
+    {
+        return m_particles[s_working_copies];
+    }
+
+    [[nodiscard]]
     inline auto position_read(std::size_t p_idx) const noexcept -> position_t const&
 
     {
-        return m_particles[s_working_copies][p_idx].position();
+        return current_system_state()[p_idx].position();
     }
 
     inline auto position_write(std::size_t p_idx, position_t value) noexcept -> void
     {
-        m_particles[s_working_copies][p_idx].position() = value;
+        current_system_state()[p_idx].position() = value;
     }
 
     [[nodiscard]]
@@ -128,12 +166,12 @@ public:
     [[nodiscard]]
     inline auto velocity_read(std::size_t p_idx) const noexcept -> velocity_t const&
     {
-        return m_particles[s_working_copies][p_idx].velocity();
+        return current_system_state()[p_idx].velocity();
     }
 
     inline auto velocity_write(std::size_t p_idx, velocity_t value) noexcept -> void
     {
-        m_particles[s_working_copies][p_idx].velocity() = value;
+        current_system_state()[p_idx].velocity() = value;
     }
 
     [[nodiscard]]

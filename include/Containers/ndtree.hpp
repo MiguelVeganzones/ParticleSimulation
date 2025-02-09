@@ -74,11 +74,20 @@ public:
     {
         for (index_t i = 0; i != s_dimension; ++i)
         {
-
             // Explicit copy to avoid dangling reference to a temporary
-            std::pair<value_type, value_type> r = std::minmax(p1[i], p2[i]);
-            m_min[i]                            = r.first;
-            m_max[i]                            = r.second;
+            const std::pair<value_type, value_type> r = std::minmax(p1[i], p2[i]);
+            m_min[i]                                  = r.first;
+            m_max[i]                                  = r.second;
+        }
+    }
+
+    constexpr ndboundary(value_type const& v1, value_type v2) noexcept
+    {
+        const std::pair<value_type, value_type> r = std::minmax(v1, v2);
+        for (index_t i = 0; i != s_dimension; ++i)
+        {
+            m_min[i] = r.first;
+            m_max[i] = r.second;
         }
     }
 
@@ -347,7 +356,8 @@ public:
         }
         else
         {
-            [[maybe_unused]] const auto inserted = insert(sp);
+            [[maybe_unused]]
+            const auto inserted = insert(sp);
             assert(inserted);
         }
     }
@@ -379,14 +389,12 @@ public:
 
     [[nodiscard]]
     inline auto fragmented() const noexcept -> bool
-
     {
         return m_fragmented;
     }
 
     [[nodiscard]]
     auto summary() const noexcept -> std::optional<sample_t> const&
-
     {
         return m_summary;
     }
@@ -635,7 +643,8 @@ public:
     {
         for (auto const& e : collection)
         {
-            [[maybe_unused]] const auto inserted = insert(&e);
+            [[maybe_unused]]
+            const auto inserted = insert(&e);
             assert(inserted);
         }
     }

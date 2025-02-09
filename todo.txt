@@ -1,0 +1,15 @@
+maybe it is more efficient to store physical magnitudes as a magnitude and a
+unit vector. This would allow defining magnitude() for any value of N, would
+simplify multiplication with scalars and would eliminate many calls to
+vectorl2_norm(physical_vector). It would require slightly more memory for some
+values of N (mass is a scalar, so padding would sometimes compensate maybe), and
+keeping the unit vector invariant would be more expensive for some computations.
+This could then be improved again by introducing expression templates, as it
+would minimize the number of vector normalizations to one per computation, if at
+least one operation maps a vector out of its span.
+
+Plot `size` vs kf_barnes / kf_bf, f call reduction.
+
+Update rk4 to new api
+
+Rewrite vector operations 
