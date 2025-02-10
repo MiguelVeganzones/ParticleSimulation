@@ -191,8 +191,8 @@ The resulting total theoretical gravitational interactions is: `1.5E9`.
 | Total Clock Time | P2P Interaction Throughput | Speedup (%) | Optimization                               |
 |------------------|----------------------------|-------------|--------------------------------------------|
 | 35.443 [s]       | 42.32 [us$^{-1}$]          | Baseline    | Base performance                           |
-| 20.489 [s]       | 73.21 [us$^{-1}$]          | +42%        | Removed `std::pow` from the critical path |
-| 15.597 [s]       | 96.17 [us$^{-1}$]          | +25%        | Replaced `fold_left` with raw `for` loop   |
+| 20.489 [s]       | 73.21 [us$^{-1}$]          | +73%        | Removed `std::pow` from the critical path |
+| 15.597 [s]       | 96.17 [us$^{-1}$]          | +31%        | Replaced `fold_left` with raw `for` loop   |
 | 14.833 [s]       | 101.13 [us$^{-1}$]         | +5%         | Introduced `l2_norm_sq` specialization     |
 
 Improving performance further is not trivial and would require modifying
