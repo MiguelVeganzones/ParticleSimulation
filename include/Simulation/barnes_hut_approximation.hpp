@@ -105,7 +105,6 @@ public:
         std::vector<std::vector<data_point_t>> data(1);
         data[0].resize(m_simulation_size);
         plotting::plots_3D::scatter_plot_3D scatter_plot(data);
-        std::size_t                         iteration{};
 #endif
         m_ndtrees[0].cache_summary();
         while (m_current_time < m_simulation_duration)
@@ -137,7 +136,7 @@ public:
             }
 #endif
 #ifdef USE_ROOT_PLOTTING
-            if (iteration++ % 50 == 0)
+            if (m_current_time - m_prev_plot_time >= m_plot_interval)
             {
                 for (auto j = decltype(m_simulation_size){}; j != m_simulation_size; ++j)
                 {
@@ -152,6 +151,7 @@ public:
                         );
                 }
                 scatter_plot.render();
+                m_prev_plot_time = m_current_time;
             }
 #endif
         }
@@ -308,6 +308,10 @@ private:
     solver_t                                             m_solver;
     mutable std::atomic<std::size_t>                     m_f_eval_count = 0;
     utility::generics::ranged_value<value_type>          m_theta_sq;
+#ifdef USE_ROOT_PLOTTING
+    duration_t m_plot_interval  = duration_t{ 3.0 };
+    duration_t m_prev_plot_time = -m_plot_interval;
+#endif
 };
 
 } // namespace simulation::bh_approx

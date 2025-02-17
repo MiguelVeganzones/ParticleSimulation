@@ -10,13 +10,12 @@
 #include <concepts>
 #include <cstdlib>
 #include <iostream>
-#include <vector>
 
 #define SEED1 104845342
 #define SEED2 982523355
 #define SEED3 223857254
 
-constexpr auto universe_radius = 10.0;
+constexpr auto universe_radius = 100.0;
 
 template <std::floating_point F>
 auto generate_particle_pair()
@@ -45,9 +44,9 @@ auto generate_particle_set(std::size_t size)
     auto mass_generator = []() mutable -> F {
         using distribution_t = random_distribution<F, DistributionCategory::Exponential>;
         using param_type     = typename distribution_t::param_type;
-        static const param_type params(0.001);
+        static const param_type params(1.0);
         static distribution_t   d(params, SEED1);
-        return d() * F{ 100 };
+        return d() * F{ 0.01 };
     };
 
     auto position_generator = []() mutable -> F {

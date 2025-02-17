@@ -48,6 +48,7 @@ set(DEBUG_CXX_FLAGS
 	-fdiagnostics-show-template-tree
 	-ffinite-math-only
 	-fmax-errors=5
+	-fvisibility=hidden
 	-ggdb3
 	-mavx
 	-march=native
@@ -76,6 +77,7 @@ set(RELEASE_CXX_FLAGS
 	-fstrength-reduce
 	-fbounds-check
 	-fconcepts-diagnostics-depth=3
+	-fvisibility=hidden
 )
 
 set(FULL_RELEASE_CXX_FLAGS
@@ -97,6 +99,7 @@ set(FULL_RELEASE_CXX_FLAGS
 	-fconcepts-diagnostics-depth=3
 	-fno-math-errno
 	-fno-trapping-math
+	-fvisibility=hidden
 )
 
 set(SANITIZER_FLAGS
