@@ -34,11 +34,11 @@ public:
         VisualizationMode visualization_mode = VisualizationMode::layout_2D
     ) noexcept;
 
-    virtual auto render() -> void final override;
+    auto render() -> void final;
 
-    virtual auto clear() -> void final override;
+    auto clear() -> void final;
 
-    virtual auto append(float t, std::vector<float> const& y_star) -> void final override;
+    auto append(float t, std::vector<float> const& y_star) -> void final;
 
 private:
 #ifdef USE_ROOT_PLOTTING

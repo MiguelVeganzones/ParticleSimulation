@@ -35,7 +35,7 @@ public:
         VisualizationMode                visualization_mode = VisualizationMode::layout_2D
     ) noexcept;
 
-    virtual auto render() -> void final override;
+    auto render() -> void final;
 
 private:
 #ifdef USE_ROOT_PLOTTING

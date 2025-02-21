@@ -26,7 +26,7 @@ public:
 public:
     scatter_plot_2D(std::vector<std::vector<data_point>>& data) noexcept;
 
-    virtual auto render() -> void final override;
+    auto render() -> void final;
 
 private:
 #ifdef USE_ROOT_PLOTTING
