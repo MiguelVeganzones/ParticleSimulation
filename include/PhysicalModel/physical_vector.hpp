@@ -175,7 +175,7 @@ auto min(Vector_Type const& pva, Vector_Type const& pvb) noexcept -> decltype(au
 }
 
 template <std::size_t N, std::floating_point F>
-auto operator<<(std::ostream& os, physical_vector<N, F> const pv) noexcept
+auto operator<<(std::ostream& os, physical_vector<N, F> const& pv) noexcept
     -> std::ostream&
 {
     os << "{ ";
