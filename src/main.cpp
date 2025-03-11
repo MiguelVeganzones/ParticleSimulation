@@ -147,6 +147,44 @@ int barnes_hut_bench()
     return EXIT_SUCCESS;
 }
 
+int brute_force_bench()
+{
+    using namespace pm;
+    using F                    = double;
+    static constexpr auto N    = 3;
+    using particle_t           = particle::ndparticle<N, F>;
+    constexpr auto interaction = pm::interaction::InteractionType::Gravitational;
+
+#ifdef NDEBUG
+    const auto config_file_path = "data/input/release/config.ini";
+#else
+    const auto config_file_path = "data/input/debug/config.ini";
+#endif
+
+    const auto config    = simulation::config::parse_config<particle_t>(config_file_path);
+    const auto size      = config.general_config().particle_count_;
+    auto       particles = generate_particle_set<N, F>(size);
+
+    assert(config.is_valid());
+    config.print();
+    if (config.physics_config_.gravitational_constant_.has_value())
+    {
+        pm::physical_parameters<F>::set_gravitational_constant(
+            config.physics_config_.gravitational_constant_.value()
+        );
+    }
+
+    simulation::bf::brute_force_computation<particle_t, interaction> simulation_a(
+        particles, config.general_config()
+    );
+
+    std::cout << "Simulation A\n";
+    simulation_a.run();
+    std::cout << "Done\n";
+
+    return EXIT_SUCCESS;
+}
+
 int barnes_hut_test()
 {
     using namespace pm;
@@ -233,7 +271,8 @@ int main()
     utility::logging::default_source::log(
         utility::logging::severity_level::error, "Huge error or sth..."
     );
-    barnes_hut_bench();
+    // barnes_hut_bench();
+    brute_force_bench();
     // electrostatic_test();
 
 #ifdef USE_ROOT_PLOTTING

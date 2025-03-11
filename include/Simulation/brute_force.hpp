@@ -76,6 +76,7 @@ public:
         {
             m_solver.run();
             m_current_time += m_dt;
+            /*
             if (utility::random::srandom::randfloat<float>() < 0.02f)
             {
                 std::cout << "Current time: " << m_current_time << '\n';
@@ -85,6 +86,7 @@ public:
                                  )
                           << std::endl;
             }
+            */
         }
 #ifdef USE_ROOT_PLOTTING
         if (iteration++ % 20 == 0)
