@@ -1,7 +1,37 @@
 # Barnes-Hut Simulation
 
 ## Table of Contents
-[[_TOC_]]
+- [Introduction](#introduction)
+- [Features](#features)
+  - [NDTree](#ndtree)
+  - [Numerical Solvers](#numerical-solvers)
+  - [Particle System](#particle-system)
+  - [Plotting](#plotting)
+  - [Random Distributions](#random-distributions)
+  - [Configuration Files](#configuration-files)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Building the Project](#building-the-project)
+    - [Example](#example)
+    - [Video of live simulation](#video-of-live-simulation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+  - [Compile Time Configuration](#compile-time-configuration)
+    - [Optimization Level](#optimization-level)
+    - [Build Options](#build-options)
+  - [Runtime Configuration](#runtime-configuration)
+- [Testing](#testing)
+- [Performance](#performance)
+  - [Optimization Steps](#optimization-steps)
+    - [Key Optimizations](#key-optimizations)
+  - [Summary of Results](#summary-of-results)
+  - [Failed Attempts](#failed-attempts)
+  - [ToDo](#todo)
+- [Contributing](#contributing)
+- [Documentation](#documentation)
+- [License](#license)
+- [Acknowledgments](#acknowledgments)
 
 ## Introduction
 The Barnes-Hut simulation is an approximation algorithm for the N-body problem, designed for the simulation of large clusters of particles, such as galaxies.
